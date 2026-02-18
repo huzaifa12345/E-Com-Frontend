@@ -1,0 +1,249 @@
+import axios from 'axios';
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Theme-specific API calls
+export const themeApi = {
+  // Authentication
+  login: async (credentials) => {
+    const response = await api.post('/auth/login', credentials);
+    return response.data;
+  },
+
+  register: async (userData) => {
+    const response = await api.post('/auth/register', userData);
+    return response.data;
+  },
+
+  logout: async () => {
+    const response = await api.post('/auth/logout');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return response.data;
+  },
+
+  refreshToken: async () => {
+    const response = await api.post('/auth/refresh');
+    localStorage.setItem('token', response.data.token);
+    return response.data;
+  },
+
+  // Products
+  getProducts: async (params = {}) => {
+    const response = await api.get('/products', { params });
+    return response.data;
+  },
+
+  getProductById: async (id) => {
+    const response = await api.get(`/products/${id}`);
+    return response.data;
+  },
+
+  getProductsByCategory: async (category) => {
+    const response = await api.get(`/products/category/${category}`);
+    return response.data;
+  },
+
+  // Reviews
+  createReview: async (reviewData) => {
+    const response = await api.post('/reviews', reviewData);
+    return response.data;
+  },
+
+  getProductReviews: async (productId) => {
+    const response = await api.get(`/reviews/product/${productId}`);
+    return response.data;
+  },
+
+  getAllReviews: async (params = {}) => {
+    const response = await api.get('/reviews/admin/all', { params });
+    return response.data;
+  },
+
+  updateReviewStatus: async (id, status) => {
+    const response = await api.put(`/reviews/admin/${id}/status`, { status });
+    return response.data;
+  },
+
+  deleteReview: async (id) => {
+    const response = await api.delete(`/reviews/admin/${id}`);
+    return response.data;
+  },
+
+  searchProducts: async (query) => {
+    const response = await api.get('/products/search', { params: { q: query } });
+    return response.data;
+  },
+
+  createProduct: async (productData) => {
+    const response = await api.post('/products', productData);
+    return response.data;
+  },
+
+  updateProduct: async (id, productData) => {
+    const response = await api.put(`/products/${id}`, productData);
+    return response.data;
+  },
+
+  deleteProduct: async (id) => {
+    const response = await api.delete(`/products/${id}`);
+    return response.data;
+  },
+
+  // Categories
+  getCategories: async () => {
+    const response = await api.get('/categories');
+    return response.data;
+  },
+
+  getCategoryBySlug: async (slug) => {
+    const response = await api.get(`/categories/slug/${slug}`);
+    return response.data;
+  },
+
+  createCategory: async (categoryData) => {
+    const response = await api.post('/categories', categoryData);
+    return response.data;
+  },
+
+  updateCategory: async (id, categoryData) => {
+    const response = await api.put(`/categories/${id}`, categoryData);
+    return response.data;
+  },
+
+  deleteCategory: async (id) => {
+    const response = await api.delete(`/categories/${id}`);
+    return response.data;
+  },
+
+  // Orders
+  createOrder: async (orderData) => {
+    const response = await api.post('/orders/guest', orderData);
+    return response.data;
+  },
+
+  getOrders: async (userId) => {
+    const response = await api.get(`/orders/user/${userId}`);
+    return response.data;
+  },
+
+  // Admin Orders
+  getAllOrders: async (params = {}) => {
+    const response = await api.get('/orders', { params });
+    return response.data;
+  },
+
+  updateOrderStatus: async (orderId, statusData) => {
+    const response = await api.put(`/orders/${orderId}/status`, statusData);
+    return response.data;
+  },
+
+  // Upload Images
+  uploadImages: async (files) => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('images', file);
+    });
+    
+    const response = await api.post('/upload/upload-images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // User
+  getUserProfile: async () => {
+    const response = await api.get('/users/profile');
+    return response.data;
+  },
+
+  updateUserProfile: async (userData) => {
+    const response = await api.put('/users/profile', userData);
+    return response.data;
+  },
+
+  // Reviews
+  getProductReviews: async (productId) => {
+    const response = await api.get(`/reviews/product/${productId}`);
+    return response.data;
+  },
+
+  createReview: async (reviewData) => {
+    const response = await api.post('/reviews', reviewData);
+    return response.data;
+  },
+
+  // Wishlist
+  getWishlist: async () => {
+    const response = await api.get('/wishlist');
+    return response.data;
+  },
+
+  addToWishlist: async (productId) => {
+    const response = await api.post('/wishlist', { productId });
+    return response.data;
+  },
+
+  removeFromWishlist: async (productId) => {
+    const response = await api.delete(`/wishlist/${productId}`);
+    return response.data;
+  },
+
+  // Sizes
+  getSizes: async () => {
+    const response = await api.get('/sizes');
+    return response.data;
+  },
+
+  createSize: async (sizeData) => {
+    const response = await api.post('/sizes', sizeData);
+    return response.data;
+  },
+
+  updateSize: async (id, sizeData) => {
+    const response = await api.put(`/sizes/${id}`, sizeData);
+    return response.data;
+  },
+
+  deleteSize: async (id) => {
+    const response = await api.delete(`/sizes/${id}`);
+    return response.data;
+  },
+};
+
+export default api;
