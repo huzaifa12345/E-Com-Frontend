@@ -123,7 +123,7 @@ const StockManagement = () => {
           <ul className="mb-0">
             {lowStock.map(item => (
               <li key={`${item.product_id}-${item.size}`}>
-                {item.product_name} - Size {item.size} (Only {item.quantity} left)
+                {item.product_name} - Size {typeof item.size === 'string' ? item.size : JSON.stringify(item.size)} (Only {item.quantity} left)
               </li>
             ))}
           </ul>

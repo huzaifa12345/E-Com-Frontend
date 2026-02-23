@@ -166,15 +166,24 @@ const ThemeProductDetail = () => {
   };
 
   const handleAddToCart = () => {
-    if (product) {
-      // Add selected size to the product object
-      const productWithSize = {
-        ...product,
-        selectedSize: selectedSize
-      };
-      addToCart(productWithSize, quantity);
-      toast.success(`${product.name} (Size: ${selectedSize}) added to cart!`);
+    console.log('handleAddToCart called');
+    console.log('selectedSize:', selectedSize);
+    
+    // Simple validation: Always require size selection
+    if (!selectedSize || selectedSize === '') {
+      console.log('No size selected - showing error');
+      toast.error('Please select a size before adding to cart');
+      return;
     }
+
+    console.log('Size selected - adding to cart');
+    // Add selected size to the product object
+    const productWithSize = {
+      ...product,
+      selectedSize: selectedSize
+    };
+    addToCart(productWithSize, quantity);
+    toast.success(`${product.name} (Size: ${selectedSize}) added to cart!`);
   };
 
   const handleAddToWishlist = async () => {
@@ -380,7 +389,7 @@ const ThemeProductDetail = () => {
                       {product.sizes && product.sizes.length > 0 ? (
                         product.sizes.map((sizeItem, index) => {
                           console.log('Rendering size button:', sizeItem);
-                          const isAvailable = sizeItem.quantity > 0;
+                          // Remove stock check - allow size selection regardless of stock
                           return (
                             <button
                               key={index}
@@ -390,7 +399,6 @@ const ThemeProductDetail = () => {
                                 setSelectedSize(sizeItem.size);
                                 setQuantity(Math.max(1, sizeItem.quantity > 0 ? sizeItem.quantity : quantity));
                               }}
-                              disabled={!isAvailable}
                               style={{ 
                                 backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
                                 borderColor: '#f26522',
@@ -404,44 +412,17 @@ const ThemeProductDetail = () => {
                                 border: '2px solid #f26522',
                                 position: 'relative'
                               }}
-                              onMouseEnter={(e) => {
-                                if (!isAvailable) {
-                                  e.target.style.transform = 'none';
-                                  e.target.style.cursor = 'not-allowed';
-                                }
-                              }}
                             >
-                              {sizeItem.size}
+                              {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
                               <span className="ms-2 badge" style={{
-                                backgroundColor: isAvailable ? '#28a745' : '#dc3545',
+                                backgroundColor: '#28a745',
                                 color: 'white',
                                 fontSize: '11px',
                                 padding: '2px 6px',
                                 borderRadius: '12px'
                               }}>
-                                {sizeItem.quantity} pcs
+                                {sizeItem.quantity}
                               </span>
-                              {!isAvailable && (
-                                <span 
-                                  style={{ 
-                                    position: 'absolute',
-                                    top: '-8px',
-                                    right: '-8px',
-                                    backgroundColor: '#dc3545',
-                                    color: 'white',
-                                    borderRadius: '50%',
-                                    width: '20px',
-                                    height: '20px',
-                                    fontSize: '12px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: 'bold'
-                                  }}
-                                >
-                                  ×
-                                </span>
-                              )}
                             </button>
                           );
                         })
@@ -469,7 +450,7 @@ const ThemeProductDetail = () => {
                               border: '2px solid #f26522'
                             }}
                           >
-                            {sizeItem.size}
+                            {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
                           </button>
                         ))
                       )}
@@ -822,6 +803,12 @@ const ThemeProductDetail = () => {
                           <button 
                             className="btn btn-primary"
                             onClick={() => {
+                              // Check if product is single size and has sizes
+                              if (relatedProduct.product_type === 'single' && relatedProduct.sizes && relatedProduct.sizes.length > 0) {
+                                toast.error('Please select a size from product details before adding to cart');
+                                return;
+                              }
+                              
                               addToCart(relatedProduct, 1);
                               toast.success(`${relatedProduct.name} added to cart!`);
                             }}

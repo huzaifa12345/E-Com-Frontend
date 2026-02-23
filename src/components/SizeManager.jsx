@@ -38,8 +38,8 @@ const SizeManager = ({ sizes, onChange }) => {
               onChange={(e) => setNewSize({ ...newSize, size: e.target.value })}
             >
               <option value="">Select size</option>
-              {commonSizes.map(size => (
-                <option key={size} value={size}>{size}</option>
+              {commonSizes.map((size, index) => (
+                <option key={typeof size === 'string' ? size : `size-${index}`} value={size}>{size}</option>
               ))}
             </select>
           </div>
@@ -81,8 +81,8 @@ const SizeManager = ({ sizes, onChange }) => {
                           value={sizeItem.size}
                           onChange={(e) => updateSize(index, 'size', e.target.value)}
                         >
-                          {commonSizes.map(size => (
-                            <option key={size} value={size}>{size}</option>
+                          {commonSizes.map((size, index) => (
+                            <option key={typeof size === 'string' ? size : `size-${index}`} value={size}>{size}</option>
                           ))}
                         </select>
                       </div>
@@ -107,7 +107,7 @@ const SizeManager = ({ sizes, onChange }) => {
                     </div>
                     <div className="mt-1">
                       <small className="text-muted">
-                        Size: {sizeItem.size} | Quantity: {sizeItem.quantity}
+                        Size: {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)} | Quantity: {sizeItem.quantity}
                       </small>
                     </div>
                   </div>

@@ -172,7 +172,7 @@ const SizeManagement = () => {
                             onChange={(e) => setEditingSize({ ...editingSize, size: e.target.value })}
                           />
                         ) : (
-                          <strong>{size.size}</strong>
+                          <strong>{typeof size.size === 'string' ? size.size : JSON.stringify(size.size)}</strong>
                         )}
                       </td>
                       <td>

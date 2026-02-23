@@ -104,12 +104,18 @@ export const AuthProvider = ({ children }) => {
 
   // Save token and user data to localStorage whenever they change
   useEffect(() => {
+    console.log('AuthContext - localStorage save effect triggered');
+    console.log('AuthContext - state.token:', state.token ? 'exists' : 'null');
+    console.log('AuthContext - state.user:', state.user ? 'exists' : 'null');
+    
     if (state.token && state.user) {
       localStorage.setItem('token', state.token);
       localStorage.setItem('user', JSON.stringify(state.user));
+      console.log('AuthContext - Data saved to localStorage');
     } else {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      console.log('AuthContext - Data removed from localStorage');
     }
   }, [state.token, state.user]);
 
@@ -119,13 +125,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await themeApi.login({ email, password });
       
+      console.log('AuthContext - Login response:', response);
+      console.log('AuthContext - About to dispatch LOGIN_SUCCESS');
+      
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: response
       });
 
+      console.log('AuthContext - Login success dispatched');
       return response;
     } catch (error) {
+      console.error('AuthContext - Login error:', error);
       dispatch({
         type: 'LOGIN_FAILURE',
         payload: error.response?.data?.error || error.message

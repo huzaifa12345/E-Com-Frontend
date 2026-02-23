@@ -1,17 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Trash2, Package } from 'lucide-react';
+import { themeApi } from '../services/themeApi';
 
 const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
-  const [newSize, setNewSize] = useState({ size: '', quantity: 1 });
-  const [allSizesQuantity, setAllSizesQuantity] = useState(1);
+  const [newSize, setNewSize] = useState({ size: '' });
+  const [availableSizes, setAvailableSizes] = useState([]);
 
-  const commonSizes = ['9-12 months', '12-18 months', '18-24 months', '2-3 years', '3-4 years', '4-5 years', '5-6 years', '6-7 years', '7-8 years', '9-10 years'];
+  // Fetch sizes from database
+  useEffect(() => {
+    const fetchSizes = async () => {
+      try {
+        const sizesData = await themeApi.getSizes();
+        setAvailableSizes(sizesData.sizes || sizesData || []);
+      } catch (error) {
+        console.error('Error fetching sizes:', error);
+        // Fallback to common sizes if API fails
+        setAvailableSizes(['9-12 months', '12-18 months', '18-24 months', '2-3 years', '3-4 years', '4-5 years', '5-6 years', '6-7 years', '7-8 years', '9-10 years']);
+      }
+    };
+
+    fetchSizes();
+  }, []);
 
   const addSize = () => {
-    if (newSize.size && newSize.quantity > 0) {
-      const updatedSizes = [...sizes, { ...newSize }];
+    if (newSize.size) {
+      const updatedSizes = [...sizes, { size: newSize.size }];
       onChange(updatedSizes);
-      setNewSize({ size: '', quantity: 1 });
+      setNewSize({ size: '' });
     }
   };
 
@@ -22,19 +37,16 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
 
   const updateSize = (index, field, value) => {
     const updatedSizes = sizes.map((size, i) => 
-      i === index ? { ...size, [field]: field === 'quantity' ? parseInt(value) || 0 : value } : size
+      i === index ? { ...size, [field]: value } : size
     );
     onChange(updatedSizes);
   };
 
   const applyToAllSizes = () => {
-    if (allSizesQuantity > 0) {
-      const updatedSizes = commonSizes.map(size => ({
-        size,
-        quantity: allSizesQuantity
-      }));
-      onChange(updatedSizes);
-    }
+    const updatedSizes = availableSizes.map(size => ({
+      size: typeof size === 'string' ? size : size.size
+    }));
+    onChange(updatedSizes);
   };
 
   if (productType === 'all') {
@@ -49,30 +61,19 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
           </div>
           <div className="card-body">
             <div className="row g-3">
-              <div className="col-md-8">
-                <label className="form-label">Quantity for All Sizes</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  min="1"
-                  value={allSizesQuantity}
-                  onChange={(e) => setAllSizesQuantity(parseInt(e.target.value) || 1)}
-                  placeholder="Enter quantity"
-                />
-                <small className="text-muted">
-                  This quantity will be applied to all sizes: {commonSizes.join(', ')}
-                </small>
-              </div>
-              <div className="col-md-4">
-                <label className="form-label">&nbsp;</label>
+              <div className="col-12">
+                <label className="form-label">Add All Available Sizes</label>
+                <p className="text-muted mb-3">
+                  This will add all available sizes to the product: {availableSizes.map(s => typeof s === 'string' ? s : s.size).join(', ')}
+                </p>
                 <button
                   type="button"
-                  className="btn btn-primary w-100"
+                  className="btn btn-primary"
                   onClick={applyToAllSizes}
-                  disabled={allSizesQuantity <= 0}
                   style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
                 >
-                  Apply to All Sizes
+                  <Package size={16} className="me-2" />
+                  Add All Sizes
                 </button>
               </div>
             </div>
@@ -86,8 +87,7 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
                       <div className="card">
                         <div className="card-body p-2">
                           <div className="d-flex justify-content-between align-items-center">
-                            <span className="fw-bold">{sizeItem.size}</span>
-                            <span className="badge bg-success">{sizeItem.quantity} units</span>
+                            <span className="fw-bold">{typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}</span>
                           </div>
                         </div>
                       </div>
@@ -122,34 +122,24 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
           <div className="mb-3">
             <label className="form-label">Add Sizes</label>
             <div className="row g-2">
-              <div className="col-md-4">
+              <div className="col-md-8">
                 <select
                   className="form-select"
                   value={newSize.size}
                   onChange={(e) => setNewSize({ ...newSize, size: e.target.value })}
                 >
                   <option value="">Select size</option>
-                  {commonSizes.map(size => (
-                    <option key={size} value={size}>{size}</option>
+                  {availableSizes.map((size, index) => (
+                    <option key={typeof size === 'string' ? size : `size-${index}`} value={typeof size === 'string' ? size : size.size}>{typeof size === 'string' ? size : size.size}</option>
                   ))}
                 </select>
-              </div>
-              <div className="col-md-4">
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Quantity"
-                  min="1"
-                  value={newSize.quantity}
-                  onChange={(e) => setNewSize({ ...newSize, quantity: parseInt(e.target.value) || 1 })}
-                />
               </div>
               <div className="col-md-4">
                 <button
                   type="button"
                   className="btn btn-primary w-100"
                   onClick={addSize}
-                  disabled={!newSize.size || newSize.quantity <= 0}
+                  disabled={!newSize.size}
                   style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
                 >
                   <Plus size={16} />
@@ -167,25 +157,16 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
                     <div className="card">
                       <div className="card-body p-2">
                         <div className="row g-2">
-                          <div className="col-6">
+                          <div className="col-10">
                             <select
                               className="form-select form-select-sm"
                               value={sizeItem.size}
                               onChange={(e) => updateSize(index, 'size', e.target.value)}
                             >
-                              {commonSizes.map(size => (
-                                <option key={size} value={size}>{size}</option>
+                              {availableSizes.map((size, index) => (
+                                <option key={typeof size === 'string' ? size : `size-${index}`} value={typeof size === 'string' ? size : size.size}>{typeof size === 'string' ? size : size.size}</option>
                               ))}
                             </select>
-                          </div>
-                          <div className="col-4">
-                            <input
-                              type="number"
-                              className="form-control form-control-sm"
-                              min="0"
-                              value={sizeItem.quantity}
-                              onChange={(e) => updateSize(index, 'quantity', e.target.value)}
-                            />
                           </div>
                           <div className="col-2">
                             <button
@@ -199,7 +180,7 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
                         </div>
                         <div className="mt-1">
                           <small className="text-muted">
-                            Size: {sizeItem.size} | Quantity: {sizeItem.quantity}
+                            Size: {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
                           </small>
                         </div>
                       </div>

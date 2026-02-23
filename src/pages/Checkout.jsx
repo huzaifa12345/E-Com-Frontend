@@ -44,8 +44,7 @@ const Checkout = () => {
 
   const subtotal = getCartTotal();
   const shipping = subtotal > 50 ? 0 : 9.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping;
 
   const handleScreenshotUpload = async (file) => {
     if (!file) return null;
@@ -98,7 +97,6 @@ const Checkout = () => {
         user_id: 1, // Temporary user ID, should come from auth context
         status: 'pending',
         subtotal,
-        tax_amount: tax,
         shipping_amount: shipping,
         total_amount: total,
         shipping_address: {
@@ -863,10 +861,6 @@ const Checkout = () => {
                     Add {(50 - subtotal).toFixed(2)} more for free shipping!
                   </div>
                 )}
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="lorem_text">Tax</span>
-                  <span className="shirt_text">{tax.toFixed(2)}</span>
-                </div>
                 <hr />
                 <div className="d-flex justify-content-between">
                   <h5 className="shirt_text">Total</h5>

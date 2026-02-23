@@ -266,9 +266,6 @@ const OrderManagement = ({ orders, onOrdersChange }) => {
                           <strong>Subtotal:</strong> {selectedOrder.subtotal || '0.00'}
                         </div>
                         <div className="col-md-6">
-                          <strong>Tax:</strong> {selectedOrder.tax_amount || '0.00'}
-                        </div>
-                        <div className="col-md-6">
                           <strong>Shipping:</strong> {selectedOrder.shipping_amount || '0.00'}
                         </div>
                         <div className="col-md-6">

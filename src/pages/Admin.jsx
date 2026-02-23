@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 
 const Admin = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [products, setProducts] = useState([]);
@@ -70,6 +70,17 @@ const Admin = () => {
   // Fetch data from backend
   useEffect(() => {
     const fetchData = async () => {
+      console.log('Admin - useEffect triggered');
+      console.log('Admin - user object:', user);
+      console.log('Admin - isAuthenticated:', isAuthenticated);
+      
+      // Only fetch data if user is authenticated
+      if (!isAuthenticated || !user) {
+        console.log('Admin: User not authenticated, skipping data fetch');
+        setLoading(false);
+        return;
+      }
+
       try {
         const [productsRes, categoriesRes, ordersRes] = await Promise.all([
           themeApi.getProducts(),
@@ -93,21 +104,26 @@ const Admin = () => {
 
       } catch (error) {
         console.error('Error fetching admin data:', error);
-        toast.error('Failed to load admin data');
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again.');
+          // Let the interceptor handle the redirect
+        } else {
+          toast.error('Failed to load admin data');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [user]); // Add user dependency to wait for AuthContext to load
 
   const sidebarItems = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
     { id: 'products', name: 'Products', icon: Package },
     { id: 'categories', name: 'Categories', icon: Tags },
     { id: 'sizes', name: 'Sizes', icon: TrendingUp },
-    { id: 'stock', name: 'Stock Management', icon: Package },
+    // { id: 'stock', name: 'Stock Management', icon: Package },
     { id: 'orders', name: 'Orders', icon: ShoppingCart },
     { id: 'users', name: 'Users', icon: Users },
     { id: 'settings', name: 'Settings', icon: Settings },
@@ -173,7 +189,8 @@ const Admin = () => {
         category_id: productForm.category_id ? parseInt(productForm.category_id) : null,
         image_url: uploadedImages.length > 0 ? uploadedImages[0] : productForm.image_url,
         images: uploadedImages,
-        is_active: productForm.status === 'active'
+        is_active: productForm.status === 'active',
+        brand: productForm.brand
       };
       
       if (editingProduct) {
@@ -181,9 +198,21 @@ const Admin = () => {
         setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...productData } : p));
         toast.success('Product updated successfully!');
       } else {
-        const newProduct = await themeApi.createProduct(productData);
+        // Use different API endpoints based on product type
+        let newProduct;
+        if (productType === 'single') {
+          // For single size products, include the selected sizes
+          newProduct = await themeApi.createSingleSizeProduct({
+            ...productData,
+            sizes: productForm.sizes || []
+          });
+          toast.success('Single size product created successfully!');
+        } else {
+          // For all size products, don't include sizes (will use all available sizes)
+          newProduct = await themeApi.createAllSizeProduct(productData);
+          toast.success('All size product created successfully!');
+        }
         setProducts([...products, newProduct]);
-        toast.success('Product created successfully!');
       }
       setShowProductForm(false);
       setUploadedImages([]);
@@ -660,7 +689,7 @@ const Admin = () => {
               </div>
             )}
             {activeTab === 'sizes' && <SizeManagement />}
-            {activeTab === 'stock' && <StockManagement />}
+            {/* {activeTab === 'stock' && <StockManagement />} */}
             {activeTab === 'orders' && <OrderManagement orders={orders} onOrdersChange={() => {
   // Refresh orders
   const fetchData = async () => {
@@ -1017,10 +1046,6 @@ const Admin = () => {
                       <tr>
                         <td>Subtotal:</td>
                         <td>{selectedOrder.subtotal}</td>
-                      </tr>
-                      <tr>
-                        <td>Tax:</td>
-                        <td>{selectedOrder.tax_amount}</td>
                       </tr>
                       <tr>
                         <td>Shipping:</td>

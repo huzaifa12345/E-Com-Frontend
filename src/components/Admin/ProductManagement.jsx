@@ -65,16 +65,26 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
         ...productForm,
         price: parseFloat(productForm.price),
         stock_quantity: parseInt(productForm.stock_quantity),
-        category_id: productForm.category_id || null,
-        product_type: productType // Add product type to distinguish single vs all sizes
+        category_id: productForm.category_id || null
       };
 
       if (editingProduct) {
         await themeApi.updateProduct(editingProduct.id, productData);
         toast.success('Product updated successfully!');
       } else {
-        await themeApi.createProduct(productData);
-        toast.success('Product created successfully!');
+        // Use different API endpoints based on product type
+        if (productType === 'single') {
+          // For single size products, include the selected sizes
+          await themeApi.createSingleSizeProduct({
+            ...productData,
+            sizes: productForm.sizes || []
+          });
+          toast.success('Single size product created successfully!');
+        } else {
+          // For all size products, don't include sizes (will use all available sizes)
+          await themeApi.createAllSizeProduct(productData);
+          toast.success('All size product created successfully!');
+        }
       }
 
       setShowProductForm(false);

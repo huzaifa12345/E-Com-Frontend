@@ -55,8 +55,7 @@ const Cart = () => {
 
   const subtotal = getCartTotal();
   const shipping = subtotal > 50 ? 0 : 9.99;
-  const tax = subtotal * 0.08; // 8% tax
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping;
 
   if (items.length === 0) {
     return (
@@ -89,58 +88,7 @@ const Cart = () => {
                   cursor: 'pointer' 
                 }}></i>
               </span>
-              <div className="dropdown">
-                <select 
-                  className="form-control" 
-                  id="categoryDropdown"
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      window.location.href = e.target.value;
-                    }
-                  }}
-                  style={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #ccc', 
-                    borderRadius: '4px', 
-                    padding: window.innerWidth < 768 ? '8px 12px' : '8px 12px',
-                    fontSize: window.innerWidth < 768 ? '14px' : '16px'
-                  }}
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={`/${category.slug}`}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <div className="main">
-                <form>
-                  <div className="input-group">
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      placeholder="Search this blog"
-                      style={{ 
-                        fontSize: window.innerWidth < 768 ? '14px' : '16px',
-                        height: window.innerWidth < 768 ? '44px' : 'auto'
-                      }}
-                    />
-                    <div className="input-group-append">
-                      <button 
-                        className="btn btn-secondary" 
-                        type="button" 
-                        style={{ 
-                          backgroundColor: '#f26522', 
-                          borderColor: '#f26522',
-                          height: window.innerWidth < 768 ? '44px' : 'auto'
-                        }}
-                      >
-                        <i className="fa fa-search" style={{ color: '#fff' }}></i>
-                      </button>
-                    </div>
-                  </div>
-                </form>
               </div>
               <div className="header_box">
                 <div className="login_menu">
@@ -367,85 +315,6 @@ const Cart = () => {
         </div>
       </div>
       
-      {/* Header Section */}
-      <div className="header_section">
-        <div className="container">
-          <div className="containt_main">
-            <span className="toggle_icon" onClick={() => setSideDrawerOpen(true)}>
-              <FaBars size={window.innerWidth < 768 ? 30 : 40} color="#fff" style={{ cursor: 'pointer' }} />
-            </span>
-            <div className="dropdown">
-              <select 
-                className="form-control" 
-                id="categoryDropdown"
-                onChange={(e) => {
-                  if (e.target.value) {
-                    window.location.href = e.target.value;
-                  }
-                }}
-                style={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '4px', 
-                  padding: window.innerWidth < 768 ? '8px 12px' : '8px 12px',
-                  fontSize: window.innerWidth < 768 ? '14px' : '16px'
-                }}
-              >
-                <option value="">All Categories</option>
-                <option value="/fashion">Fashion</option>
-                <option value="/electronic">Electronic</option>
-                <option value="/jewellery">Jewellery</option>
-              </select>
-            </div>
-            <div className="main">
-              <form>
-                <div className="input-group">
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="Search this blog"
-                    style={{ 
-                      fontSize: window.innerWidth < 768 ? '14px' : '16px',
-                      height: window.innerWidth < 768 ? '44px' : 'auto'
-                    }}
-                  />
-                  <div className="input-group-append">
-                    <button 
-                      className="btn btn-secondary" 
-                      type="button" 
-                      style={{ 
-                        backgroundColor: '#f26522', 
-                        borderColor: '#f26522',
-                        height: window.innerWidth < 768 ? '44px' : 'auto'
-                      }}
-                    >
-                      <i className="fa fa-search" style={{ color: '#fff' }}></i>
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-            <div className="header_box">
-              <div className="login_menu">
-                <ul>
-                  <li>
-                    <Link to="/cart">
-                      <i className="fa fa-shopping-cart" aria-hidden="true"></i>
-                      <span className="padding_10">Cart ({items.length})</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/account">
-                      <i className="fa fa-user" aria-hidden="true"></i>
-                      <span className="padding_10">User</span>
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="container layout_padding">
         {/* Page Header */}
@@ -630,10 +499,6 @@ const Cart = () => {
                       Add {(50 - subtotal).toFixed(2)} more for free shipping!
                     </div>
                   )}
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="lorem_text">Tax</span>
-                    <span className="shirt_text">{tax.toFixed(2)}</span>
-                  </div>
                   <hr />
                   <div className="d-flex justify-content-between">
                     <h5 className="shirt_text">Total</h5>

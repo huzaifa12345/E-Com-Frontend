@@ -15,6 +15,14 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      if (config.url.includes('/orders')) {
+        console.log('Orders request - Token being sent:', token.substring(0, 50) + '...');
+        console.log('Orders request - Authorization header:', config.headers.Authorization);
+      }
+    } else {
+      if (config.url.includes('/orders')) {
+        console.log('Orders request - No token found in localStorage');
+      }
     }
     return config;
   },
@@ -27,9 +35,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only logout on explicit authentication errors
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      const errorMessage = error.response?.data?.error || '';
+      if (errorMessage.includes('Invalid token') ||
+          errorMessage.includes('Token expired') ||
+          errorMessage.includes('jwt expired') ||
+          errorMessage.includes('malformed jwt')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -49,10 +65,10 @@ export const themeApi = {
   },
 
   logout: async () => {
-    const response = await api.post('/auth/logout');
+    // Client-side logout - just remove token and user data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    return response.data;
+    return { success: true };
   },
 
   refreshToken: async () => {
@@ -149,6 +165,12 @@ export const themeApi = {
     return response.data;
   },
 
+  // Sizes
+  getSizes: async () => {
+    const response = await api.get('/sizes');
+    return response.data;
+  },
+
   // Orders
   createOrder: async (orderData) => {
     const response = await api.post('/orders/guest', orderData);
@@ -242,6 +264,17 @@ export const themeApi = {
 
   deleteSize: async (id) => {
     const response = await api.delete(`/sizes/${id}`);
+    return response.data;
+  },
+
+  // Product creation methods
+  createSingleSizeProduct: async (productData) => {
+    const response = await api.post('/products/single-size', productData);
+    return response.data;
+  },
+
+  createAllSizeProduct: async (productData) => {
+    const response = await api.post('/products/all-sizes', productData);
     return response.data;
   },
 };
