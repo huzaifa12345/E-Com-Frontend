@@ -9,6 +9,7 @@ import EnhancedSizeManager from '../components/EnhancedSizeManager';
 import SizeManagement from '../components/Admin/SizeManagement';
 import OrderManagement from '../components/Admin/OrderManagement';
 import StockManagement from '../components/Admin/StockManagement';
+import CategoryManagement from '../components/Admin/CategoryManagement';
 import { 
   LayoutDashboard, 
   Package, 
@@ -40,9 +41,7 @@ const Admin = () => {
   
   // Form states for CRUD operations
   const [showProductForm, setShowProductForm] = useState(false);
-  const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [editingCategory, setEditingCategory] = useState(null);
   
   const [productForm, setProductForm] = useState({
     name: '',
@@ -60,12 +59,6 @@ const Admin = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [showProductTypeModal, setShowProductTypeModal] = useState(false);
   const [productType, setProductType] = useState('single');
-  
-  const [categoryForm, setCategoryForm] = useState({
-    name: '',
-    description: '',
-    slug: ''
-  });
 
   // Fetch data from backend
   useEffect(() => {
@@ -219,69 +212,6 @@ const Admin = () => {
     } catch (error) {
       toast.error('Failed to save product: ' + (error.response?.data?.error || error.message));
       console.error('Product save error:', error);
-    }
-  };
-
-  const handleDeleteCategory = async (categoryId) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      try {
-        await themeApi.deleteCategory(categoryId);
-        setCategories(categories.filter(c => c.id !== categoryId));
-        toast.success('Category deleted successfully!');
-      } catch (error) {
-        toast.error('Failed to delete category: ' + (error.response?.data?.error || error.message));
-        console.error('Category delete error:', error);
-      }
-    }
-  };
-
-  const handleAddCategory = () => {
-    setEditingCategory(null);
-    setCategoryForm({
-      name: '',
-      description: '',
-      slug: ''
-    });
-    setShowCategoryForm(true);
-  };
-
-  const handleEditCategory = (category) => {
-    setEditingCategory(category);
-    setCategoryForm({
-      name: category.name || '',
-      description: category.description || '',
-      slug: category.slug || ''
-    });
-    setShowCategoryForm(true);
-  };
-
-  const handleSaveCategory = async () => {
-    try {
-      // Ensure proper data structure
-      const categoryData = {
-        name: categoryForm.name,
-        description: categoryForm.description,
-        slug: categoryForm.slug || (categoryForm.name ? categoryForm.name.toLowerCase().replace(/\s+/g, '-') : undefined)
-      };
-      
-      if (editingCategory) {
-        // Only include slug if it's changed or explicitly provided
-        if (!categoryForm.slug && categoryForm.name === editingCategory.name) {
-          delete categoryData.slug; // Don't update slug if name hasn't changed
-        }
-        
-        await themeApi.updateCategory(editingCategory.id, categoryData);
-        setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, ...categoryData } : c));
-        toast.success('Category updated successfully!');
-      } else {
-        const newCategory = await themeApi.createCategory(categoryData);
-        setCategories([...categories, newCategory]);
-        toast.success('Category created successfully!');
-      }
-      setShowCategoryForm(false);
-    } catch (error) {
-      toast.error('Failed to save category: ' + (error.response?.data?.error || error.message));
-      console.error('Category save error:', error);
     }
   };
 
@@ -631,62 +561,22 @@ const Admin = () => {
             {activeTab === 'dashboard' && renderDashboard()}
             {activeTab === 'products' && renderProducts()}
             {activeTab === 'categories' && (
-              <div className="row">
-                <div className="col-12">
-                  <div className="card">
-                    <div className="card-header d-flex justify-content-between align-items-center" style={{ backgroundColor: '#262626', color: 'white' }}>
-                      <h5 className="mb-0">Categories Management</h5>
-                      <button 
-                        className="btn" 
-                        style={{ backgroundColor: '#f26522', color: 'white' }}
-                        onClick={handleAddCategory}
-                      >
-                        <Plus size={16} className="mr-2" />
-                        Add Category
-                      </button>
-                    </div>
-                    <div className="card-body">
-                      <div className="table-responsive">
-                        <table className="table table-hover">
-                          <thead>
-                            <tr>
-                              <th>Category</th>
-                              <th>Description</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {categories.map((category) => (
-                              <tr key={category.id}>
-                                <td>
-                                  <h5 className="card-title">{category.name}</h5>
-                                  <p className="text-muted">{category.description || 'No description'}</p>
-                                </td>
-                                <td>
-                                  <div className="btn-group">
-                                    <button 
-                                      onClick={() => handleEditCategory(category)}
-                                      className="btn btn-sm btn-outline-primary"
-                                    >
-                                      <Edit size={14} />
-                                    </button>
-                                    <button 
-                                      onClick={() => handleDeleteCategory(category.id)}
-                                      className="btn btn-sm btn-outline-danger"
-                                    >
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <CategoryManagement 
+                categories={categories} 
+                onCategoriesChange={() => {
+                  // Refresh categories
+                  const fetchData = async () => {
+                    try {
+                      const categoriesRes = await themeApi.getCategories();
+                      setCategories(categoriesRes);
+                    } catch (error) {
+                      console.error('Error fetching categories:', error);
+                      toast.error('Failed to fetch categories');
+                    }
+                  };
+                  fetchData();
+                }} 
+              />
             )}
             {activeTab === 'sizes' && <SizeManagement />}
             {/* {activeTab === 'stock' && <StockManagement />} */}
@@ -786,7 +676,7 @@ const Admin = () => {
                       onChange={(e) => setProductForm({ ...productForm, category_id: e.target.value })}
                     >
                       <option value="">Select Category</option>
-                      {categories.map((category) => (
+                      {categories.filter(category => category.level === 3).map((category) => (
                         <option key={category.id} value={category.id}>
                           {category.name}
                         </option>
@@ -886,72 +776,6 @@ const Admin = () => {
           </div>
         </div>
         </>
-      )}
-
-      {/* Category Form Modal */}
-      {showCategoryForm && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header" style={{ backgroundColor: '#262626', color: 'white' }}>
-                <h5 className="modal-title">
-                  {editingCategory ? 'Edit Category' : 'Add New Category'}
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowCategoryForm(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label className="form-label">Category Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={categoryForm.name}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
-                    rows="3"
-                    value={categoryForm.description}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
-                  ></textarea>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Slug</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={categoryForm.slug}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary"
-                  onClick={() => setShowCategoryForm(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="button" 
-                  className="btn"
-                  style={{ backgroundColor: '#f26522', color: 'white' }}
-                  onClick={handleSaveCategory}
-                >
-                  {editingCategory ? 'Update Category' : 'Add Category'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Order Details Modal */}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShoppingCart, 
@@ -14,6 +14,7 @@ import {
   Baby,
   Shirt
 } from 'lucide-react';
+import { themeApi } from '../services/themeApi';
 
 const Shop = () => {
   const [viewMode, setViewMode] = useState('grid');
@@ -21,127 +22,100 @@ const Shop = () => {
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [sortBy, setSortBy] = useState('featured');
   const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy data - Kids Clothing
-  const categories = [
-    { id: 'all', name: 'All Kids Wear', count: 1234 },
-    { id: 'boys', name: 'Boys Wear', count: 245 },
-    { id: 'girls', name: 'Girls Wear', count: 189 },
-    { id: 'baby', name: 'Baby Collection', count: 156 },
-    { id: 'traditional', name: 'Traditional Wear', count: 98 },
-    { id: 'uniform', name: 'School Uniform', count: 234 },
-    { id: 'accessories', name: 'Accessories', count: 167 }
-  ];
+  // Fetch hierarchical categories and products
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch hierarchical categories
+        const categoriesData = await themeApi.getHierarchicalCategories();
+        
+        // Flatten and only show Level 3 categories with full paths
+        const flattenCategories = (categories, level = 1) => {
+          let result = [];
+          categories.forEach(category => {
+            if (category.level === 3) { // Only show Level 3 categories
+              result.push({
+                id: category.id,
+                name: getCategoryFullPath(category, categoriesData),
+                slug: category.slug,
+                count: 0 // Will be updated when products are fetched
+              });
+            }
+            if (category.children && category.children.length > 0) {
+              result = result.concat(flattenCategories(category.children, level + 1));
+            }
+          });
+          return result;
+        };
 
-  const products = [
-    {
-      id: 1,
-      name: "Colorful Rainbow T-Shirt",
-      price: 899,
-      originalPrice: 1299,
-      image: "https://images.unsplash.com/photo-1516159096519-9e86268b8106?w=300",
-      rating: 4.5,
-      reviews: 234,
-      category: "boys",
-      badge: "Best Seller",
-      description: "Vibrant rainbow colored t-shirt for kids",
-      age: "3-8 years"
-    },
-    {
-      id: 2,
-      name: "Princess Dress Pink",
-      price: 1899,
-      originalPrice: 2499,
-      image: "https://images.unsplash.com/photo-1515372033412-d3df4a0f2b9f?w=300",
-      rating: 4.8,
-      reviews: 189,
-      category: "girls",
-      badge: "New",
-      description: "Beautiful princess dress with sparkles",
-      age: "4-10 years"
-    },
-    {
-      id: 3,
-      name: "Boys Casual Shorts Set",
-      price: 1299,
-      originalPrice: 1699,
-      image: "https://images.unsplash.com/photo-1596454974567-190a2cd41c5a?w=300",
-      rating: 4.6,
-      reviews: 156,
-      category: "boys",
-      badge: "Sale",
-      description: "Comfortable shorts with t-shirt combo",
-      age: "2-6 years"
-    },
-    {
-      id: 4,
-      name: "Baby Soft Onesie",
-      price: 499,
-      originalPrice: 799,
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
-      rating: 4.7,
-      reviews: 267,
-      category: "baby",
-      badge: "Popular",
-      description: "Ultra-soft cotton onesie for babies",
-      age: "0-12 months"
-    },
-    {
-      id: 5,
-      name: "Traditional Kurta Pajama",
-      price: 1599,
-      originalPrice: 1999,
-      image: "https://images.unsplash.com/photo-1516159096519-9e86268b8106?w=300",
-      rating: 4.4,
-      reviews: 145,
-      category: "traditional",
-      badge: "Eid Special",
-      description: "Traditional Pakistani kurta pajama",
-      age: "5-12 years"
-    },
-    {
-      id: 6,
-      name: "School Uniform Shirt",
-      price: 899,
-      originalPrice: 1199,
-      image: "https://images.unsplash.com/photo-1596454974567-190a2cd41c5a?w=300",
-      rating: 4.3,
-      reviews: 189,
-      category: "uniform",
-      badge: "School Wear",
-      description: "Comfortable school uniform shirt",
-      age: "6-14 years"
-    },
-    {
-      id: 7,
-      name: "Girls Hair Accessories Set",
-      price: 399,
-      originalPrice: 599,
-      image: "https://images.unsplash.com/photo-1524863479829-916d8e77f114?w=300",
-      rating: 4.6,
-      reviews: 98,
-      category: "accessories",
-      badge: "Cute",
-      description: "Colorful hair clips and bands set",
-      age: "3-10 years"
-    },
-    {
-      id: 8,
-      name: "Sports Jersey Kids",
-      price: 1099,
-      originalPrice: 1499,
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300",
-      rating: 4.5,
-      reviews: 167,
-      category: "boys",
-      badge: "Sports",
-      description: "Active wear sports jersey",
-      age: "4-12 years"
-    }
-  ];
+        const getCategoryFullPath = (category, allCategories, parentPath = '') => {
+          const currentPath = parentPath ? `${parentPath} → ${category.name}` : category.name;
+          
+          let parent = null;
+          for (const cat of allCategories) {
+            if (cat.children && cat.children.some(child => child.id === category.id)) {
+              parent = cat;
+              break;
+            }
+            if (cat.children) {
+              const found = findParentInChildren(cat.children, category.id);
+              if (found) {
+                parent = found;
+                break;
+              }
+            }
+          }
+          
+          if (parent) {
+            return getCategoryFullPath(parent, allCategories, currentPath);
+          }
+          
+          return currentPath;
+        };
+
+        const findParentInChildren = (children, childId) => {
+          for (const child of children) {
+            if (child.id === childId) return null;
+            if (child.children && child.children.some(c => c.id === childId)) {
+              return child;
+            }
+            if (child.children) {
+              const found = findParentInChildren(child.children, childId);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+
+        const activeCategories = [
+          { id: 'all', name: 'All Kids Wear', count: 0 },
+          ...flattenCategories(categoriesData)
+        ];
+        
+        setCategories(activeCategories);
+
+        // Fetch all products
+        const productsData = await themeApi.getProducts();
+        setProducts(productsData.products || []);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching shop data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || product.category_id == selectedCategory;
     const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesPrice && matchesSearch;

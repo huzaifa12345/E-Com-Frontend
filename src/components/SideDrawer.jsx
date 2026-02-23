@@ -11,13 +11,121 @@ import {
   User, 
   Settings,
   Package,
-  LogOut
+  LogOut,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { themeApi } from '../services/themeApi';
 
 const SideDrawer = ({ isOpen, onClose }) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
+  
+  // Fetch hierarchical categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await themeApi.getHierarchicalCategories();
+        // Only show Level 1 (Season) categories initially
+        const level1Categories = categoriesData.filter(cat => cat.level === 1);
+        setCategories(level1Categories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  const toggleCategoryExpansion = async (categoryId) => {
+    const newExpanded = new Set(expandedCategories);
+    
+    if (newExpanded.has(categoryId)) {
+      // Collapse category
+      newExpanded.delete(categoryId);
+    } else {
+      // Expand category - fetch children if not already loaded
+      newExpanded.add(categoryId);
+      
+      // Fetch child categories if not already loaded
+      const category = categories.find(cat => cat.id === categoryId);
+      if (category && (!category.children || category.children.length === 0)) {
+        try {
+          const allCategories = await themeApi.getHierarchicalCategories();
+          const updatedCategories = categories.map(cat => {
+            if (cat.id === categoryId) {
+              const children = allCategories.filter(c => c.parent_id === categoryId);
+              return { ...cat, children };
+            }
+            return cat;
+          });
+          setCategories(updatedCategories);
+        } catch (error) {
+          console.error('Error fetching child categories:', error);
+        }
+      }
+    }
+    
+    setExpandedCategories(newExpanded);
+  };
+
+  const renderCategoryChildren = (children, level = 2) => {
+    if (!children || children.length === 0) return null;
+    
+    return children.map(child => (
+      <li key={child.id} style={{ marginBottom: '2px' }}>
+        <div
+          style={{
+            ...linkStyle,
+            paddingLeft: `${level * 16}px`,
+            fontSize: level === 2 ? '13px' : '12px',
+            cursor: 'pointer'
+          }}
+          onClick={() => {
+            if (child.level < 3) {
+              toggleCategoryExpansion(child.id);
+            } else {
+              // Navigate to Level 3 category
+              navigate(`/${child.slug}`);
+              onClose();
+            }
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#1f2937';
+            e.currentTarget.style.color = '#ffffff';
+            const icon = e.currentTarget.querySelector('svg:last-child');
+            if (icon) icon.style.color = '#f26522';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = '#d1d5db';
+            const icon = e.currentTarget.querySelector('svg:last-child');
+            if (icon) icon.style.color = '#6b7280';
+          }}
+        >
+          {child.level < 3 ? (
+            expandedCategories.has(child.id) ? 
+              <ChevronDown style={{ ...iconStyle, marginRight: '8px', width: '14px', height: '14px' }} /> :
+              <ChevronRight style={{ ...iconStyle, marginRight: '8px', width: '14px', height: '14px' }} />
+          ) : (
+            <div style={{ width: '22px', display: 'inline-block' }} />
+          )}
+          <span style={{ fontWeight: level === 2 ? '500' : '400' }}>{child.name}</span>
+        </div>
+        {expandedCategories.has(child.id) && child.children && (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {renderCategoryChildren(child.children, level + 1)}
+          </ul>
+        )}
+      </li>
+    ));
+  };
   const navigationItems = [
     { id: 1, name: 'Home', icon: Home, path: '/' },
     { id: 2, name: 'All Products', icon: ShoppingBag, path: '/shop' },
@@ -253,6 +361,47 @@ const SideDrawer = ({ isOpen, onClose }) => {
                     <item.icon style={iconStyle} />
                     <span style={{ fontWeight: '500' }}>{item.name}</span>
                   </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Collection Section */}
+          <div style={navSectionStyle}>
+            <h3 style={sectionTitleStyle}>
+              Collection
+            </h3>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {categories.map((category) => (
+                <li key={category.id} style={{ marginBottom: '2px' }}>
+                  <div
+                    style={{
+                      ...linkStyle,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => toggleCategoryExpansion(category.id)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#1f2937';
+                      e.currentTarget.style.color = '#ffffff';
+                      e.currentTarget.querySelector('svg:last-child').style.color = '#f26522';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#d1d5db';
+                      e.currentTarget.querySelector('svg:last-child').style.color = '#6b7280';
+                    }}
+                  >
+                    {expandedCategories.has(category.id) ? 
+                      <ChevronDown style={{ ...iconStyle, marginRight: '8px', width: '14px', height: '14px' }} /> :
+                      <ChevronRight style={{ ...iconStyle, marginRight: '8px', width: '14px', height: '14px' }} />
+                    }
+                    <span style={{ fontWeight: '500' }}>{category.name}</span>
+                  </div>
+                  {expandedCategories.has(category.id) && category.children && (
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                      {renderCategoryChildren(category.children, 2)}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

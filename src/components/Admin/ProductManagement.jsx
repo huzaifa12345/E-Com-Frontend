@@ -23,6 +23,25 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
 
+  // Filter only Level 3 categories (product categories)
+  const getProductCategories = () => {
+    return categories.filter(category => category.level === 3);
+  };
+
+  // Get hierarchical path for a category
+  const getCategoryPath = (category) => {
+    if (!category.parent_id) return category.name;
+    
+    // Find parent categories
+    const parent = categories.find(cat => cat.id === category.parent_id);
+    if (!parent) return category.name;
+    
+    const grandParent = categories.find(cat => cat.id === parent.parent_id);
+    if (!grandParent) return `${parent.name} → ${category.name}`;
+    
+    return `${grandParent.name} → ${parent.name} → ${category.name}`;
+  };
+
   const handleAddProduct = () => {
     setShowProductTypeModal(true);
   };
@@ -200,19 +219,22 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
                     />
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label className="form-label">Category</label>
+                    <label className="form-label">Product Category</label>
                     <select
                       className="form-select"
                       value={productForm.category_id}
                       onChange={(e) => setProductForm({ ...productForm, category_id: e.target.value })}
                     >
-                      <option value="">Select Category</option>
-                      {categories.map(category => (
+                      <option value="">Select Product Category</option>
+                      {getProductCategories().map(category => (
                         <option key={category.id} value={category.id}>
-                          {category.name}
+                          {getCategoryPath(category)}
                         </option>
                       ))}
                     </select>
+                    <small className="text-muted">
+                      Only Level 3 categories (e.g., Winter → Boys → Fashion)
+                    </small>
                   </div>
                   <div className="col-md-6 mb-3">
                     <label className="form-label">Stock Quantity</label>
@@ -287,6 +309,16 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
               <div className="card-body">
                 <h5 className="card-title">{product.name}</h5>
                 <p className="card-text">{product.description}</p>
+                {product.category_id && (
+                  <p className="card-text">
+                    <small className="text-muted">
+                      <strong>Category:</strong> {(() => {
+                        const category = categories.find(cat => cat.id === product.category_id);
+                        return category && category.level === 3 ? getCategoryPath(category) : 'Unknown';
+                      })()}
+                    </small>
+                  </p>
+                )}
                 <p className="card-text"><strong>Price: ${product.price}</strong></p>
                 <p className="card-text"><strong>Stock: {product.stock_quantity}</strong></p>
                 <div className="d-flex justify-content-between">

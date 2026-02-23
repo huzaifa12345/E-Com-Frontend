@@ -2,34 +2,49 @@ import { useState } from 'react';
 import { Edit, Trash2, Plus, Tags } from 'lucide-react';
 import { themeApi } from '../../services/themeApi';
 import toast from 'react-hot-toast';
+import HierarchicalCategorySelector from '../HierarchicalCategorySelector.jsx';
 
 const CategoryManagement = ({ categories, onCategoriesChange }) => {
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [selectedParentCategory, setSelectedParentCategory] = useState(null);
   const [categoryForm, setCategoryForm] = useState({
     name: '',
     description: '',
-    slug: ''
+    slug: '',
+    parent_id: null
   });
 
   const handleAddCategory = () => {
     setEditingCategory(null);
+    setSelectedParentCategory(null);
     setCategoryForm({
       name: '',
       description: '',
-      slug: ''
+      slug: '',
+      parent_id: null
     });
     setShowCategoryForm(true);
   };
 
   const handleEditCategory = (category) => {
     setEditingCategory(category);
+    setSelectedParentCategory(category.parent || null);
     setCategoryForm({
       name: category.name || '',
       description: category.description || '',
-      slug: category.slug || ''
+      slug: category.slug || '',
+      parent_id: category.parent_id || null
     });
     setShowCategoryForm(true);
+  };
+
+  const handleParentCategorySelect = (category) => {
+    setSelectedParentCategory(category);
+    setCategoryForm(prev => ({
+      ...prev,
+      parent_id: category ? category.id : null
+    }));
   };
 
   const handleSaveCategory = async () => {
@@ -66,7 +81,12 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
     <>
     <div className="category-management">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4>Category Management</h4>
+        <div>
+          <h4>Category Management</h4>
+          <small className="text-muted">
+            Create hierarchical categories: Season → Gender → Custom Category
+          </small>
+        </div>
         <button 
           className="btn btn-primary"
           onClick={handleAddCategory}
@@ -75,6 +95,37 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
           <Plus size={16} className="me-2" />
           Add Category
         </button>
+      </div>
+
+      {/* Category Structure Info */}
+      <div className="alert alert-info mb-4">
+        <h6 className="alert-heading">
+          <i className="fas fa-info-circle me-2"></i>
+          Category Structure Guide
+        </h6>
+        <div className="row">
+          <div className="col-md-4">
+            <strong>Level 1 - Seasons:</strong>
+            <ul className="mb-0 small">
+              <li>Winter, Summer</li>
+              <li>No parent category</li>
+            </ul>
+          </div>
+          <div className="col-md-4">
+            <strong>Level 2 - Gender:</strong>
+            <ul className="mb-0 small">
+              <li>Boys, Girls</li>
+              <li>Parent: Season</li>
+            </ul>
+          </div>
+          <div className="col-md-4">
+            <strong>Level 3 - Custom:</strong>
+            <ul className="mb-0 small">
+              <li>Fashion, School, Party Wear</li>
+              <li>Parent: Gender</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Category Form Modal */}
@@ -95,6 +146,14 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
                 ></button>
               </div>
               <div className="modal-body">
+                <div className="mb-4">
+                  <h6 className="mb-3">Parent Category (Optional)</h6>
+                  <HierarchicalCategorySelector 
+                    onCategorySelect={handleParentCategorySelect}
+                    selectedCategory={selectedParentCategory}
+                  />
+                </div>
+                
                 <div className="mb-3">
                   <label className="form-label">Category Name</label>
                   <input
@@ -102,6 +161,10 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
                     className="form-control"
                     value={categoryForm.name}
                     onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                    placeholder={selectedParentCategory ? 
+                      `Enter ${selectedParentCategory.level === 1 ? 'Gender' : selectedParentCategory.level === 2 ? 'Custom' : 'Season'} category name` : 
+                      'Enter season name'
+                    }
                   />
                 </div>
                 <div className="mb-3">
@@ -111,6 +174,7 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
                     rows="3"
                     value={categoryForm.description}
                     onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                    placeholder="Describe this category..."
                   />
                 </div>
                 <div className="mb-3">
@@ -120,9 +184,27 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
                     className="form-control"
                     value={categoryForm.slug}
                     onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
-                    placeholder="category-name"
+                    placeholder={selectedParentCategory ? 
+                      `${selectedParentCategory.slug}-category-name` : 
+                      'category-name'
+                    }
                   />
+                  <small className="text-muted">
+                    {selectedParentCategory ? 
+                      `Will be: ${selectedParentCategory.slug}-${categoryForm.name.toLowerCase().replace(/\s+/g, '-') || 'category-name'}` : 
+                      'Leave empty to auto-generate from name'
+                    }
+                  </small>
                 </div>
+                
+                {selectedParentCategory && (
+                  <div className="alert alert-info">
+                    <i className="fas fa-info-circle me-2"></i>
+                    <strong>Category Level:</strong> {selectedParentCategory.level + 1}
+                    <br />
+                    <strong>Parent:</strong> {selectedParentCategory.name}
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button 
@@ -148,36 +230,52 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
       )}
 
       {/* Categories List */}
-      <div className="row">
-        {categories.map(category => (
-          <div key={category.id} className="col-md-4 mb-4">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title d-flex align-items-center">
-                  <Tags size={16} className="me-2" style={{ color: '#f26522' }} />
-                  {category.name}
-                </h5>
-                <p className="card-text">{category.description}</p>
-                <p className="card-text"><small className="text-muted">Slug: {category.slug}</small></p>
-                <div className="d-flex justify-content-between">
-                  <button 
-                    className="btn btn-sm btn-primary"
-                    onClick={() => handleEditCategory(category)}
-                    style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
-                  >
-                    <Edit size={14} />
-                  </button>
-                  <button 
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDeleteCategory(category.id)}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+      <div className="categories-list">
+        <div className="row">
+          {categories.map(category => (
+            <div key={category.id} className="col-md-4 mb-4">
+              <div className={`card ${category.parent_id ? 'border-secondary' : 'border-primary'}`}>
+                <div className="card-body">
+                  <h5 className="card-title d-flex align-items-center">
+                    <Tags size={16} className="me-2" style={{ 
+                      color: category.parent_id ? '#6c757d' : '#f26522' 
+                    }} />
+                    {category.name}
+                    {category.parent_id && (
+                      <span className="badge bg-secondary ms-2">L{category.level}</span>
+                    )}
+                  </h5>
+                  <p className="card-text">{category.description}</p>
+                  <p className="card-text">
+                    <small className="text-muted">
+                      <strong>Slug:</strong> <code>{category.slug}</code>
+                      {category.parent_id && (
+                        <span className="ms-2">
+                          <strong>Parent ID:</strong> {category.parent_id}
+                        </span>
+                      )}
+                    </small>
+                  </p>
+                  <div className="d-flex justify-content-between">
+                    <button 
+                      className="btn btn-sm btn-primary"
+                      onClick={() => handleEditCategory(category)}
+                      style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button 
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDeleteCategory(category.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
     </>

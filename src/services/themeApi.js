@@ -145,6 +145,17 @@ export const themeApi = {
     return response.data;
   },
 
+  getHierarchicalCategories: async () => {
+    const response = await api.get('/categories/hierarchical');
+    return response.data;
+  },
+
+  getCategoriesByLevel: async (level, parentId = null) => {
+    const params = parentId ? { parent_id: parentId } : {};
+    const response = await api.get(`/categories/level/${level}`, { params });
+    return response.data;
+  },
+
   getCategoryBySlug: async (slug) => {
     const response = await api.get(`/categories/slug/${slug}`);
     return response.data;

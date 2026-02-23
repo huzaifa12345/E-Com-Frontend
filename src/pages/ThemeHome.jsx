@@ -210,7 +210,7 @@ const ThemeHome = () => {
               <div className="col-12">
                 <div className="category-menu">
                   <Link to="/" className="category-link active">Home</Link>
-                  {categories.map((category) => (
+                  {categories.filter(category => category.level === 3).map((category) => (
                     <Link 
                       key={category.id}
                       to={`/${category.slug}`}
@@ -310,7 +310,7 @@ const ThemeHome = () => {
       {/* Products by Category Section */}
       <section className="products-section py-5">
         <div className="container">
-          {categories.map((category) => (
+          {categories.filter(category => category.level === 3).map((category) => (
             <div key={category.id} className="category-section mb-5">
               <div className="category-header d-flex justify-content-between align-items-center mb-4">
                 <h2 className="section-title">{category.name}</h2>

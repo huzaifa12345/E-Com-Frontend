@@ -113,13 +113,13 @@ const Register = () => {
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-xl mb-6 overflow-hidden">
+          {/* <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-xl mb-6 overflow-hidden">
             <img 
               src="/src/assets/images/kidcolor(1).png" 
               alt="Kids Colours Logo" 
               className="w-full h-full object-cover rounded-full"
             />
-          </div>
+          </div> */}
           <h2 className="text-4xl font-bold text-gray-900 mb-2">
             Create your account
           </h2>
