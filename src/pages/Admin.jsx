@@ -10,6 +10,7 @@ import SizeManagement from '../components/Admin/SizeManagement';
 import OrderManagement from '../components/Admin/OrderManagement';
 import StockManagement from '../components/Admin/StockManagement';
 import CategoryManagement from '../components/Admin/CategoryManagement';
+import WebsiteSettings from '../components/Admin/WebsiteSettings';
 import { 
   LayoutDashboard, 
   Package, 
@@ -119,6 +120,7 @@ const Admin = () => {
     // { id: 'stock', name: 'Stock Management', icon: Package },
     { id: 'orders', name: 'Orders', icon: ShoppingCart },
     { id: 'users', name: 'Users', icon: Users },
+    { id: 'website-settings', name: 'Website Settings', icon: Settings },
     { id: 'settings', name: 'Settings', icon: Settings },
   ];
 
@@ -593,6 +595,7 @@ const Admin = () => {
   };
   fetchData();
 }} />}
+            {activeTab === 'website-settings' && <WebsiteSettings />}
             {activeTab === 'users' && (
               <div className="text-center py-5">
                 <Users size={48} className="mb-3" style={{ color: '#f26522' }} />

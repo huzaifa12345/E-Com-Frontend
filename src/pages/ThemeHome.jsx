@@ -2,23 +2,24 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaBars, FaSearch, FaShoppingCart, FaUser, FaHeart, FaStar, FaTruck, FaShieldAlt, FaUndo, FaHeadset, FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 import { themeApi } from '../services/themeApi';
+import websiteSettingsApi from '../services/websiteSettingsApi';
 import toast from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
 import SideDrawer from '../components/SideDrawer';
 import '../assets/css/mobile-responsive.css';
 
 const ThemeHome = () => {
+
+   const navigate = useNavigate();
+  const { addToCart, getCartItemsCount } = useCart();
   const [categories, setCategories] = useState([]);
   const [productsByCategory, setProductsByCategory] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const navigate = useNavigate();
-  const { addToCart, getCartItemsCount } = useCart();
-
-  // Hero slider images
-  const heroSlides = [
+  const [websiteLogo, setWebsiteLogo] = useState('/src/assets/images/kidcolor(1).png');
+  const [heroSlides, setHeroSlides] = useState([
     {
       image: "/src/assets/images/kids.webp",
       title: "Welcome to Kids Colours",
@@ -39,15 +40,78 @@ const ThemeHome = () => {
       title: "Comfortable Kids Shoes",
       description: "Stylish and comfortable footwear for active kids"
     }
-  ];
+  ]);
 
   // Auto-advance slider
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setCurrentSlide((prev) => {
+        const newSlide = (prev + 1) % heroSlides.length;
+        console.log('Auto-advancing to slide:', newSlide, 'Total slides:', heroSlides.length);
+        return newSlide;
+      });
     }, 5000); // Change slide every 5 seconds
 
     return () => clearInterval(interval);
+  }, [heroSlides.length]); // Add dependency on heroSlides.length
+
+  // Fetch website settings
+  useEffect(() => {
+    const fetchWebsiteSettings = async () => {
+      try {
+        console.log('=== FETCHING WEBSITE SETTINGS ===');
+        const response = await websiteSettingsApi.getWebsiteSettings();
+        console.log('Website settings response:', response);
+        
+        if (response.success) {
+          const settings = response.data;
+          console.log('Settings data received:', settings);
+          
+          // Update logo if available
+          if (settings.logo && settings.logo.length > 0) {
+            const logoSetting = settings.logo.find(s => s.key === 'website_logo');
+            if (logoSetting && logoSetting.value) {
+              setWebsiteLogo(logoSetting.value);
+              console.log('Updated website logo:', logoSetting.value);
+            }
+          }
+
+          // Update hero slides from settings
+          if (settings.hero && Array.isArray(settings.hero)) {
+            const dynamicSlides = [];
+            
+            // Get all hero slide settings
+            for (let i = 1; i <= 4; i++) {
+              const imageSetting = settings.hero.find(s => s.key === `hero_slide_${i}`);
+              const titleSetting = settings.hero.find(s => s.key === `hero_title_${i}`);
+              const descSetting = settings.hero.find(s => s.key === `hero_description_${i}`);
+              
+              if (imageSetting || titleSetting || descSetting) {
+                dynamicSlides.push({
+                  image: imageSetting?.value || `/src/assets/images/kids.webp`,
+                  title: titleSetting?.value || `Slide ${i}`,
+                  description: descSetting?.value || `Description for slide ${i}`
+                });
+              }
+            }
+            
+            if (dynamicSlides.length > 0) {
+              setHeroSlides(dynamicSlides);
+              console.log('Updated hero slides:', dynamicSlides);
+              console.log('Current heroSlides state will be:', dynamicSlides);
+            } else {
+              console.log('No dynamic slides found, keeping defaults');
+            }
+          }
+        } else {
+          console.log('No website settings found, using defaults');
+        }
+      } catch (error) {
+        console.error('Error fetching website settings:', error);
+      }
+    };
+
+    fetchWebsiteSettings();
   }, []);
 
   // Fetch categories and products from backend
@@ -173,7 +237,7 @@ const ThemeHome = () => {
               <div className="col-md-3">
                 <div className="logo">
                   <Link to="/">
-                    <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
                   </Link>
                 </div>
               </div>
@@ -270,6 +334,10 @@ const ThemeHome = () => {
                       <div className="decoration-circle decoration-2"></div>
                       <div className="decoration-circle decoration-3"></div>
                     </div>
+                    {/* Debug info
+                    <div className="mt-2 text-white small">
+                      Slide {currentSlide + 1}: {heroSlides[currentSlide].image}
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -455,7 +523,7 @@ const ThemeHome = () => {
           <div className="row">
             <div className="col-lg-4 col-md-6 mb-4">
               <div className="footer-about">
-                <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
                 <p>Your trusted online shopping destination for quality products and exceptional service.</p>
                 <div className="social-links">
                   <a href="#" className="social-icon"><FaFacebook /></a>
