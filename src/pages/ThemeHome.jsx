@@ -5,6 +5,7 @@ import { themeApi } from '../services/themeApi';
 import websiteSettingsApi from '../services/websiteSettingsApi';
 import toast from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import SideDrawer from '../components/SideDrawer';
 import '../assets/css/mobile-responsive.css';
 
@@ -12,6 +13,7 @@ const ThemeHome = () => {
 
    const navigate = useNavigate();
   const { addToCart, getCartItemsCount } = useCart();
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [productsByCategory, setProductsByCategory] = useState({});
   const [loading, setLoading] = useState(true);
@@ -140,9 +142,9 @@ const ThemeHome = () => {
         const productsData = {};
         for (const category of activeCategories) {
           try {
-            console.log(`Fetching products for category ${category.name} (${category.slug})...`);
-            const categoryProducts = await themeApi.getProductsByCategory(category.slug);
-            console.log(`Products for category ${category.name} (${category.slug}):`, categoryProducts);
+            console.log(`Fetching products for category ${category.name} (ID: ${category.id})...`);
+            const categoryProducts = await themeApi.getProductsByCategory(category.id);
+            console.log(`Products for category ${category.name} (ID: ${category.id}):`, categoryProducts);
             
             // Handle the response structure properly
             const products = categoryProducts.products || categoryProducts || [];
@@ -174,8 +176,8 @@ const ThemeHome = () => {
     toast.success(`${product.name} added to cart!`);
   };
 
-  const handleCategoryClick = (categorySlug) => {
-    navigate(`/${categorySlug}`);
+  const handleCategoryClick = (categoryId) => {
+    navigate(`/category/${categoryId}`);
   };
 
   const handleProductClick = (productId) => {
@@ -218,8 +220,13 @@ const ThemeHome = () => {
               </div>
               <div className="col-md-6 text-end">
                 <div className="social-links">
-                  <a href="#" className="text-white me-3"><FaUser /></a>
-                  <a href="#" className="text-white me-3"><FaHeart /></a>
+                  <Link to={user ? "/profile" : "/login"} className="text-white me-3">
+                    <FaUser />
+                    <span className="ms-1">
+                      Hi, {user ? user.first_name || user.name || 'User' : 'Guest'}
+                    </span>
+                  </Link>
+                  {/* <a href="#" className="text-white me-3"><FaHeart /></a> */}
                   <Link to="/cart" className="text-white position-relative">
                     <FaShoppingCart />
                     {getCartItemsCount() > 0 && (
@@ -277,11 +284,11 @@ const ThemeHome = () => {
                   {categories.filter(category => category.level === 3).map((category) => (
                     <Link 
                       key={category.id}
-                      to={`/${category.slug}`}
+                      to={`/category/${category.id}`}
                       className="category-link"
                       onClick={(e) => {
                         e.preventDefault();
-                        handleCategoryClick(category.slug);
+                        handleCategoryClick(category.id);
                       }}
                     >
                       {category.name}
@@ -309,12 +316,12 @@ const ThemeHome = () => {
                       {heroSlides[currentSlide].description}
                     </p>
                     <div className="hero-buttons">
-                      <Link to="/products" className="btn btn-primary btn-lg me-3">
+                      <Link to="/all-products" className="btn btn-primary btn-lg me-3">
                         Buy Now
                       </Link>
                       {' '}
-                      <Link to="/categories" className="btn btn-outline-light btn-lg">
-                        View Categories
+                      <Link to="/all-products" className="btn btn-outline-light btn-lg">
+                        View Products
                       </Link>
                     </div>
                   </div>
@@ -383,11 +390,11 @@ const ThemeHome = () => {
               <div className="category-header d-flex justify-content-between align-items-center mb-4">
                 <h2 className="section-title">{category.name}</h2>
                 <Link 
-                  to={`/${category.slug}`}
+                  to={`/category/${category.id}`}
                   className="btn btn-outline-primary"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleCategoryClick(category.slug);
+                    handleCategoryClick(category.id);
                   }}
                 >
                   View All
@@ -453,7 +460,7 @@ const ThemeHome = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="newsletter-section py-5">
+      {/* <section className="newsletter-section py-5">
         <div className="container">
           <div className="newsletter-content text-center">
             <h2 className="mb-4">Subscribe to Our Newsletter</h2>
@@ -471,7 +478,7 @@ const ThemeHome = () => {
             </form>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Features Section */}
       <section className="features-section py-5">
@@ -525,12 +532,12 @@ const ThemeHome = () => {
               <div className="footer-about">
                 <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
                 <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-                <div className="social-links">
+                {/* <div className="social-links">
                   <a href="#" className="social-icon"><FaFacebook /></a>
                   <a href="#" className="social-icon"><FaTwitter /></a>
                   <a href="#" className="social-icon"><FaInstagram /></a>
                   <a href="#" className="social-icon"><FaLinkedin /></a>
-                </div>
+                </div> */}
               </div>
             </div>
             <div className="col-lg-2 col-md-6 mb-4">
@@ -538,13 +545,13 @@ const ThemeHome = () => {
                 <h5>Quick Links</h5>
                 <ul>
                   <li><Link to="/">Home</Link></li>
-                  <li><Link to="/products">Products</Link></li>
-                  <li><Link to="/categories">Categories</Link></li>
-                  <li><Link to="/about">About Us</Link></li>
+                  <li><Link to="/all-products">Products</Link></li>
+                  {/* <li><Link to="/categories">Categories</Link></li> */}
+                  <li><Link to="/cart">Cart</Link></li>
                 </ul>
               </div>
             </div>
-            <div className="col-lg-3 col-md-6 mb-4">
+            {/* <div className="col-lg-3 col-md-6 mb-4">
               <div className="footer-links">
                 <h5>Customer Service</h5>
                 <ul>
@@ -554,7 +561,7 @@ const ThemeHome = () => {
                   <li><Link to="/faq">FAQ</Link></li>
                 </ul>
               </div>
-            </div>
+            </div> */}
             <div className="col-lg-3 col-md-6 mb-4">
               <div className="footer-contact">
                 <h5>Contact Info</h5>
@@ -567,7 +574,7 @@ const ThemeHome = () => {
           <div className="footer-bottom">
             <div className="row">
               <div className="col-12 text-center">
-                <p>&copy; 2024 Kids Colours. All rights reserved.</p>
+                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
               </div>
             </div>
           </div>
@@ -650,7 +657,7 @@ const ThemeHome = () => {
         }
 
         .modern-header {
-          background: rgba(0, 0, 0, 0.8);
+          background: #000;
           backdrop-filter: blur(10px);
           position: sticky;
           top: 0;
@@ -659,7 +666,7 @@ const ThemeHome = () => {
         }
 
         .top-bar {
-          padding: 10px 0;
+          padding: 6px 0;
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 

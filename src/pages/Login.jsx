@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLogo } from '../context/LogoContext';
 import toast from 'react-hot-toast';
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaGoogle, FaFacebook } from 'react-icons/fa';
 
 const Login = () => {
+  const { websiteLogo } = useLogo();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -41,7 +43,7 @@ const Login = () => {
       if (response.user?.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/home');
+        navigate('/');
       }
       
     } catch (error) {
@@ -59,12 +61,13 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg mb-6 overflow-hidden">
-            {/* <img 
-              src="/src/assets/images/kidcolor(1).png" 
+          <div className="inline-flex items-center justify-center">
+            <img 
+            style={{ maxWidth: '250px', minHeight: '130px' , marginTop: '30px'}}
+              src={websiteLogo} 
               alt="Kids Colours Logo" 
-              className="w-full h-full object-cover rounded-full"
-            /> */}
+              className=""
+            />
           </div>
           {/* <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back
@@ -180,13 +183,13 @@ const Login = () => {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
+            {/* <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-white text-gray-500">Or continue with</span>
-            </div>
+            </div> */}
           </div>
 
-          {/* Social Login */}
-          <div className="grid grid-cols-2 gap-3">
+          
+          {/* <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => handleSocialLogin('Google')}
@@ -204,7 +207,7 @@ const Login = () => {
               <FaFacebook className="h-5 w-5 text-blue-600 mr-2" />
               Facebook
             </button>
-          </div>
+          </div> */}
 
           {/* Sign Up Link */}
           <p className="mt-8 text-center text-sm text-gray-600">
@@ -216,7 +219,7 @@ const Login = () => {
         </div>
 
         {/* Demo Account Info */}
-        <div className="mt-6 bg-gray-50 rounded-lg p-4">
+        {/* <div className="mt-6 bg-gray-50 rounded-lg p-4">
           <p className="text-center text-sm text-gray-600 mb-2">
             <strong>Demo Accounts:</strong>
           </p>
@@ -224,7 +227,7 @@ const Login = () => {
             <p><strong>Admin:</strong> admin@kidscolours.com / admin123</p>
             <p><strong>Customer:</strong> customer@kidscolours.com / customer123</p>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

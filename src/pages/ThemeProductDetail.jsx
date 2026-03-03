@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaBars , FaStar} from 'react-icons/fa';
+import { FaBars , FaStar, FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch} from 'react-icons/fa';
 import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-react';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
 import SideDrawer from '../components/SideDrawer';
 import { useCart } from '../context/CartContext';
+import { useLogo } from '../context/LogoContext';
 
 const ThemeProductDetail = () => {
   const { id } = useParams();
-  const { addToCart } = useCart();
+  const { addToCart, getCartItemsCount } = useCart();
+  const { websiteLogo } = useLogo();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -139,7 +141,7 @@ const ThemeProductDetail = () => {
       setProduct(productData);
       
       // Fetch related products from same category (max 3)
-      const relatedData = await themeApi.getProductsByCategory(productData.category_relation?.slug || 'fashion');
+      const relatedData = await themeApi.getProductsByCategory(productData.category_id || productData.category?.id || '1');
       console.log('Related data from API:', relatedData);
       console.log('Product sizes:', productData.sizes);
       
@@ -218,24 +220,77 @@ const ThemeProductDetail = () => {
 
   return (
     <div className="min-vh-100 bg-light">
-      {/* Header Section */}
-      <div className="container">
-        <div className="header_section_top">
-          <div className="row">
-            <div className="col-sm-12">
-              <div className="custom_menu">
-                <ul>
-                  <li><Link to="/">Home</Link></li>
-                  <li><Link to="/shop">Shop</Link></li>
-                  <li><Link to="/cart">Cart</Link></li>
-                  <li><Link to="/checkout">Checkout</Link></li>
-                  <li><Link to="/admin">Admin</Link></li>
-                </ul>
+      {/* Modern Header */}
+      <header className="modern-header">
+        <div className="container">
+          {/* Top Bar */}
+          <div className="top-bar">
+            <div className="row align-items-center">
+              <div className="col-md-6">
+                <div className="contact-info">
+                  <span><FaHeadset /> +1 800-123-4567</span>
+                  {' '}
+                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
+                </div>
+              </div>
+              <div className="col-md-6 text-end">
+                <div className="social-links">
+                  <Link to="/cart" className="text-white position-relative">
+                    <FaShoppingCart />
+                    {getCartItemsCount() > 0 && (
+                      <span className="cart-badge">{getCartItemsCount()}</span>
+                    )}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Main Navigation */}
+          <nav className="main-nav">
+            <div className="row align-items-center">
+              <div className="col-md-3">
+                <div className="logo">
+                  <Link to="/">
+                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                  </Link>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="search-bar">
+                  <form className="d-flex">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search products..."
+                    />
+                    <button type="submit" className="btn btn-search">
+                      <FaSearch />
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div className="col-md-3 text-end">
+                <button
+                  className="btn btn-outline-light menu-toggle"
+                  onClick={() => setSideDrawerOpen(true)}
+                >
+                  <FaBars />
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          {/* Custom Menu */}
+          <div className="custom_menu">
+            <ul>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/cart">Cart</Link></li>
+              <li><Link to="/checkout">Checkout</Link></li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* <div className="logo_section">
         <div className="container">
@@ -243,7 +298,7 @@ const ThemeProductDetail = () => {
             <div className="col-sm-12">
               <div className="logo">
                 <Link to="/">
-                  <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours Logo" style={{ width: '120px', height: 'auto' }} />
+                  <img src={websiteLogo} alt="Kids Colours Logo" style={{ width: '120px', height: 'auto' }} />
                 </Link>
                 <button 
                   className="ml-3 btn btn-outline-secondary"
@@ -329,6 +384,13 @@ const ThemeProductDetail = () => {
                     {product.price}
                   </span>
                 </div>
+
+                {product.sku && (
+                  <div className="sku_section mb-4">
+                    <h4 style={{ color: '#262626', fontSize: '14px', fontWeight: 'normal' }}>SKU</h4>
+                    <p style={{ color: '#666', fontFamily: 'monospace' }}>{product.sku}</p>
+                  </div>
+                )}
 
                 <div className="description_section mb-4">
                   <h4 style={{ color: '#262626' }}>Description</h4>
@@ -639,7 +701,7 @@ const ThemeProductDetail = () => {
                 </div>
               )}
               
-              {/* Debug Info - Remove in production */}
+              {/* Debug Info - Remove in production
               {!reviewsLoading && process.env.NODE_ENV === 'development' && (
                 <div className="alert alert-info mb-3">
                   <small>
@@ -649,7 +711,7 @@ const ThemeProductDetail = () => {
                     )}
                   </small>
                 </div>
-              )}
+              )} */}
               
               {!reviewsLoading && Array.isArray(reviews) && reviews.map((review, index) => (
                 <div key={review.id} className="review-card mb-4">
@@ -774,7 +836,7 @@ const ThemeProductDetail = () => {
                 Related {product?.category_relation?.name || 'Products'}
               </h2>
               <Link 
-                to={`/category/${product?.category_relation?.slug || 'fashion'}`}
+                to={`/category/${product?.category_id || product?.category?.id || '1'}`}
                 className="btn btn-outline-primary"
               >
                 View All
@@ -848,167 +910,43 @@ const ThemeProductDetail = () => {
       </section>
 
       {/* Footer Section */}
-      <div className="footer_section layout_padding" style={{ backgroundColor: '#1a1a1a', padding: '60px 0 20px' }}>
+      <footer className="footer-section">
         <div className="container">
-          {/* Main Footer Content */}
           <div className="row">
-            <div className="col-12 text-center mb-5">
-              {/* Kids Colours Logo */}
-              <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" style={{ width: '200px', height: 'auto', marginBottom: '30px' }} />
-              
-              {/* Newsletter Section */}
-              <div className="newsletter_section mb-4">
-                <div className="row justify-content-center">
-                  <div className="col-md-8 col-lg-6">
-                    <div className="d-flex align-items-center justify-content-center">
-                      <input 
-                        type="email" 
-                        placeholder="Your Email" 
-                        className="form-control" 
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          borderBottom: '2px solid #fff',
-                          color: '#fff',
-                          borderRadius: '0',
-                          padding: '10px 15px',
-                          fontSize: '16px',
-                          outline: 'none'
-                        }}
-                      />
-                      <button 
-                        className="btn ml-3" 
-                        style={{
-                          backgroundColor: '#f26522',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '10px 25px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        Subscribe
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            <div className="col-lg-4 col-md-6 mb-4">
+              <div className="footer-about">
+                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
               </div>
-
-              {/* Navigation Links */}
-              <div className="footer_links mb-4">
-                <div className="d-flex justify-content-center flex-wrap">
-                  <a href="#" className="footer_link">Best Sellers</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Gift Ideas</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">New Releases</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Today's Deals</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Customer Service</a>
-                </div>
+            </div>
+            <div className="col-lg-2 col-md-6 mb-4">
+              <div className="footer-links">
+                <h5>Quick Links</h5>
+                <ul>
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/cart">Cart</a></li>
+                  <li><a href="/checkout">Checkout</a></li>
+                </ul>
               </div>
-
-              {/* Helpline Number */}
-              <div className="helpline_section mb-4">
-                <p style={{ 
-                  color: '#fff', 
-                  fontSize: '16px', 
-                  fontWeight: '500',
-                  margin: '0'
-                }}>
-                  Help Line Number : +1 1800 1200 1200
-                </p>
+            </div>
+            <div className="col-lg-3 col-md-6 mb-4">
+              <div className="footer-contact">
+                <h5>Contact Info</h5>
+                <p><FaHeadset /> +1 800-123-4567</p>
+                <p><FaEnvelope /> info@kidscolours.com</p>
+                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
               </div>
             </div>
           </div>
-
-          {/* Copyright Bar */}
-          <div className="row">
-            <div className="col-12">
-              <div className="copyright_bar text-center pt-4" style={{ borderTop: '1px solid #333' }}>
-                <p style={{ 
-                  color: '#fff', 
-                  fontSize: '14px', 
-                  margin: '0',
-                  opacity: '0.8'
-                }}>
-                  © 2026 All Rights Reserved. Design by Kids Colours
-                </p>
+          <div className="footer-bottom">
+            <div className="row">
+              <div className="col-12 text-center">
+                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Custom Styles */}
-        <style jsx>{`
-          .footer_link {
-            color: #fff !important;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            transition: color 0.3s ease;
-          }
-          
-          .footer_link:hover {
-            color: #f26522 !important;
-          }
-          
-          .link_separator {
-            color: #666;
-            font-size: 16px;
-          }
-          
-          .form-control::placeholder {
-            color: #999;
-          }
-          
-          .form-control:focus {
-            box-shadow: none;
-            border-bottom-color: #f26522;
-          }
-          
-          @media (max-width: 767px) {
-            .footer_section {
-              padding: 40px 0 20px !important;
-            }
-            
-            .newsletter_section .d-flex {
-              flex-direction: column;
-              gap: 15px;
-            }
-            
-            .newsletter_section .form-control {
-              width: 100% !important;
-              text-align: center;
-            }
-            
-            .newsletter_section .btn {
-              width: 100%;
-              margin-left: 0 !important;
-            }
-            
-            .footer_links {
-              display: flex !important;
-              flex-direction: column !important;
-              align-items: center !important;
-              gap: 10px;
-            }
-            
-            .link_separator {
-              display: none;
-            }
-            
-            .footer_link {
-              font-size: 13px;
-            }
-          }
-        `}</style>
-      </div>
+      </footer>
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
@@ -1371,6 +1309,150 @@ const ThemeProductDetail = () => {
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        /* Modern Header Styles */
+        .modern-header {
+          background: #000;
+          backdrop-filter: blur(10px);
+          border-radius: 0 0 30px 30px;
+        }
+        
+        .top-bar {
+          background: #000;
+          padding: 2px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .contact-info span {
+          color: #fff;
+          font-size: 12px;
+        }
+          .footer-bottom span {
+          color: #f26522;
+        }
+        
+        .cart-badge {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #f26522;
+          color: white;
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+          font-size: 11px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .main-nav {
+          padding: 15px 0;
+        }
+        
+        .search-bar {
+          position: relative;
+        }
+        
+        .search-bar .form-control {
+          border-radius: 25px;
+          padding: 10px 20px;
+          border: none;
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+          backdrop-filter: blur(5px);
+          height: 44px;
+        }
+        
+        .search-bar .form-control::placeholder {
+          color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .search-bar .form-control:focus {
+          background: rgba(255, 255, 255, 0.2);
+          box-shadow: 0 0 10px rgba(242, 101, 34, 0.3);
+          color: #fff;
+        }
+        
+        .btn-search {
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          background: #f26522;
+          border: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+        
+        .menu-toggle {
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-size: 14px;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: #fff;
+        }
+        
+        .menu-toggle:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: #f26522;
+        }
+        
+        .custom_menu {
+          background: rgba(242, 101, 34, 0.9);
+          padding: 12px 0;
+          border-radius: 20px;
+          margin-top: 15px;
+        }
+        
+        .custom_menu ul {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 30px;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        
+        .custom_menu ul li a {
+          color: #fff;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.3s;
+          padding: 5px 0;
+          position: relative;
+          font-size: 14px;
+        }
+        
+        .custom_menu ul li a::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: #fff;
+          transition: width 0.3s;
+        }
+        
+        .custom_menu ul li a:hover::after,
+        .custom_menu ul li a.active::after {
+          width: 100%;
+        }
+        
+        @media (max-width: 767px) {
+          .top-bar {
+            display: none;
+          }
         }
       `}</style>
     </div>

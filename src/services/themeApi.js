@@ -88,8 +88,20 @@ export const themeApi = {
     return response.data;
   },
 
-  getProductsByCategory: async (category) => {
-    const response = await api.get(`/products/category/${category}`);
+  getProductsByCategory: async (category, params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    // Add pagination parameters
+    if (params.page) queryParams.append('page', params.page);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    
+    // Add filter parameters
+    if (params.minPrice) queryParams.append('minPrice', params.minPrice);
+    if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice);
+    if (params.search) queryParams.append('search', params.search);
+    
+    const response = await api.get(`/products/category/${category}?${queryParams.toString()}`);
     return response.data;
   },
 
@@ -158,6 +170,11 @@ export const themeApi = {
 
   getCategoryBySlug: async (slug) => {
     const response = await api.get(`/categories/slug/${slug}`);
+    return response.data;
+  },
+
+  getCategoryById: async (id) => {
+    const response = await api.get(`/categories/${id}`);
     return response.data;
   },
 
@@ -286,6 +303,12 @@ export const themeApi = {
 
   createAllSizeProduct: async (productData) => {
     const response = await api.post('/products/all-sizes', productData);
+    return response.data;
+  },
+
+  // SKU Generation
+  getNextSKU: async () => {
+    const response = await api.get('/products/next-sku');
     return response.data;
   },
 };

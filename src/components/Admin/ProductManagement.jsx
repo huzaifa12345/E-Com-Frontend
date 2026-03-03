@@ -308,6 +308,13 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
               )}
               <div className="card-body">
                 <h5 className="card-title">{product.name}</h5>
+                {product.sku && (
+                  <p className="card-text mb-1">
+                    <small className="text-muted">
+                      <strong>SKU:</strong> <code>{product.sku}</code>
+                    </small>
+                  </p>
+                )}
                 <p className="card-text">{product.description}</p>
                 {product.category_id && (
                   <p className="card-text">

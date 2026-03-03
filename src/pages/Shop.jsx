@@ -43,7 +43,6 @@ const Shop = () => {
               result.push({
                 id: category.id,
                 name: getCategoryFullPath(category, categoriesData),
-                slug: category.slug,
                 count: 0 // Will be updated when products are fetched
               });
             }
@@ -264,7 +263,7 @@ const Shop = () => {
                 <div className="col-sm-12">
                   <div className="custom_menu">
                     <ul>
-                      <li><a href="/home">Home</a></li>
+                      <li><a href="/">Home</a></li>
                       <li><a href="/cart">Cart</a></li>
                       <li><a href="/checkout">Checkout</a></li>
                     </ul>

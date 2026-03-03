@@ -16,11 +16,13 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLogo } from '../context/LogoContext';
 import { useState, useEffect } from 'react';
 import { themeApi } from '../services/themeApi';
 
 const SideDrawer = ({ isOpen, onClose }) => {
   const { logout, user } = useAuth();
+  const { websiteLogo } = useLogo();
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
@@ -92,7 +94,7 @@ const SideDrawer = ({ isOpen, onClose }) => {
               toggleCategoryExpansion(child.id);
             } else {
               // Navigate to Level 3 category
-              navigate(`/${child.slug}`);
+              navigate(`/category/${child.id}`);
               onClose();
             }
           }}
@@ -128,9 +130,9 @@ const SideDrawer = ({ isOpen, onClose }) => {
   };
   const navigationItems = [
     { id: 1, name: 'Home', icon: Home, path: '/' },
-    { id: 2, name: 'All Products', icon: ShoppingBag, path: '/shop' },
-    { id: 3, name: 'My Cart', icon: ShoppingCart, path: '/cart' },
-    { id: 4, name: 'My Orders', icon: Package, path: '/orders' },
+    { id: 2, name: 'All Products', icon: ShoppingBag, path: '/all-products' },
+    // { id: 3, name: 'My Cart', icon: ShoppingCart, path: '/cart' },
+    // { id: 4, name: 'My Orders', icon: Package, path: '/orders' },
   ];
 
   const adminItems = [
@@ -141,7 +143,7 @@ const SideDrawer = ({ isOpen, onClose }) => {
     try {
       await logout();
       onClose(); // Close the drawer
-      navigate('/'); // Redirect to login page
+      navigate('/login'); // Redirect to login page
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -447,43 +449,52 @@ const SideDrawer = ({ isOpen, onClose }) => {
             </h3>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               <li style={{ marginBottom: '4px' }}>
-                <Link
-                  to="/account"
-                  onClick={onClose}
-                  style={linkStyle}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#1f2937';
-                    e.currentTarget.style.color = '#ffffff';
-                    e.currentTarget.querySelector('svg').style.color = '#f26522';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#d1d5db';
-                    e.currentTarget.querySelector('svg').style.color = '#6b7280';
-                  }}
-                >
-                  <User style={iconStyle} />
-                  <span style={{ fontWeight: '500' }}>My Account</span>
-                </Link>
-              </li>
-              <li style={{ marginBottom: '4px' }}>
-                <button
-                  style={buttonStyle}
-                  onClick={handleLogout}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#1f2937';
-                    e.currentTarget.style.color = '#ffffff';
-                    e.currentTarget.querySelector('svg').style.color = '#f26522';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#d1d5db';
-                    e.currentTarget.querySelector('svg').style.color = '#6b7280';
-                  }}
-                >
-                  <LogOut style={iconStyle} />
-                  <span style={{ fontWeight: '500' }}>Logout</span>
-                </button>
+                {user ? (
+                  <button
+                    style={buttonStyle}
+                    onClick={handleLogout}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#1f2937';
+                      e.currentTarget.style.color = '#ffffff';
+                      if (e.currentTarget.querySelector('svg')) {
+                        e.currentTarget.querySelector('svg').style.color = '#ffffff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#6b7280';
+                      if (e.currentTarget.querySelector('svg')) {
+                        e.currentTarget.querySelector('svg').style.color = '#6b7280';
+                      }
+                    }}
+                  >
+                    <LogOut style={iconStyle} />
+                    <span style={{ fontWeight: '500' }}>Logout</span>
+                  </button>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={onClose}
+                    style={buttonStyle}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#1f2937';
+                      e.currentTarget.style.color = '#ffffff';
+                      if (e.currentTarget.querySelector('svg')) {
+                        e.currentTarget.querySelector('svg').style.color = '#ffffff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#6b7280';
+                      if (e.currentTarget.querySelector('svg')) {
+                        e.currentTarget.querySelector('svg').style.color = '#6b7280';
+                      }
+                    }}
+                  >
+                    <User style={iconStyle} />
+                    <span style={{ fontWeight: '500' }}>Login</span>
+                  </Link>
+                )}
               </li>
             </ul>
           </div>
@@ -531,7 +542,7 @@ const SideDrawer = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div style={footerStyle} className='mt-3'>
           <img 
-            src="/src/assets/images/kidcolor(1).png" 
+            src={websiteLogo} 
             alt="Kids Colours" 
             style={logoStyle}
           />

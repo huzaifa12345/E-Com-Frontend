@@ -43,6 +43,7 @@ const Admin = () => {
   // Form states for CRUD operations
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [nextSku, setNextSku] = useState('001');
   
   const [productForm, setProductForm] = useState({
     name: '',
@@ -119,9 +120,9 @@ const Admin = () => {
     { id: 'sizes', name: 'Sizes', icon: TrendingUp },
     // { id: 'stock', name: 'Stock Management', icon: Package },
     { id: 'orders', name: 'Orders', icon: ShoppingCart },
-    { id: 'users', name: 'Users', icon: Users },
+    // { id: 'users', name: 'Users', icon: Users },
     { id: 'website-settings', name: 'Website Settings', icon: Settings },
-    { id: 'settings', name: 'Settings', icon: Settings },
+    // { id: 'settings', name: 'Settings', icon: Settings },
   ];
 
   const handleDeleteProduct = async (productId) => {
@@ -141,6 +142,17 @@ const Admin = () => {
     setShowProductTypeModal(true);
   };
 
+  // Fetch next SKU when adding new product
+  const fetchNextSku = async () => {
+    try {
+      const skuData = await themeApi.getNextSKU();
+      setNextSku(skuData.sku || '001');
+    } catch (error) {
+      console.error('Error fetching next SKU:', error);
+      setNextSku('001');
+    }
+  };
+
   const handleProductTypeSelect = (type) => {
     setProductType(type);
     setEditingProduct(null);
@@ -154,6 +166,7 @@ const Admin = () => {
       sizes: [],
       status: 'active'
     });
+    fetchNextSku(); // Fetch next SKU for new product
     setShowProductTypeModal(false);
     setShowProductForm(true);
   };
@@ -208,6 +221,8 @@ const Admin = () => {
           toast.success('All size product created successfully!');
         }
         setProducts([...products, newProduct]);
+        // Fetch next SKU for next product creation
+        fetchNextSku();
       }
       setShowProductForm(false);
       setUploadedImages([]);
@@ -499,13 +514,15 @@ const Admin = () => {
           <div className="header_section_top">
             <div className="row">
               <div className="col-sm-12">
-                <div className="custom_menu">
+                <div className="custom_menu"
+                style={{backgroundColor: 'black'}}>
                   <ul>
                     <li><Link to="/admin">Dashboard</Link></li>
-                    <li><Link to="/admin/products">Products</Link></li>
+                    {/* <li><Link to="/admin/products">Products</Link></li>
                     <li><Link to="/admin/orders">Orders</Link></li>
-                    <li><Link to="/admin/users">Users</Link></li>
-                    <li><Link to="/home">Back to Store</Link></li>
+                     */}
+                    <li><Link to="/">Back to Store</Link></li>
+                    <li><Link to="/login">Logout</Link></li>
                   </ul>
                 </div>
               </div>
@@ -652,6 +669,19 @@ const Admin = () => {
                         value={productForm.name}
                         onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                       />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">SKU (Auto-generated)</label>
+                      <input
+                        type="text"
+                        className="form-control bg-light"
+                        value={editingProduct ? editingProduct.sku || 'N/A' : nextSku}
+                        disabled
+                        readOnly
+                      />
+                      <small className="text-muted">
+                        {editingProduct ? 'Existing SKU cannot be changed' : `Next SKU: ${nextSku}`}
+                      </small>
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label">Price</label>

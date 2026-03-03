@@ -14,10 +14,12 @@ import {
   Minus,
   Check
 } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { themeApi } from '../services/themeApi';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import { FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars } from 'react-icons/fa';
+import SideDrawer from '../components/SideDrawer';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -34,7 +36,8 @@ const ProductDetail = () => {
     rating: '',
     comment: ''
   });
-  const { addToCart } = useCart();
+  const { addToCart, getCartItemsCount } = useCart();
+  const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
 
   // Fetch product details and related products
   useEffect(() => {
@@ -48,11 +51,11 @@ const ProductDetail = () => {
         setProduct(productData);
 
         // Fetch related products from the same category
-        if (productData?.category?.slug || productData?.category_slug) {
+        if (productData?.category?.id || productData?.category_id) {
           try {
-            const categorySlug = productData.category?.slug || productData.category_slug;
-            console.log('Fetching products for category:', categorySlug);
-            const categoryProducts = await themeApi.getProductsByCategory(categorySlug);
+            const categoryId = productData.category?.id || productData.category_id;
+            console.log('Fetching products for category:', categoryId);
+            const categoryProducts = await themeApi.getProductsByCategory(categoryId);
             console.log('Category products:', categoryProducts);
             
             // Handle different response structures
@@ -238,37 +241,85 @@ const ProductDetail = () => {
           </div>
           <div className="product-price">
             <span className="current-price">{product.price}</span>
-            {product.original_price && (
-              <span className="original-price">{product.original_price}</span>
-            )}
-          </div>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="container">
-        <div className="row">
-          <div className="col-12">
-            <div className="header_section_top">
-              <div className="row">
-                <div className="col-sm-12">
-                  <div className="custom_menu">
-                    <ul>
-                      <li><a href="/home">Home</a></li>
-                      <li><a href="/cart">Cart</a></li>
-                      <li><a href="/checkout">Checkout</a></li>
-                    </ul>
-                  </div>
+return (
+  <div className="min-h-screen bg-gray-50">
+      {/* Modern Header */}
+      <header className="modern-header">
+        <div className="container">
+          {/* Top Bar */}
+          <div className="top-bar">
+            <div className="row align-items-center">
+              <div className="col-md-6">
+                <div className="contact-info">
+                  <span><FaHeadset /> +1 800-123-4567</span>
+                  {' '}
+                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
+                </div>
+              </div>
+              <div className="col-md-6 text-end">
+                <div className="social-links">
+                  <Link to="/cart" className="text-white position-relative">
+                    <FaShoppingCart />
+                    {getCartItemsCount() > 0 && (
+                      <span className="cart-badge">{getCartItemsCount()}</span>
+                    )}
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Main Navigation */}
+          <nav className="main-nav">
+            <div className="row align-items-center">
+              <div className="col-md-3">
+                <div className="logo">
+                  <Link to="/">
+                    <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                  </Link>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="search-bar">
+                  <form className="d-flex">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search products..."
+                    />
+                    <button type="submit" className="btn btn-search">
+                      <FaSearch />
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div className="col-md-3 text-end">
+                <button
+                  className="btn btn-outline-light menu-toggle"
+                  onClick={() => setSideDrawerOpen(true)}
+                >
+                  <FaBars /> Menu
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          {/* Custom Menu */}
+          <div className="custom_menu">
+            <ul>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/cart">Cart</Link></li>
+              <li><Link to="/checkout">Checkout</Link></li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </header>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
@@ -632,6 +683,187 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer Section */}
+      <footer className="footer-section">
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-4 col-md-6 mb-4">
+              <div className="footer-about">
+                <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
+              </div>
+            </div>
+            <div className="col-lg-2 col-md-6 mb-4">
+              <div className="footer-links">
+                <h5>Quick Links</h5>
+                <ul>
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/cart">Cart</a></li>
+                  <li><a href="/checkout">Checkout</a></li>
+                </ul>
+              </div>
+            </div>
+            <div className="col-lg-3 col-md-6 mb-4">
+              <div className="footer-contact">
+                <h5>Contact Info</h5>
+                <p><FaHeadset /> +1 800-123-4567</p>
+                <p><FaEnvelope /> info@kidscolours.com</p>
+                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
+              </div>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <div className="row">
+              <div className="col-12 text-center">
+                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <style jsx>{`
+        .modern-header {
+          background: #000;
+          backdrop-filter: blur(10px);
+          border-radius: 0 0 30px 30px;
+        }
+        
+        .top-bar {
+          background: #000;
+          padding: 2px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .contact-info span {
+          color: #fff;
+          font-size: 12px;
+        }
+        
+        .cart-badge {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #f26522;
+          color: white;
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+          font-size: 11px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .main-nav {
+          padding: 15px 0;
+        }
+        
+        .search-bar {
+          position: relative;
+        }
+        
+        .search-bar .form-control {
+          border-radius: 25px;
+          padding: 10px 20px;
+          border: none;
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+          backdrop-filter: blur(5px);
+          height: 44px;
+        }
+        
+        .search-bar .form-control::placeholder {
+          color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .search-bar .form-control:focus {
+          background: rgba(255, 255, 255, 0.2);
+          box-shadow: 0 0 10px rgba(242, 101, 34, 0.3);
+          color: #fff;
+        }
+        
+        .btn-search {
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          background: #f26522;
+          border: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+        
+        .menu-toggle {
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-size: 14px;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: #fff;
+        }
+        
+        .menu-toggle:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: #f26522;
+        }
+        
+        .custom_menu {
+          background: rgba(242, 101, 34, 0.9);
+          padding: 12px 0;
+          border-radius: 20px;
+          margin-top: 15px;
+        }
+        
+        .custom_menu ul {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 30px;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        
+        .custom_menu ul li a {
+          color: #fff;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.3s;
+          padding: 5px 0;
+          position: relative;
+          font-size: 14px;
+        }
+        
+        .custom_menu ul li a::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: #fff;
+          transition: width 0.3s;
+        }
+        
+        .custom_menu ul li a:hover::after,
+        .custom_menu ul li a.active::after {
+          width: 100%;
+        }
+        
+        @media (max-width: 767px) {
+          .top-bar {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useLogo } from '../context/LogoContext';
 import { 
   Plus, 
   Minus, 
@@ -12,18 +13,21 @@ import {
   Shield,
   RefreshCw,
 } from 'lucide-react';
-import { FaBars } from 'react-icons/fa';
+import { FaBars, FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch } from 'react-icons/fa';
 import SideDrawer from '../components/SideDrawer';
 import { themeApi } from '../services/themeApi';
 import '../assets/css/mobile-responsive.css';
 
 
 const Cart = () => {
+  const { websiteLogo } = useLogo();
   const { 
     items, 
+    cart, 
     removeFromCart, 
     updateQuantity, 
-    getCartTotal,
+    getCartTotal, 
+    getCartItemsCount, 
     clearCart 
   } = useCart();
 
@@ -60,22 +64,77 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Top Bar Section */}
-        <div className="header_section_top">
+        {/* Modern Header */}
+        <header className="modern-header">
           <div className="container">
-            <div className="row">
-              <div className="col-sm-12">
-                <div className="custom_menu">
-                  <ul>
-                    <li><a href="/home">Home</a></li>
-                    <li><a href="/cart">Cart</a></li>
-                    <li><a href="/checkout">Checkout</a></li>
-                  </ul>
+            {/* Top Bar */}
+            <div className="top-bar">
+              <div className="row align-items-center">
+                <div className="col-md-6">
+                  <div className="contact-info">
+                    <span><FaHeadset /> +1 800-123-4567</span>
+                    {' '}
+                    <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
+                  </div>
+                </div>
+                <div className="col-md-6 text-end">
+                  <div className="social-links">
+                    <Link to="/cart" className="text-white position-relative">
+                      <FaShoppingCart />
+                      {getCartItemsCount() > 0 && (
+                        <span className="cart-badge">{getCartItemsCount()}</span>
+                      )}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Main Navigation */}
+            <nav className="main-nav">
+              <div className="row align-items-center">
+                <div className="col-md-3">
+                  <div className="logo">
+                    <Link to="/">
+                      <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                    </Link>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="search-bar">
+                    <form className="d-flex">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Search products..."
+                      />
+                      <button type="submit" className="btn btn-search">
+                        <FaSearch />
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                <div className="col-md-3 text-end">
+                  <button
+                    className="btn btn-outline-light menu-toggle"
+                    onClick={() => setSideDrawerOpen(true)}
+                  >
+                    <FaBars /> Menu
+                  </button>
+                </div>
+              </div>
+            </nav>
+
+            {/* Custom Menu */}
+            <div className="custom_menu">
+              <ul>
+                <li><Link to="/">Home</Link></li>
+                <li><Link to="/cart">Cart</Link></li>
+                <li><Link to="/checkout">Checkout</Link></li>
+              </ul>
+            </div>
           </div>
-        </div>
+        </header>
         
         {/* Header Section
         <div className="header_section">
@@ -135,94 +194,43 @@ const Cart = () => {
         </div>
 
         {/* Footer Section */}
-        <div className="footer_section layout_padding" style={{ backgroundColor: '#1a1a1a', padding: '60px 0 20px' }}>
+        <footer className="footer-section">
           <div className="container">
             <div className="row">
-              <div className="col-12 text-center mb-5">
-                <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" style={{ width: '200px', height: 'auto', marginBottom: '30px' }} />
-                
-                <div className="newsletter_section mb-4">
-                  <div className="row justify-content-center">
-                    <div className="col-md-8 col-lg-6">
-                      <div className="d-flex align-items-center justify-content-center">
-                        <input 
-                          type="email" 
-                          placeholder="Your Email" 
-                          className="form-control" 
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            borderBottom: '2px solid #fff',
-                            color: '#fff',
-                            borderRadius: '0',
-                            padding: '10px 15px',
-                            fontSize: '16px',
-                            outline: 'none'
-                          }}
-                        />
-                        <button 
-                          className="btn ml-3" 
-                          style={{
-                            backgroundColor: '#f26522',
-                            color: '#fff',
-                            border: 'none',
-                            padding: '10px 25px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            textTransform: 'uppercase'
-                          }}
-                        >
-                          Subscribe
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+              <div className="col-lg-4 col-md-6 mb-4">
+                <div className="footer-about">
+                  <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                  <p>Your trusted online shopping destination for quality products and exceptional service.</p>
                 </div>
-
-                <div className="footer_links mb-4">
-                  <div className="d-flex justify-content-center flex-wrap">
-                    <a href="#" className="footer_link">Best Sellers</a>
-                    <span className="link_separator mx-3">|</span>
-                    <a href="#" className="footer_link">Gift Ideas</a>
-                    <span className="link_separator mx-3">|</span>
-                    <a href="#" className="footer_link">New Releases</a>
-                    <span className="link_separator mx-3">|</span>
-                    <a href="#" className="footer_link">Today's Deals</a>
-                    <span className="link_separator mx-3">|</span>
-                    <a href="#" className="footer_link">Customer Service</a>
-                  </div>
+              </div>
+              <div className="col-lg-2 col-md-6 mb-4">
+                <div className="footer-links">
+                  <h5>Quick Links</h5>
+                  <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/cart">Cart</a></li>
+                    <li><a href="/checkout">Checkout</a></li>
+                  </ul>
                 </div>
-
-                <div className="helpline_section mb-4">
-                  <p style={{ 
-                    color: '#fff', 
-                    fontSize: '16px', 
-                    fontWeight: '500',
-                    margin: '0'
-                  }}>
-                    Help Line Number : +1 1800 1200 1200
-                  </p>
+              </div>
+              <div className="col-lg-3 col-md-6 mb-4">
+                <div className="footer-contact">
+                  <h5>Contact Info</h5>
+                  <p><FaHeadset /> +1 800-123-4567</p>
+                  <p><FaEnvelope /> info@kidscolours.com</p>
+                  <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
                 </div>
               </div>
             </div>
-
-            <div className="row">
-              <div className="col-12">
-                <div className="copyright_bar text-center pt-4" style={{ borderTop: '1px solid #333' }}>
-                  <p style={{ 
-                    color: '#fff', 
-                    fontSize: '14px', 
-                    margin: '0',
-                    opacity: '0.8'
-                  }}>
-                    © 2026 All Rights Reserved. Design by Kids Colours
-                  </p>
+            <div className="footer-bottom">
+              <div className="row">
+                <div className="col-12 text-center">
+                  <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
                 </div>
               </div>
             </div>
           </div>
+        </footer>
 
           <style jsx>{`
             .footer_link {
@@ -249,7 +257,132 @@ const Cart = () => {
             
             .form-control:focus {
               box-shadow: none;
-              border-bottom-color: #f26522;
+              background: #000;
+              padding: 2px 0;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .contact-info span {
+              color: #fff;
+              font-size: 13px;
+            }
+            
+            .cart-badge {
+              position: absolute;
+              top: -8px;
+              right: -8px;
+              background: #f26522;
+              color: white;
+              border-radius: 50%;
+              width: 18px;
+              height: 18px;
+              font-size: 11px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            
+            .main-nav {
+              padding: 15px 0;
+            }
+            
+            .search-bar {
+              position: relative;
+            }
+            
+            .search-bar .form-control {
+              border-radius: 25px;
+              padding: 10px 20px;
+              border: none;
+              background: rgba(255, 255, 255, 0.1);
+              color: #fff;
+              backdrop-filter: blur(5px);
+              height: 44px;
+            }
+            
+            .search-bar .form-control::placeholder {
+              color: rgba(255, 255, 255, 0.7);
+            }
+            
+            .search-bar .form-control:focus {
+              background: rgba(255, 255, 255, 0.2);
+              box-shadow: 0 0 10px rgba(242, 101, 34, 0.3);
+              color: #fff;
+            }
+            
+            .btn-search {
+              position: absolute;
+              right: 5px;
+              top: 50%;
+              transform: translateY(-50%);
+              border-radius: 50%;
+              width: 36px;
+              height: 36px;
+              background: #f26522;
+              border: none;
+              color: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0;
+            }
+            
+            .menu-toggle {
+              border-radius: 8px;
+              padding: 8px 16px;
+              font-size: 14px;
+              background: transparent;
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              color: #fff;
+            }
+            
+            .menu-toggle:hover {
+              background: rgba(255, 255, 255, 0.1);
+              border-color: #f26522;
+            }
+            
+            /* Custom Menu - Orange Style */
+            .custom_menu {
+              background: rgba(242, 101, 34, 0.9);
+              padding: 12px 0;
+              border-radius: 20px;
+              margin-top: 15px;
+            }
+            
+            .custom_menu ul {
+              display: flex;
+              justify-content: center;
+              flex-wrap: wrap;
+              gap: 30px;
+              list-style: none;
+              margin: 0;
+              padding: 0;
+            }
+            
+            .custom_menu ul li a {
+              color: #fff;
+              text-decoration: none;
+              font-weight: 500;
+              transition: color 0.3s;
+              padding: 5px 0;
+              position: relative;
+              font-size: 14px;
+            }
+            
+            .custom_menu ul li a::after {
+              content: '';
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              width: 0;
+              height: 2px;
+              background: #fff;
+              transition: width 0.3s;
+            }
+            
+            .custom_menu ul li a:hover::after,
+            .custom_menu ul li a.active::after {
+              width: 100%;
             }
             
             @media (max-width: 767px) {
@@ -286,9 +419,15 @@ const Cart = () => {
               .footer_link {
                 font-size: 13px;
               }
+                .footer-bottom span {
+          color: #f26522;
+        }
+              
+              .top-bar {
+                display: none;
+              }
             }
           `}</style>
-        </div>
 
         {/* Side Drawer */}
         <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
@@ -298,22 +437,77 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top Bar Section */}
-      <div className="header_section_top">
+      {/* Modern Header */}
+      <header className="modern-header">
         <div className="container">
-          <div className="row">
-            <div className="col-sm-12">
-              <div className="custom_menu">
-                <ul>
-                  <li><a href="/home">Home</a></li>
-                  <li><a href="/cart">Cart</a></li>
-                  <li><a href="/checkout">Checkout</a></li>
-                </ul>
+          {/* Top Bar */}
+          <div className="top-bar">
+            <div className="row align-items-center">
+              <div className="col-md-6">
+                <div className="contact-info">
+                  <span><FaHeadset /> +1 800-123-4567</span>
+                  {' '}
+                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
+                </div>
+              </div>
+              <div className="col-md-6 text-end">
+                <div className="social-links">
+                  <Link to="/cart" className="text-white position-relative">
+                    <FaShoppingCart />
+                    {getCartItemsCount() > 0 && (
+                      <span className="cart-badge">{getCartItemsCount()}</span>
+                    )}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Main Navigation */}
+          <nav className="main-nav">
+            <div className="row align-items-center">
+              <div className="col-md-3">
+                <div className="logo">
+                  <Link to="/">
+                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                  </Link>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="search-bar">
+                  <form className="d-flex">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search products..."
+                    />
+                    <button type="submit" className="btn btn-search">
+                      <FaSearch />
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div className="col-md-3 text-end">
+                <button
+                  className="btn btn-outline-light menu-toggle"
+                  onClick={() => setSideDrawerOpen(true)}
+                >
+                  <FaBars /> Menu
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          {/* Custom Menu */}
+          <div className="custom_menu">
+            <ul>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/cart">Cart</Link></li>
+              <li><Link to="/checkout">Checkout</Link></li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </header>
       
 
       <div className="container layout_padding">
@@ -555,264 +749,43 @@ const Cart = () => {
       </div>
 
       {/* Footer Section */}
-      <div className="footer_section layout_padding" style={{ backgroundColor: '#1a1a1a', padding: '60px 0 20px' }}>
+      <footer className="footer-section">
         <div className="container">
           <div className="row">
-            <div className="col-12 text-center mb-5">
-              <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" style={{ width: '200px', height: 'auto', marginBottom: '30px' }} />
-              
-              <div className="newsletter_section mb-4">
-                <div className="row justify-content-center">
-                  <div className="col-md-8 col-lg-6">
-                    <div className="d-flex align-items-center justify-content-center">
-                      <input 
-                        type="email" 
-                        placeholder="Your Email" 
-                        className="form-control" 
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          borderBottom: '2px solid #fff',
-                          color: '#fff',
-                          borderRadius: '0',
-                          padding: '10px 15px',
-                          fontSize: '16px',
-                          outline: 'none'
-                        }}
-                      />
-                      <button 
-                        className="btn ml-3" 
-                        style={{
-                          backgroundColor: '#f26522',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '10px 25px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        Subscribe
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            <div className="col-lg-4 col-md-6 mb-4">
+              <div className="footer-about">
+                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
               </div>
-
-              <div className="footer_links mb-4">
-                <div className="d-flex justify-content-center flex-wrap">
-                  <a href="#" className="footer_link">Best Sellers</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Gift Ideas</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">New Releases</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Today's Deals</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Customer Service</a>
-                </div>
+            </div>
+            <div className="col-lg-2 col-md-6 mb-4">
+              <div className="footer-links">
+                <h5>Quick Links</h5>
+                <ul>
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/cart">Cart</a></li>
+                  <li><a href="/checkout">Checkout</a></li>
+                </ul>
               </div>
-
-              <div className="helpline_section mb-4">
-                <p style={{ 
-                  color: '#fff', 
-                  fontSize: '16px', 
-                  fontWeight: '500',
-                  margin: '0'
-                }}>
-                  Help Line Number : +1 1800 1200 1200
-                </p>
+            </div>
+            <div className="col-lg-3 col-md-6 mb-4">
+              <div className="footer-contact">
+                <h5>Contact Info</h5>
+                <p><FaHeadset /> +1 800-123-4567</p>
+                <p><FaEnvelope /> info@kidscolours.com</p>
+                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
               </div>
             </div>
           </div>
-
-          <div className="row">
-            <div className="col-12">
-              <div className="copyright_bar text-center pt-4" style={{ borderTop: '1px solid #333' }}>
-                <p style={{ 
-                  color: '#fff', 
-                  fontSize: '14px', 
-                  margin: '0',
-                  opacity: '0.8'
-                }}>
-                  © 2026 All Rights Reserved. Design by Kids Colours
-                </p>
+          <div className="footer-bottom">
+            <div className="row">
+              <div className="col-12 text-center">
+                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
               </div>
             </div>
           </div>
         </div>
-
-        <style jsx>{`
-          .footer_link {
-            color: #fff !important;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            transition: color 0.3s ease;
-          }
-          
-          .footer_link:hover {
-            color: #f26522 !important;
-          }
-          
-          .link_separator {
-            color: #666;
-            font-size: 16px;
-          }
-          
-          .form-control::placeholder {
-            color: #999;
-          }
-          
-          .form-control:focus {
-            box-shadow: none;
-            border-bottom-color: #f26522;
-          }
-          
-          @media (max-width: 767px) {
-            .footer_section {
-              padding: 40px 0 20px !important;
-            }
-            
-            .newsletter_section .d-flex {
-              flex-direction: column;
-              gap: 15px;
-            }
-            
-            .newsletter_section .form-control {
-              width: 100% !important;
-              text-align: center;
-            }
-            
-            .newsletter_section .btn {
-              width: 100%;
-              margin-left: 0 !important;
-            }
-            
-            .footer_links {
-              display: flex !important;
-              flex-direction: column !important;
-              align-items: center !important;
-              gap: 10px;
-            }
-            
-            .link_separator {
-              display: none;
-            }
-            
-            .footer_link {
-              font-size: 13px;
-            }
-          }
-          
-          /* Cart Page Specific Styles */
-          .cart-items-container {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-          }
-          
-          .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 1rem;
-          }
-          
-          .cart-item {
-            transition: all 0.3s ease;
-            border-radius: 8px;
-          }
-          
-          .cart-item:hover {
-            background-color: #f8f9fa;
-          }
-          
-          .product-image {
-            border-radius: 8px;
-            overflow: hidden;
-          }
-          
-          .current-price {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #f26522;
-          }
-          
-          .original-price {
-            font-size: 0.9rem;
-            color: #999;
-          }
-          
-          .total-price {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #333;
-          }
-          
-          .order-summary {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-          }
-          
-          .free-shipping-notice {
-            background: #d4edda;
-            color: #155724;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-          }
-          
-          .trust-badge {
-            padding: 15px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-          }
-          
-          .trust-badge:hover {
-            background: #f8f9fa;
-            transform: translateY(-2px);
-          }
-          
-          .empty-cart-icon {
-            animation: float 3s ease-in-out infinite;
-          }
-          
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-          
-          /* Mobile Responsive Styles */
-          @media (max-width: 768px) {
-            .cart-items-container {
-              padding: 15px;
-            }
-            
-            .order-summary {
-              margin-top: 20px;
-            }
-            
-            .section-title {
-              font-size: 1.2rem;
-            }
-            
-            .cart-item .row {
-              align-items: flex-start !important;
-            }
-            
-            .product-image img {
-              height: 80px !important;
-            }
-          }
-        `}</style>
-      </div>
+      </footer>
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />

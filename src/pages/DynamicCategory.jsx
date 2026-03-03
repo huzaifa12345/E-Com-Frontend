@@ -2,36 +2,59 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Eye, Filter, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
+import { useLogo } from '../context/LogoContext';
+import './DynamicCategory.css';
+import {FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars } from 'react-icons/fa'
+import SideDrawer from '../components/SideDrawer';
 
 const DynamicCategory = () => {
   const { categorySlug } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, getCartItemsCount } = useCart();
+  const { websiteLogo } = useLogo();
   
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('created_at');
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 5000]);
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
 
   useEffect(() => {
     const fetchCategoryData = async () => {
       try {
         setLoading(true);
         
-        // Fetch category details
-        const categoryData = await themeApi.getCategoryBySlug(categorySlug);
+        // Fetch category details by ID
+        const categoryData = await themeApi.getCategoryById(categorySlug);
         setCategory(categoryData);
         
-        // Fetch products for this category
-        const productsData = await themeApi.getProductsByCategory(categorySlug);
+        // Fetch products for this category with pagination
+        console.log('[DynamicCategory] Fetching products for category ID:', categorySlug);
+        const productsData = await themeApi.getProductsByCategory(categorySlug, {
+          page: currentPage,
+          limit: 12,
+          sortBy,
+          minPrice: priceRange[0],
+          maxPrice: priceRange[1],
+          search: searchQuery
+        });
+        console.log('[DynamicCategory] Products response:', productsData);
+        console.log('[DynamicCategory] Products array:', productsData.products);
+        console.log('[DynamicCategory] Pagination:', productsData.pagination);
         setProducts(productsData.products || []);
         setPagination(productsData.pagination || {});
+        setTotalPages(productsData.pagination?.pages || 1);
+        setFilteredProducts(productsData.products || []);
         
       } catch (error) {
         console.error('Error fetching category data:', error);
@@ -52,10 +75,52 @@ const DynamicCategory = () => {
     toast.success(`${product.name} added to cart!`);
   };
 
-  const handleSearch = (e) => {
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePriceRangeChange = (newRange) => {
+    setPriceRange(newRange);
+    setCurrentPage(1);
+  };
+
+  const applyFilters = async () => {
+    try {
+      setLoading(true);
+      const filteredData = await themeApi.getProductsByCategory(categorySlug, {
+        page: 1,
+        limit: 12,
+        sortBy,
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+        search: searchQuery
+      });
+      setFilteredProducts(filteredData.products || []);
+      setTotalPages(filteredData.pagination?.pages || 1);
+      setCurrentPage(1);
+      setLoading(false);
+    } catch (error) {
+      console.error('Filter error:', error);
+      toast.error('Failed to apply filters');
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      try {
+        setLoading(true);
+        const searchResults = await themeApi.searchProducts(searchQuery.trim());
+        setFilteredProducts(searchResults.products || []);
+        setTotalPages(searchResults.totalPages || 1);
+        setCurrentPage(1);
+        setLoading(false);
+      } catch (error) {
+        console.error('Search error:', error);
+        toast.error('Failed to search products');
+        setLoading(false);
+      }
     }
   };
 
@@ -79,7 +144,7 @@ const DynamicCategory = () => {
           <h2>Category not found</h2>
           <button 
             className="btn btn-primary mt-3"
-            onClick={() => navigate('/home')}
+            onClick={() => navigate('/')}
           >
             Back to Home
           </button>
@@ -90,24 +155,78 @@ const DynamicCategory = () => {
 
   return (
     <div className="fashion_main">
-      {/* Top Bar Section */}
-      <div className="header_section_top">
+      {/* Modern Header */}
+      <header className="modern-header">
         <div className="container">
-          <div className="row">
-            <div className="col-sm-12">
-              <div className="custom_menu">
-                <ul>
-                  <li><a href="/home">Home</a></li>
-                  <li><a href="/cart">Cart</a></li>
-                  <li><a href="/checkout">Checkout</a></li>
-                </ul>
+          {/* Top Bar */}
+          <div className="top-bar">
+            <div className="row align-items-center">
+              <div className="col-md-6">
+                <div className="contact-info">
+                  <span><FaHeadset /> +1 800-123-4567</span>
+                  {' '}
+                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
+                </div>
+              </div>
+              <div className="col-md-6 text-end">
+                <div className="social-links">
+                  <Link to="/cart" className="text-white position-relative">
+                    <FaShoppingCart />
+                    {getCartItemsCount() > 0 && (
+                      <span className="cart-badge">{getCartItemsCount()}</span>
+                    )}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <br/>
+          {/* Main Navigation */}
+          <nav className="main-nav">
+            <div className="row align-items-center">
+              <div className="col-md-3">
+                <div className="logo">
+                  <Link to="/">
+                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                  </Link>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="search-bar">
+                  <form className="d-flex">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search products..."
+                    />
+                    <button type="submit" className="btn btn-search">
+                      <FaSearch />
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div className="col-md-3 text-end">
+                <button
+                  className="btn btn-outline-light menu-toggle"
+                  onClick={() => setSideDrawerOpen(true)}
+                >
+                  <FaBars />
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          {/* Custom Menu */}
+          <div className="custom_menu">
+            <ul>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/cart">Cart</Link></li>
+              <li><Link to="/checkout">Checkout</Link></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+
       <br/>
       <br/>
 
@@ -126,80 +245,52 @@ const DynamicCategory = () => {
         </div>
       </div>
 
-      {/* Filter Section */}
+      {/* Search Bar Section */}
       <div className="container">
         <div className="row">
-          <div className="col-lg-3 col-md-4">
-            <div className="filter_section">
-              <h4 className="filter_title">Search</h4>
-              <form onSubmit={handleSearch} className="mb-4">
-                <div className="input-group">
+          <div className="col-12">
+            <div className="search-bar-section mb-4">
+              <form onSubmit={handleSearch} className="search-form">
+                <div className="search-input-group">
                   <input
                     type="text"
-                    className="form-control"
-                    placeholder="Search products..."
+                    className="search-input"
+                    placeholder={`Search products in ${category?.name || 'this category'}...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  <button className="btn btn-outline-secondary" type="submit">
-                    <Search size={16} />
+                  <button className="search-button" type="submit">
+                    <Search size={20} />
+                    <span>Search</span>
                   </button>
                 </div>
               </form>
-
-              <h4 className="filter_title">Price Range</h4>
-              <div className="price_filter">
-                <input
-                  type="range"
-                  min="0"
-                  max="500"
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                  className="price_slider"
-                />
-                <div className="price_range_text">
-                  0 - {priceRange[1]}
-                </div>
-              </div>
-
-              <h4 className="filter_title mt-4">Sort By</h4>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="sort_select"
-              >
-                <option value="featured">Featured</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="newest">Newest First</option>
-                <option value="name">Name: A-Z</option>
-              </select>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Products Section */}
-          <div className="col-lg-9 col-md-8">
+          {/* Products Section - Full Width */}
+      <div className="container">
+        <div className="row">
+          <div className="col-12">
             <div className="products_section">
               <div className="row">
-                {products.length === 0 ? (
+                {filteredProducts.length === 0 ? (
                   <div className="col-12 text-center py-5">
-                    <h3>No products found in this category</h3>
-                    <p>Check back later for new arrivals!</p>
+                    <h3>No products found</h3>
+                    <p>Try adjusting your search terms</p>
                   </div>
                 ) : (
-                  products.map((product) => (
-                    <div className="col-lg-4 col-sm-4 mb-4" key={product.id}>
+                  filteredProducts.map((product) => (
+                    <div className="col-lg-4 col-md-6 col-sm-6 mb-4" key={product.id}>
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ y: -5 }}
-                        className="box_main"
+                        className="product-card"
                       >
-                        <h4 className="shirt_text">{product.name}</h4>
-                        <p className="price_text">
-                          Price <span style={{ color: '#262626' }}>{product.price}</span>
-                        </p>
-                        <div className="tshirt_img">
+                        <div className="product-image-container">
                           <img 
                             src={
                               product.images && product.images.length > 0 
@@ -207,34 +298,33 @@ const DynamicCategory = () => {
                                 : product.image_url || '/src/assets/images/tshirt-img.png'
                             } 
                             alt={product.name} 
-                            style={{ 
-                              objectFit: 'cover',
-                              width: '100%',
-                              height: '300px'
-                            }}
+                            className="product-image"
                           />
-                          <div className="overlay_icons">
-                            <button className="icon_btn">
+                          {/* <div className="overlay-icons">
+                            <button className="icon-btn">
                               <Heart className="w-4 h-4" />
                             </button>
-                            <button className="icon_btn">
+                            <button className="icon-btn">
                               <Eye className="w-4 h-4" />
                             </button>
-                          </div>
+                          </div> */}
                         </div>
-                        <div className="btn_main">
-                          <div className="buy_bt">
+                        <div className="product-content">
+                          <h4 className="product-name">{product.name}</h4>
+                          <p className="product-price">
+                            Rs. {product.price}
+                          </p>
+                          <div className="product-actions">
                             <button 
+                              className="btn-add-cart"
                               onClick={() => handleAddToCart(product)}
-                              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
                             >
+                              <ShoppingCart size={16} />
                               Add to Cart
                             </button>
-                          </div>
-                          <div className="seemore_bt">
                             <button 
+                              className="btn-view-details"
                               onClick={() => navigate(`/product/${product.id}`)}
-                              style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
                             >
                               View Details
                             </button>
@@ -246,257 +336,100 @@ const DynamicCategory = () => {
                 )}
               </div>
               
-              {/* Load More */}
-              <div className="load_more_section mt-4 text-center">
-                <button className="load_more_bt">
-                  Load More Products
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer Section - Same as ThemeHome */}
-      <div className="footer_section layout_padding" style={{ backgroundColor: '#1a1a1a', padding: '60px 0 20px' }}>
-        <div className="container">
-          <div className="row">
-            <div className="col-12 text-center mb-5">
-              <img src="/src/assets/images/kidcolor(1).png" alt="Kids Colours" style={{ width: '200px', height: 'auto', marginBottom: '30px' }} />
-              
-              <div className="newsletter_section mb-4">
-                <div className="row justify-content-center">
-                  <div className="col-md-8 col-lg-6">
-                    <div className="d-flex align-items-center justify-content-center">
-                      <input 
-                        type="email" 
-                        placeholder="Your Email" 
-                        className="form-control" 
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          borderBottom: '2px solid #fff',
-                          color: '#fff',
-                          borderRadius: '0',
-                          padding: '10px 15px',
-                          fontSize: '16px',
-                          outline: 'none'
-                        }}
-                      />
-                      <button 
-                        className="btn ml-3" 
-                        style={{
-                          backgroundColor: '#f26522',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '10px 25px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        Subscribe
-                      </button>
-                    </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="pagination_section mt-4 text-center">
+                  <div className="pagination-controls">
+                    <button 
+                      className="btn btn-outline-secondary me-2" 
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    
+                    <span className="page-info">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    
+                    <button 
+                      className="btn btn-outline-secondary ms-2" 
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  
+                  <div className="page-numbers">
+                    {Array.from({ length: totalPages }, (_, index) => {
+                      const pageNum = index + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          className={`page-btn ${pageNum === currentPage ? 'active' : ''}`}
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <div className="footer_links mb-4">
-                <div className="d-flex justify-content-center flex-wrap">
-                  <a href="#" className="footer_link">Best Sellers</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Gift Ideas</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">New Releases</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Today's Deals</a>
-                  <span className="link_separator mx-3">|</span>
-                  <a href="#" className="footer_link">Customer Service</a>
-                </div>
+      {/* Footer Section */}
+      <footer className="footer-section">
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-4 col-md-6 mb-4">
+              <div className="footer-about">
+                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
+                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
               </div>
-
-              <div className="helpline_section mb-4">
-                <p style={{ 
-                  color: '#fff', 
-                  fontSize: '16px', 
-                  fontWeight: '500',
-                  margin: '0'
-                }}>
-                  Help Line Number : +1 1800 1200 1200
-                </p>
+            </div>
+            <div className="col-lg-2 col-md-6 mb-4">
+              <div className="footer-links">
+                <h5>Quick Links</h5>
+                <ul>
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/cart">Cart</a></li>
+                  <li><a href="/checkout">Checkout</a></li>
+                </ul>
+              </div>
+            </div>
+            {/* <div className="col-lg-3 col-md-6 mb-4">
+              <div className="footer-links">
+                <h5>Customer Service</h5>
+                <ul>
+                  <li><a href="/contact">Contact Us</a></li>
+                  <li><a href="/about">About Us</a></li>
+                </ul>
+              </div>
+            </div> */}
+            <div className="col-lg-3 col-md-6 mb-4">
+              <div className="footer-contact">
+                <h5>Contact Info</h5>
+                                <p><FaHeadset /> +1 800-123-4567</p>
+                                <p><FaEnvelope /> info@kidscolours.com</p>
+                                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
               </div>
             </div>
           </div>
-
-          <div className="row">
-            <div className="col-12">
-              <div className="copyright_bar text-center pt-4" style={{ borderTop: '1px solid #333' }}>
-                <p style={{ 
-                  color: '#fff', 
-                  fontSize: '14px', 
-                  margin: '0',
-                  opacity: '0.8'
-                }}>
-                  © 2026 All Rights Reserved. Design by Kids Colours
-                </p>
+          <div className="footer-bottom">
+            <div className="row">
+              <div className="col-12 text-center">
+                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
               </div>
             </div>
           </div>
         </div>
-
-        <style jsx>{`
-          .footer_link {
-            color: #fff !important;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            transition: color 0.3s ease;
-          }
-          
-          .footer_link:hover {
-            color: #f26522 !important;
-          }
-          
-          .link_separator {
-            color: #666;
-            font-size: 16px;
-          }
-          
-          .form-control::placeholder {
-            color: #999;
-          }
-          
-          .form-control:focus {
-            box-shadow: none;
-            border-bottom-color: #f26522;
-          }
-        `}</style>
-      </div>
-
-      <style jsx>{`
-        .fashion_main {
-          background-color: #fff;
-          min-height: 100vh;
-        }
-
-        .filter_section {
-          background: #f8f9fa;
-          padding: 20px;
-          border-radius: 8px;
-          margin-bottom: 20px;
-        }
-
-        .filter_title {
-          font-size: 18px;
-          font-weight: 600;
-          color: #262626;
-          margin-bottom: 15px;
-          border-bottom: 2px solid #f26522;
-          padding-bottom: 5px;
-        }
-
-        .price_filter {
-          margin-bottom: 20px;
-        }
-
-        .price_slider {
-          width: 100%;
-          margin-bottom: 10px;
-        }
-
-        .price_range_text {
-          font-size: 14px;
-          color: #666;
-          text-align: center;
-        }
-
-        .sort_select {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          background: #fff;
-        }
-
-        .overlay_icons {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-
-        .tshirt_img:hover .overlay_icons {
-          opacity: 1;
-        }
-
-        .icon_btn {
-          background: rgba(255, 255, 255, 0.9);
-          border: none;
-          border-radius: 50%;
-          width: 36px;
-          height: 36px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .icon_btn:hover {
-          background: #f26522;
-          color: white;
-        }
-
-        .load_more_bt {
-          background: #f26522;
-          color: white;
-          border: none;
-          padding: 12px 30px;
-          border-radius: 4px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.3s ease;
-        }
-
-        .load_more_bt:hover {
-          background: #e5551b;
-        }
-
-        .footer_link {
-          color: #fff !important;
-          text-decoration: none;
-          font-size: 14px;
-          font-weight: 500;
-          text-transform: uppercase;
-          transition: color 0.3s ease;
-        }
-        
-        .footer_link:hover {
-          color: #f26522 !important;
-        }
-        
-        .link_separator {
-          color: #666;
-          font-size: 16px;
-        }
-        
-        .form-control::placeholder {
-          color: #999;
-        }
-        
-        .form-control:focus {
-          box-shadow: none;
-          border-bottom-color: #f26522;
-        }
-      `}</style>
+      </footer>
+      <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
     </div>
   );
 };

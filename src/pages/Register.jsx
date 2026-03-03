@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLogo } from '../context/LogoContext';
 import toast from 'react-hot-toast';
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaGoogle, FaFacebook, FaCheck } from 'react-icons/fa';
 
 const Register = () => {
+  const { websiteLogo } = useLogo();
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -113,13 +115,13 @@ const Register = () => {
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          {/* <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-xl mb-6 overflow-hidden">
+          <div className="inline-flex items-center justify-center">
             <img 
-              src="/src/assets/images/kidcolor(1).png" 
+            style={{ maxWidth: '250px', minHeight: '130px' , marginTop: '30px'}}
+              src={websiteLogo} 
               alt="Kids Colours Logo" 
-              className="w-full h-full object-cover rounded-full"
             />
-          </div> */}
+          </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-2">
             Create your account
           </h2>
@@ -334,17 +336,17 @@ const Register = () => {
           </form>
 
           {/* Divider */}
-          <div className="relative my-6">
+          {/* <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-white text-gray-500">Or register with</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Social Registration */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => handleSocialRegister('Google')}
@@ -362,7 +364,7 @@ const Register = () => {
               <FaFacebook className="h-5 w-5 text-blue-600 mr-2" />
               Facebook
             </button>
-          </div>
+          </div> */}
 
           {/* Sign In Link */}
           <p className="mt-8 text-center text-sm text-gray-600">
@@ -374,7 +376,7 @@ const Register = () => {
         </div>
 
         {/* Benefits Section */}
-        <div className="mt-8 bg-gradient-to-r from-orange-50 to-white rounded-2xl p-6">
+        {/* <div className="mt-8 bg-gradient-to-r from-orange-50 to-white rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
             Why Join Kids Colours?
           </h3>
@@ -409,7 +411,7 @@ const Register = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

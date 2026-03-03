@@ -10,8 +10,10 @@ import Checkout from './pages/Checkout';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AllProducts from './pages/AllProducts';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { LogoProvider } from './context/LogoContext';
 
 // Import theme CSS
 import './assets/css/bootstrap.min.css';
@@ -22,20 +24,23 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Router>
+        <LogoProvider>
+          <Router>
           <div className="App">
             {/* <ThemeNavbar /> */}
             <main>
               <AnimatePresence mode="wait">
                 <Routes>
-                  <Route path="/" element={<Login />} />
-                  <Route path="/home" element={<ThemeHome />} />
+                  <Route path="/" element={<ThemeHome />} />
+                  <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/all-products" element={<AllProducts />} />
                   <Route path="/product/:id" element={<ThemeProductDetail />} />
                   <Route path="/product-detail/:id" element={<ProductDetail />} />
+                  <Route path="/category/:categorySlug" element={<DynamicCategory />} />
                   <Route path="/:categorySlug" element={<DynamicCategory />} />
                 </Routes>
               </AnimatePresence>
@@ -68,6 +73,7 @@ function App() {
             }}
           />
         </Router>
+      </LogoProvider>
       </CartProvider>
     </AuthProvider>
   );

@@ -11,7 +11,6 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
   const [categoryForm, setCategoryForm] = useState({
     name: '',
     description: '',
-    slug: '',
     parent_id: null
   });
 
@@ -21,7 +20,6 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
     setCategoryForm({
       name: '',
       description: '',
-      slug: '',
       parent_id: null
     });
     setShowCategoryForm(true);
@@ -33,7 +31,6 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
     setCategoryForm({
       name: category.name || '',
       description: category.description || '',
-      slug: category.slug || '',
       parent_id: category.parent_id || null
     });
     setShowCategoryForm(true);
@@ -177,26 +174,6 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
                     placeholder="Describe this category..."
                   />
                 </div>
-                <div className="mb-3">
-                  <label className="form-label">Slug</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={categoryForm.slug}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
-                    placeholder={selectedParentCategory ? 
-                      `${selectedParentCategory.slug}-category-name` : 
-                      'category-name'
-                    }
-                  />
-                  <small className="text-muted">
-                    {selectedParentCategory ? 
-                      `Will be: ${selectedParentCategory.slug}-${categoryForm.name.toLowerCase().replace(/\s+/g, '-') || 'category-name'}` : 
-                      'Leave empty to auto-generate from name'
-                    }
-                  </small>
-                </div>
-                
                 {selectedParentCategory && (
                   <div className="alert alert-info">
                     <i className="fas fa-info-circle me-2"></i>
@@ -248,7 +225,7 @@ const CategoryManagement = ({ categories, onCategoriesChange }) => {
                   <p className="card-text">{category.description}</p>
                   <p className="card-text">
                     <small className="text-muted">
-                      <strong>Slug:</strong> <code>{category.slug}</code>
+                      <strong>Category Code:</strong> <code>{String(category.sort_order || 0).padStart(2, '0')}</code>
                       {category.parent_id && (
                         <span className="ms-2">
                           <strong>Parent ID:</strong> {category.parent_id}

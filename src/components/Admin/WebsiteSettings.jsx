@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Save, RefreshCw, Trash2 } from 'lucide-react';
 import websiteSettingsApi from '../../services/websiteSettingsApi';
 import toast from 'react-hot-toast';
+import { useLogo } from '../../context/LogoContext';
 
 const WebsiteSettings = () => {
+  const { updateLogo, fetchWebsiteLogo } = useLogo();
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
@@ -64,6 +66,12 @@ const WebsiteSettings = () => {
       
       if (response.success) {
         toast.success('Setting updated successfully!');
+        
+        // If this is a logo setting, update the global logo
+        if (settingId.includes('logo') || settingId.includes('website_logo')) {
+          updateLogo(response.data.value);
+          console.log('WebsiteSettings: Updated global logo to:', response.data.value);
+        }
         
         // Update local state
         setSettings(prev => {
