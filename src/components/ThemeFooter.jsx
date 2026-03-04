@@ -6,6 +6,13 @@ import { useLogo } from '../context/LogoContext';
 const Footer = () => {
   const { websiteLogo } = useLogo();
 
+  const handleLinkClick = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <footer className="footer-section">
       <div className="container">
@@ -20,9 +27,9 @@ const Footer = () => {
             <div className="footer-links">
               <h5>Quick Links</h5>
               <ul>
-                <li><Link to="/">Home</Link></li>
-                <li><Link to="/all-products">Products</Link></li>
-                <li><Link to="/cart">Cart</Link></li>
+                <li><Link to="/" onClick={handleLinkClick}>Home</Link></li>
+                <li><Link to="/all-products" onClick={handleLinkClick}>Products</Link></li>
+                <li><Link to="/cart" onClick={handleLinkClick}>Cart</Link></li>
               </ul>
             </div>
           </div>

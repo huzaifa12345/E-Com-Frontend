@@ -425,19 +425,19 @@ const ThemeHome = () => {
       </section> */}
 
       {/* Features Section */}
-      <section className="features-section py-5">
+      <section className="features-section py-4">
         <div className="container">
           <div className="row">
-            <div className="col-md-3 col-6 mb-4">
+            <div className="col-md-4 col-6 mb-4">
               <div className="feature-card text-center">
                 <div className="feature-icon">
                   <FaTruck />
                 </div>
                 <h5>Free Shipping</h5>
-                <p>On orders over 2000</p>
+                <p>On orders over 10000</p>
               </div>
             </div>
-            <div className="col-md-3 col-6 mb-4">
+            <div className="col-md-4 col-6 mb-4">
               <div className="feature-card text-center">
                 <div className="feature-icon">
                   <FaShieldAlt />
@@ -446,16 +446,7 @@ const ThemeHome = () => {
                 <p>100% secure transactions</p>
               </div>
             </div>
-            <div className="col-md-3 col-6 mb-4">
-              <div className="feature-card text-center">
-                <div className="feature-icon">
-                  <FaUndo />
-                </div>
-                <h5>Easy Returns</h5>
-                <p>30-day return policy</p>
-              </div>
-            </div>
-            <div className="col-md-3 col-6 mb-4">
+            <div className="col-md-4 col-6 mb-4">
               <div className="feature-card text-center">
                 <div className="feature-icon">
                   <FaHeadset />
