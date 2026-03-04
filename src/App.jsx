@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThemeHome from './pages/ThemeHome';
+import About from './pages/About';
 import DynamicCategory from './pages/DynamicCategory';
 import ThemeProductDetail from './pages/ThemeProductDetail';
 import ProductDetail from './pages/ProductDetail';
@@ -36,6 +37,7 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/about" element={<About />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/all-products" element={<AllProducts />} />
                   <Route path="/product/:id" element={<ThemeProductDetail />} />
@@ -59,7 +61,7 @@ function App() {
               success: {
                 duration: 3000,
                 iconTheme: {
-                  primary: '#f26522',
+                  primary: '#22c55e',
                   secondary: '#fff',
                 },
               },

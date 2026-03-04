@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 import SideDrawer from '../components/SideDrawer';
 import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
+import TopBar from '../components/TopBar';
+import ThemeFooter from '../components/ThemeFooter';
 
 const ThemeProductDetail = () => {
   const { id } = useParams();
@@ -167,7 +169,12 @@ const ThemeProductDetail = () => {
     }
   };
 
-  const handleAddToCart = () => {
+  // Calculate average rating from reviews
+  const averageRating = reviews.length > 0 
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+    : 0;
+
+  const handleAddToCart = async () => {
     console.log('handleAddToCart called');
     console.log('selectedSize:', selectedSize);
     
@@ -224,94 +231,13 @@ const ThemeProductDetail = () => {
       <header className="modern-header">
         <div className="container">
           {/* Top Bar */}
-          <div className="top-bar">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="contact-info">
-                  <span><FaHeadset /> +1 800-123-4567</span>
-                  {' '}
-                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
-                </div>
-              </div>
-              <div className="col-md-6 text-end">
-                <div className="social-links">
-                  <Link to="/cart" className="text-white position-relative">
-                    <FaShoppingCart />
-                    {getCartItemsCount() > 0 && (
-                      <span className="cart-badge">{getCartItemsCount()}</span>
-                    )}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Navigation */}
-          <nav className="main-nav">
-            <div className="row align-items-center">
-              <div className="col-md-3">
-                <div className="logo">
-                  <Link to="/">
-                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  </Link>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="search-bar">
-                  <form className="d-flex">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search products..."
-                    />
-                    <button type="submit" className="btn btn-search">
-                      <FaSearch />
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div className="col-md-3 text-end">
-                <button
-                  className="btn btn-outline-light menu-toggle"
-                  onClick={() => setSideDrawerOpen(true)}
-                >
-                  <FaBars />
-                </button>
-              </div>
-            </div>
-          </nav>
-
-          {/* Custom Menu */}
-          <div className="custom_menu">
-            <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/cart">Cart</Link></li>
-              <li><Link to="/checkout">Checkout</Link></li>
-            </ul>
-          </div>
+          <TopBar 
+           onMenuToggle={() => setSideDrawerOpen(true)}
+          />
         </div>
       </header>
 
-      {/* <div className="logo_section">
-        <div className="container">
-          <div className="row">
-            <div className="col-sm-12">
-              <div className="logo">
-                <Link to="/">
-                  <img src={websiteLogo} alt="Kids Colours Logo" style={{ width: '120px', height: 'auto' }} />
-                </Link>
-                <button 
-                  className="ml-3 btn btn-outline-secondary"
-                  onClick={() => setSideDrawerOpen(true)}
-                >
-                  <FaBars size={20} color="#f26522" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
+  
       {/* Product Detail Section */}
       <div className="product_section layout_padding">
         <div className="container">
@@ -372,11 +298,11 @@ const ThemeProductDetail = () => {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${i < 4 ? 'text-warning fill-current' : 'text-gray-300'}`}
+                        className={`w-5 h-5 ${i < Math.floor(averageRating) ? 'text-warning fill-current' : 'text-gray-300'}`}
                       />
                     ))}
                   </div>
-                  <span className="rating_count ml-2">({reviews.length} Reviews)</span>
+                  <span className="rating_count ml-2">({reviews.length} Reviews) • {averageRating > 0 ? `${averageRating} ★` : 'No Rating'}</span>
                 </div>
 
                 <div className="price_section mb-4">
@@ -386,9 +312,24 @@ const ThemeProductDetail = () => {
                 </div>
 
                 {product.sku && (
-                  <div className="sku_section mb-4">
-                    <h4 style={{ color: '#262626', fontSize: '14px', fontWeight: 'normal' }}>SKU</h4>
-                    <p style={{ color: '#666', fontFamily: 'monospace' }}>{product.sku}</p>
+                  <div className="sku_section mb-4 p-3" style={{ backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+                    <h4 style={{ color: '#262626', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+                      <span style={{ color: '#f26522' }}>SKU:</span> {product.sku}
+                    </h4>
+                    {/* <p style={{ 
+                      color: '#495057', 
+                      fontFamily: 'monospace', 
+                      fontSize: '18px', 
+                      fontWeight: 'bold',
+                      backgroundColor: '#ffffff',
+                      padding: '8px 12px',
+                      borderRadius: '4px',
+                      border: '2px solid #f26522',
+                      display: 'inline-block',
+                      letterSpacing: '1px'
+                    }}>
+                      {product.sku}
+                    </p> */}
                   </div>
                 )}
 
@@ -545,7 +486,7 @@ const ThemeProductDetail = () => {
                     <ShoppingCart className="w-5 h-5 mr-2" />
                     Add to Cart
                   </motion.button>
-                  <motion.button
+                  {/* <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="btn btn-outline-secondary"
@@ -553,27 +494,22 @@ const ThemeProductDetail = () => {
                   >
                     <Heart className="w-5 h-5 mr-2" />
                     Wishlist
-                  </motion.button>
+                  </motion.button> */}
                 </div>
 
                 <div className="trust_badges">
                   <div className="row">
-                    <div className="col-4">
+                    <div className="col-6">
                       <div className="text-center">
                         <Truck className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
-                        <span className="d-block">Free Shipping</span>
+                        <span className='d-block'>Shipping Fee Rs 250</span>
+                        {/* <span className="d-block">Free Shipping on Orders over Rs 10,000</span> */}
                       </div>
                     </div>
-                    <div className="col-4">
+                    <div className="col-6">
                       <div className="text-center">
                         <Shield className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
-                        <span className="d-block">Secure Payment</span>
-                      </div>
-                    </div>
-                    <div className="col-4">
-                      <div className="text-center">
-                        <RefreshCw className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
-                        <span className="d-block">30-Day Returns</span>
+                        <span className="d-block">Quality Assured</span>
                       </div>
                     </div>
                   </div>
@@ -910,7 +846,7 @@ const ThemeProductDetail = () => {
       </section>
 
       {/* Footer Section */}
-      <footer className="footer-section">
+      {/* <footer className="footer-section">
         <div className="container">
           <div className="row">
             <div className="col-lg-4 col-md-6 mb-4">
@@ -941,12 +877,13 @@ const ThemeProductDetail = () => {
           <div className="footer-bottom">
             <div className="row">
               <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
+                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solutions</span></p>
               </div>
             </div>
           </div>
         </div>
-      </footer>
+      </footer> */}
+      <ThemeFooter />
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />

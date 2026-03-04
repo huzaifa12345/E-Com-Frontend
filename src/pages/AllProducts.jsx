@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaHeadset, FaTruck, FaShoppingCart, FaSearch, FaBars, FaEnvelope } from 'react-icons/fa';
 import { ShoppingCart, Heart, Star } from 'lucide-react';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
 import SideDrawer from '../components/SideDrawer';
+import TopBar from '../components/TopBar';
+import ThemeFooter from '../components/ThemeFooter';
 import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
 
@@ -13,6 +15,7 @@ const AllProducts = () => {
   const { addToCart, getCartItemsCount } = useCart();
   const { websiteLogo } = useLogo();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +29,17 @@ const AllProducts = () => {
   useEffect(() => {
     fetchProducts();
   }, [searchQuery, sortBy, priceRange, currentPage]);
+
+  // Initialize searchQuery from URL (TopBar default navigation uses ?search=...)
+  useEffect(() => {
+    const q = searchParams.get('search') || '';
+    // Avoid loops: only update when it differs
+    if (q !== searchQuery) {
+      setSearchQuery(q);
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const fetchProducts = async () => {
     try {
@@ -53,6 +67,12 @@ const AllProducts = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
+    const q = searchQuery.trim();
+    if (q) {
+      setSearchParams({ search: q });
+    } else {
+      setSearchParams({});
+    }
     fetchProducts();
   };
 
@@ -119,63 +139,15 @@ const AllProducts = () => {
 
   return (
     <div className="all-products-page">
-      {/* Header - Same as ThemeHome */}
+      {/* Header - Using TopBar Component */}
       <header className="modern-header">
         <div className="container">
-          {/* Top Bar */}
-          <div className="top-bar">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="contact-info">
-                  <span><FaHeadset /> +1 800-123-4567</span>
-                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
-                </div>
-              </div>
-              <div className="col-md-6 text-end">
-                <div className="social-links">
-                  <Link to="/cart" className="text-white position-relative">
-                    <FaShoppingCart />
-                    {getCartItemsCount() > 0 && (
-                      <span className="cart-badge">{getCartItemsCount()}</span>
-                    )}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Main Navigation */}
-          <nav className="main-nav">
-            <div className="row align-items-center">
-              <div className="col-md-3">
-                <div className="logo">
-                  <Link to="/">
-                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  </Link>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="search-bar">
-                  <form onSubmit={handleSearch} className="d-flex">
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      placeholder="Search products by name or SKU..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button type="submit" className="btn btn-search">
-                      <FaSearch />
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div className="col-md-3 text-end">
-                <button className="btn btn-outline-light menu-toggle" onClick={() => setSideDrawerOpen(true)}>
-                  <FaBars />
-                </button>
-              </div>
-            </div>
-          </nav>
+          <TopBar 
+            onMenuToggle={() => setSideDrawerOpen(true)}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+          />
         </div>
       </header>
 
@@ -282,106 +254,71 @@ const AllProducts = () => {
       </div>
 
       {/* Footer - Same as ThemeHome */}
-      <footer className="footer-section">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-4 col-md-6 mb-4">
-              <div className="footer-about">
-                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-              </div>
-            </div>
-            <div className="col-lg-2 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Quick Links</h5>
-                <ul>
-                  <li><Link to="/">Home</Link></li>
-                  <li><Link to="/all-products">Products</Link></li>
-                  <li><Link to="/cart">Cart</Link></li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-contact">
-                <h5>Contact Info</h5>
-                <p><FaHeadset /> +1 800-123-4567</p>
-                <p><FaEnvelope /> info@kidscolours.com</p>
-                <p><FaTruck /> Free Shipping on orders over Rs 2000</p>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div className="row">
-              <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+
+      <ThemeFooter />
 
       {/* Add ThemeHome footer styles and DynamicCategory product card styles */}
       <style jsx>{`
-        .footer-section {
-          background: #333;
-          color: white;
-          padding: 50px 0 20px;
-          border-radius: 20px 20px 0 0;
-        }
+        // .footer-section {
+        //   background: #333;
+        //   color: white;
+        //   padding: 50px 0 20px;
+        //   border-radius: 20px 20px 0 0;
+        // }
 
-        .footer-about img {
-          max-height: 50px;
-        }
+        // .footer-about img {
+        //   max-height: 50px;
+        // }
 
-        .footer-links h5,
-        .footer-contact h5 {
-          color: #f26522;
-          margin-bottom: 20px;
-        }
+        // .footer-links h5,
+        // .footer-contact h5 {
+        //   color: #f26522;
+        //   margin-bottom: 20px;
+        // }
 
-        .footer-links ul {
-          list-style: none;
-          padding: 0;
-        }
+        // .footer-links ul {
+        //   list-style: none;
+        //   padding: 0;
+        // }
 
-        .footer-links ul li {
-          margin-bottom: 10px;
-        }
+        // .footer-links ul li {
+        //   margin-bottom: 10px;
+        // }
 
-        .footer-links a {
-          color: #ccc;
-          text-decoration: none;
-          transition: color 0.3s;
-        }
+        // .footer-links a {
+        //   color: #ccc;
+        //   text-decoration: none;
+        //   transition: color 0.3s;
+        // }
 
-        .footer-links a:hover {
-          color: #f26522;
-        }
+        // .footer-links a:hover {
+        //   color: #f26522;
+        // }
 
-        .footer-contact p {
-          color: #ccc;
-          margin-bottom: 10px;
-        }
+        // .footer-contact p {
+        //   color: #ccc;
+        //   margin-bottom: 10px;
+        // }
 
-        .footer-contact p i {
-          margin-right: 10px;
-          color: #f26522;
-        }
+        // .footer-contact p i {
+        //   margin-right: 10px;
+        //   color: #f26522;
+        // }
 
-        .footer-bottom {
-          border-top: 1px solid #555;
-          margin-top: 30px;
-          padding-top: 20px;
-        }
+        // .footer-bottom {
+        //   border-top: 1px solid #555;
+        //   margin-top: 30px;
+        //   padding-top: 20px;
+        // }
 
-        .footer-bottom p {
-          color: #ccc;
-          margin: 0;
-        }
+        // .footer-bottom p {
+        //   color: #ccc;
+        //   margin: 0;
+        // }
 
-        .footer-bottom span {
-          color: #f26522;
-        }
+        // .footer-bottom span {
+        //   color: #f26522;
+        // }
 
         /* Product Card Styles - Same as DynamicCategory */
         .product-card {
@@ -493,6 +430,8 @@ const AllProducts = () => {
           }
         }
       `}</style>
+
+     
 
       {/* SideDrawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />

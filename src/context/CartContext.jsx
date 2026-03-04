@@ -2,6 +2,13 @@ import { createContext, useContext, useReducer, useEffect } from 'react';
 
 const CartContext = createContext();
 
+const SHIPPING_OPTIONS = [
+  { id: 'standard', label: 'Standard Delivery', cost: 250 },
+  // { id: 'express', label: 'Express Delivery', cost: 500 },
+];
+
+const FREE_SHIPPING_THRESHOLD = 10000;
+
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TO_CART':
@@ -63,6 +70,12 @@ const cartReducer = (state, action) => {
         items: action.payload
       };
 
+    case 'SET_SHIPPING_METHOD':
+      return {
+        ...state,
+        shippingMethod: action.payload
+      };
+
     default:
       return state;
   }
@@ -71,7 +84,8 @@ const cartReducer = (state, action) => {
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, {
     items: [],
-    isOpen: false
+    isOpen: false,
+    shippingMethod: 'standard'
   });
 
   // Load cart from localStorage on mount
@@ -80,7 +94,12 @@ export const CartProvider = ({ children }) => {
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
-        dispatch({ type: 'SET_CART_ITEMS', payload: parsedCart.items });
+        if (parsedCart?.items) {
+          dispatch({ type: 'SET_CART_ITEMS', payload: parsedCart.items });
+        }
+        if (parsedCart?.shippingMethod) {
+          dispatch({ type: 'SET_SHIPPING_METHOD', payload: parsedCart.shippingMethod });
+        }
       } catch (error) {
         console.error('Error loading cart from localStorage:', error);
       }
@@ -90,7 +109,7 @@ export const CartProvider = ({ children }) => {
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(state));
-  }, [state.items]);
+  }, [state.items, state.isOpen, state.shippingMethod]);
 
   const addToCart = (product, quantity = 1) => {
     dispatch({ type: 'ADD_TO_CART', payload: { ...product, quantity } });
@@ -120,6 +139,14 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'SET_CART_OPEN', payload: isOpen });
   };
 
+  const setShippingMethod = (methodId) => {
+    const isValid = SHIPPING_OPTIONS.some((o) => o.id === methodId);
+    dispatch({
+      type: 'SET_SHIPPING_METHOD',
+      payload: isValid ? methodId : 'standard'
+    });
+  };
+
   const getCartTotal = () => {
     return state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
@@ -128,16 +155,28 @@ export const CartProvider = ({ children }) => {
     return state.items.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const getShippingCost = (subtotal, methodId = state.shippingMethod) => {
+    if (!subtotal || Number.isNaN(Number(subtotal))) return 0;
+    if (Number(subtotal) >= FREE_SHIPPING_THRESHOLD) return 0;
+
+    const selected = SHIPPING_OPTIONS.find((o) => o.id === methodId) || SHIPPING_OPTIONS[0];
+    return selected.cost;
+  };
+
   const value = {
     ...state,
+    shippingOptions: SHIPPING_OPTIONS,
+    freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
     toggleCart,
     setCartOpen,
+    setShippingMethod,
     getCartTotal,
-    getCartItemsCount
+    getCartItemsCount,
+    getShippingCost
   };
 
   return (

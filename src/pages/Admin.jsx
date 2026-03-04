@@ -276,7 +276,7 @@ const Admin = () => {
   const renderDashboard = () => (
     <div className="row">
       {/* Stats Cards - Kids Colours Theme */}
-      <div className="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-4">
+      <div className="col-xl-4 col-lg-6 col-md-6 col-sm-6 mb-4">
         <div className="card" style={{ backgroundColor: '#f26522', color: 'white' }}>
           <div className="card-body">
             <div className="row align-items-center">
@@ -292,7 +292,7 @@ const Admin = () => {
         </div>
       </div>
 
-      <div className="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-4">
+      <div className="col-xl-4 col-lg-6 col-md-6 col-sm-6 mb-4">
         <div className="card" style={{ backgroundColor: '#007bff', color: 'white' }}>
           <div className="card-body">
             <div className="row align-items-center">
@@ -308,7 +308,7 @@ const Admin = () => {
         </div>
       </div>
 
-      <div className="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-4">
+      <div className="col-xl-4 col-lg-6 col-md-6 col-sm-6 mb-4">
         <div className="card" style={{ backgroundColor: '#28a745', color: 'white' }}>
           <div className="card-body">
             <div className="row align-items-center">
@@ -324,22 +324,6 @@ const Admin = () => {
         </div>
       </div>
 
-      <div className="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-4">
-        <div className="card" style={{ backgroundColor: '#6f42c1', color: 'white' }}>
-          <div className="card-body">
-            <div className="row align-items-center">
-              <div className="col">
-                <h5 className="card-title mb-0">Total Users</h5>
-                <h2 className="mb-0">{stats.totalUsers || 0}</h2>
-              </div>
-              <div className="col-auto">
-                <Users size={32} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Top Products */}
       <div className="col-lg-6 mb-4">
         <div className="card">
@@ -348,20 +332,32 @@ const Admin = () => {
           </div>
           <div className="card-body">
             {products.slice(0, 5).map((product) => (
-              <div key={product.id} className="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                <div className="d-flex align-items-center">
-                  <img 
-                    src={product.image_url || '/src/assets/images/tshirt-img.png'} 
-                    alt={product.name} 
-                    className="rounded me-3" 
-                    style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+              <div
+                key={product.id}
+                className="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom"
+              >
+                <div className="d-flex align-items-center flex-grow-1">
+                  <img
+                    src={product.image_url || '/src/assets/images/tshirt-img.png'}
+                    alt={product.name}
+                    className="rounded"
+                    style={{ width: '48px', height: '48px', objectFit: 'cover', marginRight: '14px' }}
                   />
-                  <div>
-                    <h6 className="mb-1">{product.name}</h6>
-                    <small className="text-muted">{product.price}</small>
+                  <div className="overflow-hidden">
+                    <h6 className="mb-1 text-truncate" style={{ maxWidth: '220px' }}>
+                      {product.name}
+                    </h6>
+                    <small className="text-muted d-block">
+                      Rs. {Number(product.price || 0).toFixed(2)}
+                    </small>
                   </div>
                 </div>
-                <span style={{ color: '#f26522', fontWeight: 'bold' }}>{product.stock_quantity || 0} in stock</span>
+                <span
+                  className="ms-3"
+                  style={{ color: '#f26522', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                >
+                  {product.stock_quantity || 0} in stock
+                </span>
               </div>
             ))}
           </div>
@@ -426,15 +422,15 @@ const Admin = () => {
           </div>
           <div className="card-body">
             <div className="table-responsive">
-              <table className="table table-hover">
+              <table className="table table-hover align-middle">
                 <thead>
                   <tr>
                     <th>Product</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th className="text-center">Category</th>
+                    <th className="text-center">Price</th>
+                    <th className="text-center">Stock</th>
+                    <th className="text-center">Status</th>
+                    <th className="text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -450,24 +446,29 @@ const Admin = () => {
                           />
                           <div>
                             <h6 className="mb-0">{product.name}</h6>
-                            <small className="text-muted">{product.description?.substring(0, 50)}...</small>
+                            {product.description && (
+                              <small className="text-muted d-block">
+                                {product.description.substring(0, 50)}
+                                {product.description.length > 50 && '...'}
+                              </small>
+                            )}
                           </div>
                         </div>
                       </td>
-                      <td>{product.category_relation?.name || 'N/A'}</td>
-                      <td>{product.price}</td>
-                      <td>
+                      <td className="text-center">{product.category_relation?.name || 'N/A'}</td>
+                      <td className="text-center">Rs. {Number(product.price || 0).toFixed(2)}</td>
+                      <td className="text-center">
                         <span className={`badge ${product.stock_quantity > 10 ? 'bg-success' : 'bg-danger'}`}>
                           {product.stock_quantity}
                         </span>
                       </td>
-                      <td>
+                      <td className="text-center">
                         <span className={`badge ${product.is_active ? 'bg-success' : 'bg-secondary'}`}>
                           {product.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td>
-                        <div className="btn-group">
+                      <td className="text-center">
+                        <div className="btn-group justify-content-center">
                           <button 
                             onClick={() => handleEditProduct(product)}
                             className="btn btn-sm btn-outline-primary"

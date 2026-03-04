@@ -10,6 +10,8 @@ import { useLogo } from '../context/LogoContext';
 import './DynamicCategory.css';
 import {FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars } from 'react-icons/fa'
 import SideDrawer from '../components/SideDrawer';
+import ThemeFooter from '../components/ThemeFooter';
+import TopBar from '../components/TopBar';
 
 const DynamicCategory = () => {
   const { categorySlug } = useParams();
@@ -159,71 +161,9 @@ const DynamicCategory = () => {
       <header className="modern-header">
         <div className="container">
           {/* Top Bar */}
-          <div className="top-bar">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="contact-info">
-                  <span><FaHeadset /> +1 800-123-4567</span>
-                  {' '}
-                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
-                </div>
-              </div>
-              <div className="col-md-6 text-end">
-                <div className="social-links">
-                  <Link to="/cart" className="text-white position-relative">
-                    <FaShoppingCart />
-                    {getCartItemsCount() > 0 && (
-                      <span className="cart-badge">{getCartItemsCount()}</span>
-                    )}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Navigation */}
-          <nav className="main-nav">
-            <div className="row align-items-center">
-              <div className="col-md-3">
-                <div className="logo">
-                  <Link to="/">
-                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  </Link>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="search-bar">
-                  <form className="d-flex">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search products..."
-                    />
-                    <button type="submit" className="btn btn-search">
-                      <FaSearch />
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div className="col-md-3 text-end">
-                <button
-                  className="btn btn-outline-light menu-toggle"
-                  onClick={() => setSideDrawerOpen(true)}
-                >
-                  <FaBars />
-                </button>
-              </div>
-            </div>
-          </nav>
-
-          {/* Custom Menu */}
-          <div className="custom_menu">
-            <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/cart">Cart</Link></li>
-              <li><Link to="/checkout">Checkout</Link></li>
-            </ul>
-          </div>
+          <TopBar 
+          onMenuToggle={() => setSideDrawerOpen(true)}
+          />
         </div>
       </header>
 
@@ -383,52 +323,7 @@ const DynamicCategory = () => {
       </div>
 
       {/* Footer Section */}
-      <footer className="footer-section">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-4 col-md-6 mb-4">
-              <div className="footer-about">
-                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-              </div>
-            </div>
-            <div className="col-lg-2 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Quick Links</h5>
-                <ul>
-                  <li><a href="/">Home</a></li>
-                  <li><a href="/cart">Cart</a></li>
-                  <li><a href="/checkout">Checkout</a></li>
-                </ul>
-              </div>
-            </div>
-            {/* <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Customer Service</h5>
-                <ul>
-                  <li><a href="/contact">Contact Us</a></li>
-                  <li><a href="/about">About Us</a></li>
-                </ul>
-              </div>
-            </div> */}
-            <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-contact">
-                <h5>Contact Info</h5>
-                                <p><FaHeadset /> +1 800-123-4567</p>
-                                <p><FaEnvelope /> info@kidscolours.com</p>
-                                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div className="row">
-              <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+     <ThemeFooter />
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
     </div>
   );

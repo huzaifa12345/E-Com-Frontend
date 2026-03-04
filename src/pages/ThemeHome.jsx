@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import SideDrawer from '../components/SideDrawer';
+import TopBar from '../components/TopBar';
+import ThemeFooter from '../components/ThemeFooter';
 import '../assets/css/mobile-responsive.css';
 
 const ThemeHome = () => {
@@ -186,9 +188,11 @@ const ThemeHome = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    // Reuse global All Products search (name + SKU) for consistency
+    navigate(`/all-products?search=${encodeURIComponent(query)}`);
   };
 
   if (loading) {
@@ -208,75 +212,15 @@ const ThemeHome = () => {
       {/* Modern Header */}
       <header className="modern-header">
         <div className="container">
-          {/* Top Bar */}
-          <div className="top-bar">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="contact-info">
-                  <span><FaHeadset /> +1 800-123-4567</span>
-                  {' '}
-                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
-                </div>
-              </div>
-              <div className="col-md-6 text-end">
-                <div className="social-links">
-                  <Link to={user ? "/profile" : "/login"} className="text-white me-3">
-                    <FaUser />
-                    <span className="ms-1">
-                      Hi, {user ? user.first_name || user.name || 'User' : 'Guest'}
-                    </span>
-                  </Link>
-                  {/* <a href="#" className="text-white me-3"><FaHeart /></a> */}
-                  <Link to="/cart" className="text-white position-relative">
-                    <FaShoppingCart />
-                    {getCartItemsCount() > 0 && (
-                      <span className="cart-badge">{getCartItemsCount()}</span>
-                    )}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Navigation */}
-          <nav className="main-nav">
-            <div className="row align-items-center">
-              <div className="col-md-3">
-                <div className="logo">
-                  <Link to="/">
-                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  </Link>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="search-bar">
-                  <form onSubmit={handleSearch} className="d-flex">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search products..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <button type="submit" className="btn btn-search">
-                      <FaSearch />
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div className="col-md-3 text-end">
-                <button 
-                  className="btn btn-outline-light menu-toggle"
-                  onClick={() => setSideDrawerOpen(true)}
-                >
-                  <FaBars />
-                </button>
-              </div>
-            </div>
-          </nav>
+          <TopBar 
+            onMenuToggle={() => setSideDrawerOpen(true)}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+          />
 
           {/* Category Navigation */}
-          <div className="category-nav">
+          {/* <div className="category-nav">
             <div className="row">
               <div className="col-12">
                 <div className="category-menu">
@@ -297,7 +241,7 @@ const ThemeHome = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </header>
 
@@ -525,61 +469,7 @@ const ThemeHome = () => {
       </section>
 
       {/* Footer */}
-      <footer className="footer-section">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-4 col-md-6 mb-4">
-              <div className="footer-about">
-                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-                {/* <div className="social-links">
-                  <a href="#" className="social-icon"><FaFacebook /></a>
-                  <a href="#" className="social-icon"><FaTwitter /></a>
-                  <a href="#" className="social-icon"><FaInstagram /></a>
-                  <a href="#" className="social-icon"><FaLinkedin /></a>
-                </div> */}
-              </div>
-            </div>
-            <div className="col-lg-2 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Quick Links</h5>
-                <ul>
-                  <li><Link to="/">Home</Link></li>
-                  <li><Link to="/all-products">Products</Link></li>
-                  {/* <li><Link to="/categories">Categories</Link></li> */}
-                  <li><Link to="/cart">Cart</Link></li>
-                </ul>
-              </div>
-            </div>
-            {/* <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Customer Service</h5>
-                <ul>
-                  <li><Link to="/contact">Contact Us</Link></li>
-                  <li><Link to="/shipping">Shipping Info</Link></li>
-                  <li><Link to="/returns">Returns</Link></li>
-                  <li><Link to="/faq">FAQ</Link></li>
-                </ul>
-              </div>
-            </div> */}
-            <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-contact">
-                <h5>Contact Info</h5>
-                <p><FaHeadset /> +1 800-123-4567</p>
-                <p><FaEnvelope /> info@kidscolours.com</p>
-                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div className="row">
-              <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <ThemeFooter />
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />

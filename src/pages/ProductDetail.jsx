@@ -259,7 +259,7 @@ return (
                 <div className="contact-info">
                   <span><FaHeadset /> +1 800-123-4567</span>
                   {' '}
-                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
+                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 10,000</span>
                 </div>
               </div>
               <div className="col-md-6 text-end">
@@ -716,7 +716,7 @@ return (
           <div className="footer-bottom">
             <div className="row">
               <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
+                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solutions</span></p>
               </div>
             </div>
           </div>

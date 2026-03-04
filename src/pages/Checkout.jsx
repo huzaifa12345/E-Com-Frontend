@@ -8,10 +8,21 @@ import SideDrawer from '../components/SideDrawer';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
 import { FaBars, FaHeadset, FaTruck as FaTruckIcon, FaShoppingCart, FaSearch, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import TopBar from '../components/TopBar';
+import ThemeFooter from '../components/ThemeFooter';
 
 const Checkout = () => {
   const { websiteLogo } = useLogo();
-  const { items, getCartTotal, clearCart, getCartItemsCount } = useCart();
+  const {
+    items,
+    shippingMethod,
+    shippingOptions,
+    freeShippingThreshold,
+    getShippingCost,
+    getCartTotal,
+    clearCart,
+    getCartItemsCount
+  } = useCart();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -45,8 +56,10 @@ const Checkout = () => {
   });
 
   const subtotal = getCartTotal();
-  const shipping = subtotal > 50 ? 0 : 9.99;
+  const shipping = getShippingCost(subtotal, shippingMethod);
   const total = subtotal + shipping;
+  const shippingLabel =
+    shippingOptions?.find((o) => o.id === shippingMethod)?.label || 'Standard Delivery';
 
   const handleScreenshotUpload = async (file) => {
     if (!file) return null;
@@ -169,62 +182,9 @@ const Checkout = () => {
         <header className="modern-header">
           <div className="container">
             {/* Top Bar */}
-            <div className="top-bar">
-              <div className="row align-items-center">
-                <div className="col-md-6">
-                  <div className="contact-info">
-                    <span><FaHeadset /> +1 800-123-4567</span>
-                    {' '}
-                    <span className="ms-3"><FaTruckIcon /> Free Shipping on orders over Rs 2000</span>
-                  </div>
-                </div>
-                <div className="col-md-6 text-end">
-                  <div className="social-links">
-                    <Link to="/cart" className="text-white position-relative">
-                      <FaShoppingCart />
-                      {getCartItemsCount() > 0 && (
-                        <span className="cart-badge">{getCartItemsCount()}</span>
-                      )}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Navigation */}
-            <nav className="main-nav">
-              <div className="row align-items-center">
-                <div className="col-md-3">
-                  <div className="logo">
-                    <Link to="/">
-                      <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                    </Link>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="search-bar">
-                    <form className="d-flex">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Search products..."
-                      />
-                      <button type="submit" className="btn btn-search">
-                        <FaSearch />
-                      </button>
-                    </form>
-                  </div>
-                </div>
-                <div className="col-md-3 text-end">
-                  <button 
-                    className="btn btn-outline-light menu-toggle"
-                    onClick={() => setSideDrawerOpen(true)}
-                  >
-                    <FaBars /> 
-                  </button>
-                </div>
-              </div>
-            </nav>
+            <TopBar 
+            onMenuToggle={() => setSideDrawerOpen(true)}
+            />
           </div>
         </header>
         
@@ -232,49 +192,14 @@ const Checkout = () => {
           <ShoppingBag className="w-20 h-20 mx-auto text-gray-400 mb-4" />
           <h1 className="banner_taital mb-3">Your Cart is Empty</h1>
           <p className="lorem_text mb-4">Add some products to your cart before checkout!</p>
-          <Link to="/" className="btn btn-primary btn-lg" style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}>
+          <Link to="/all-products" className="btn btn-primary btn-lg" style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}>
             Continue Shopping
           </Link>
         </div>
 
         {/* Footer Section */}
-        <footer className="footer-section">
-          <div className="container">
-            <div className="row">
-              <div className="col-lg-4 col-md-6 mb-4">
-                <div className="footer-about">
-                  <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-                </div>
-              </div>
-              <div className="col-lg-2 col-md-6 mb-4">
-                <div className="footer-links">
-                  <h5>Quick Links</h5>
-                  <ul>
-                    <li><Link to="/">Home</Link></li>
-                    <li><Link to="/cart">Cart</Link></li>
-                    <li><Link to="/checkout">Checkout</Link></li>
-                  </ul>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6 mb-4">
-                <div className="footer-contact">
-                  <h5>Contact Info</h5>
-                  <p><FaHeadset /> +1 800-123-4567</p>
-                  <p><FaEnvelope /> info@kidscolours.com</p>
-                  <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
-                </div>
-              </div>
-            </div>
-            <div className="footer-bottom">
-              <div className="row">
-                <div className="col-12 text-center">
-                  <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
+       
+        <ThemeFooter />
 
         {/* Side Drawer */}
         <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
@@ -395,13 +320,13 @@ const Checkout = () => {
         <header className="modern-header">
           <div className="container">
             {/* Top Bar */}
-            <div className="top-bar">
+            {/* <div className="top-bar">
               <div className="row align-items-center">
                 <div className="col-md-6">
                   <div className="contact-info">
                     <span><FaHeadset /> +1 800-123-4567</span>
                     {' '}
-                    <span className="ms-3"><FaTruckIcon /> Free Shipping on orders over Rs 2000</span>
+                    <span className="ms-3"><FaTruckIcon /> Free Shipping on orders over Rs 10,000</span>
                   </div>
                 </div>
                 <div className="col-md-6 text-end">
@@ -415,10 +340,10 @@ const Checkout = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Main Navigation */}
-            <nav className="main-nav">
+            {/* <nav className="main-nav">
               <div className="row align-items-center">
                 <div className="col-md-3">
                   <div className="logo">
@@ -450,7 +375,7 @@ const Checkout = () => {
                   </button>
                 </div>
               </div>
-            </nav>
+            </nav> */}
           </div>
         </header>
         
@@ -472,7 +397,7 @@ const Checkout = () => {
         </div>
 
         {/* Footer Section */}
-        <footer className="footer-section">
+        {/* <footer className="footer-section">
           <div className="container">
             <div className="row">
               <div className="col-lg-4 col-md-6 mb-4">
@@ -503,12 +428,12 @@ const Checkout = () => {
             <div className="footer-bottom">
               <div className="row">
                 <div className="col-12 text-center">
-                  <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
+                  <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solutions</span></p>
                 </div>
               </div>
             </div>
           </div>
-        </footer>
+        </footer> */}
 
         {/* Side Drawer */}
         <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
@@ -628,13 +553,16 @@ const Checkout = () => {
       <header className="modern-header">
         <div className="container">
           {/* Top Bar */}
-          <div className="top-bar">
+          <TopBar 
+            onMenuToggle={() => setSideDrawerOpen(true)}
+          />
+          {/* <div className="top-bar">
             <div className="row align-items-center">
               <div className="col-md-6">
                 <div className="contact-info">
                   <span><FaHeadset /> +1 800-123-4567</span>
                   {' '}
-                  <span className="ms-3"><FaTruckIcon /> Free Shipping on orders over Rs 2000</span>
+                  <span className="ms-3"><FaTruckIcon /> Free Shipping on orders over Rs 10,000</span>
                 </div>
               </div>
               <div className="col-md-6 text-end">
@@ -648,10 +576,10 @@ const Checkout = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Main Navigation */}
-          <nav className="main-nav">
+          {/* <nav className="main-nav">
             <div className="row align-items-center">
               <div className="col-md-3">
                 <div className="logo">
@@ -683,7 +611,7 @@ const Checkout = () => {
                 </button>
               </div>
             </div>
-          </nav>
+          </nav> */}
         </div>
       </header>
 
@@ -833,7 +761,7 @@ const Checkout = () => {
                   <div className="box_main">
                     <h3 className="shirt_text mb-4">Payment Information</h3>
                     <div className="mb-4">
-                      <div className="form-check form-check-inline mb-2">
+                      {/* <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
                           type="radio"
@@ -860,7 +788,7 @@ const Checkout = () => {
                         <label className="form-check-label" htmlFor="casheasy">
                           📱 Cash Easy
                         </label>
-                      </div>
+                      </div> */}
                       <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
@@ -919,7 +847,7 @@ const Checkout = () => {
                       </div>
                     </div>
 
-                    {paymentInfo.method === 'card' && (
+                    {/* {paymentInfo.method === 'card' && (
                       <div className="row">
                         <div className="col-12 mb-3">
                           <label className="form-label">Cardholder Name</label>
@@ -963,7 +891,7 @@ const Checkout = () => {
                           />
                         </div>
                       </div>
-                    )}
+                    )} */}
 
                     {/* Bank Transfer Payment */}
                     {paymentInfo.method === 'banktransfer' && (
@@ -1272,26 +1200,36 @@ const Checkout = () => {
               <h3 className="shirt_text mb-4">Order Summary</h3>
               
               <div className="summary_details mb-4">
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="lorem_text">Subtotal</span>
-                  <span className="shirt_text">{subtotal.toFixed(2)}</span>
+                <div className="checkout-summary-line">
+                  <div className="checkout-summary-left">
+                    <div className="checkout-summary-label">Subtotal</div>
+                  </div>
+                  <div className="checkout-summary-right">Rs. {subtotal.toFixed(2)}</div>
                 </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="lorem_text">Shipping</span>
-                  <span className="shirt_text">
-                    {shipping === 0 ? 'FREE' : shipping.toFixed(2)}
-                  </span>
+
+                <div className="checkout-summary-line">
+                  <div className="checkout-summary-left">
+                    <div className="checkout-summary-label">Shipping</div>
+                    <div className="checkout-summary-sub">{shippingLabel}</div>
+                  </div>
+                  <div className="checkout-summary-right">
+                    {shipping === 0 ? 'FREE' : `Rs. ${shipping.toFixed(2)}`}
+                  </div>
                 </div>
-                {shipping > 0 && (
+                {subtotal < freeShippingThreshold && shipping > 0 && (
                   <div className="free-shipping-notice text-success small mb-2">
-                    <Truck className="w-4 h-4 me-1" />
-                    Add {(50 - subtotal).toFixed(2)} more for free shipping!
+                    <Truck className="w-4 h-4 checkout-free-ship-icon" />
+                    <span>
+                      Add Rs. {(freeShippingThreshold - subtotal).toFixed(2)} more for free shipping!
+                    </span>
                   </div>
                 )}
                 <hr />
-                <div className="d-flex justify-content-between">
-                  <h5 className="shirt_text">Total</h5>
-                  <h5 className="shirt_text">{total.toFixed(2)}</h5>
+                <div className="checkout-summary-line checkout-summary-total">
+                  <div className="checkout-summary-left">
+                    <div className="checkout-summary-label">Total</div>
+                  </div>
+                  <div className="checkout-summary-right">Rs. {total.toFixed(2)}</div>
                 </div>
               </div>
 
@@ -1300,7 +1238,7 @@ const Checkout = () => {
                   <div className="row">
                     <div className="col-4">
                       <Truck className="w-6 h-6 mx-auto mb-1" style={{ color: '#f26522' }} />
-                      <small>Free Shipping</small>
+                      <small>Free Shipping on Order over Rs. {freeShippingThreshold}</small>
                     </div>
                     <div className="col-4">
                       <CreditCard className="w-6 h-6 mx-auto mb-1" style={{ color: '#f26522' }} />
@@ -1318,44 +1256,8 @@ const Checkout = () => {
         </div>
       </div>
 
-      {/* Footer Section */}
-      <footer className="footer-section">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-4 col-md-6 mb-4">
-              <div className="footer-about">
-                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-              </div>
-            </div>
-            <div className="col-lg-2 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Quick Links</h5>
-                <ul>
-                  <li><Link to="/">Home</Link></li>
-                  <li><Link to="/cart">Cart</Link></li>
-                  <li><Link to="/checkout">Checkout</Link></li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-contact">
-                <h5>Contact Info</h5>
-                <p><FaHeadset /> +1 800-123-4567</p>
-                <p><FaEnvelope /> info@kidscolours.com</p>
-                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div className="row">
-              <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+     
+      <ThemeFooter />
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
@@ -1429,12 +1331,64 @@ const Checkout = () => {
           margin-bottom: 1rem;
         }
 
+        .checkout-summary-line {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+          margin-bottom: 10px;
+        }
+
+        .checkout-summary-left {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .checkout-summary-label {
+          font-weight: 600;
+          color: #666;
+          line-height: 1.2;
+        }
+
+        .checkout-summary-sub {
+          margin-top: 4px;
+          font-size: 12px;
+          color: #999;
+          line-height: 1.2;
+        }
+
+        .checkout-summary-right {
+          flex: none;
+          text-align: right;
+          font-weight: 700;
+          color: #111;
+          white-space: nowrap;
+        }
+
+        .checkout-summary-total .checkout-summary-label {
+          color: #111;
+          font-weight: 800;
+        }
+
+        .checkout-summary-total .checkout-summary-right {
+          font-weight: 900;
+        }
+
         .free-shipping-notice {
           background: #d4edda;
           color: #155724;
           padding: 8px 12px;
           border-radius: 4px;
           font-size: 12px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          line-height: 1.2;
+        }
+
+        .checkout-free-ship-icon {
+          flex: none;
+          display: block;
         }
 
         .trust-badges {

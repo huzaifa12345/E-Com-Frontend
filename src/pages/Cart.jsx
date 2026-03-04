@@ -1,53 +1,32 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useLogo } from '../context/LogoContext';
-import { 
-  Plus, 
-  Minus, 
-  Trash2, 
-  ArrowLeft,
-  ShoppingBag,
-  Truck,
-  Shield,
-  RefreshCw,
-} from 'lucide-react';
-import { FaBars, FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch } from 'react-icons/fa';
+import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import SideDrawer from '../components/SideDrawer';
-import { themeApi } from '../services/themeApi';
 import '../assets/css/mobile-responsive.css';
+import '../assets/css/cart-styles.css';
+import TopBar from '../components/TopBar';
+import ThemeFooter from '../components/ThemeFooter';
 
 
 const Cart = () => {
-  const { websiteLogo } = useLogo();
   const { 
     items, 
-    cart, 
+    shippingMethod,
+    setShippingMethod,
+    shippingOptions,
+    freeShippingThreshold,
     removeFromCart, 
     updateQuantity, 
     getCartTotal, 
-    getCartItemsCount, 
+    getCartItemsCount,
+    getShippingCost,
     clearCart 
   } = useCart();
 
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
-  const [categories, setCategories] = useState([]);
-
-  // Fetch categories from database
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categoriesData = await themeApi.getCategories();
-        const activeCategories = categoriesData?.filter(cat => cat.is_active) || [];
-        setCategories(activeCategories);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState(null);
 
   const handleRemoveItem = (productId) => {
     removeFromCart(productId);
@@ -58,8 +37,35 @@ const Cart = () => {
   };
 
   const subtotal = getCartTotal();
-  const shipping = subtotal > 50 ? 0 : 9.99;
-  const total = subtotal + shipping;
+  const itemsCount = getCartItemsCount();
+  const shippingCost = getShippingCost(subtotal, shippingMethod);
+
+  const discount = useMemo(() => {
+    if (!promoApplied) return 0;
+    if (promoApplied.type === 'percent') return (subtotal * promoApplied.value) / 100;
+    if (promoApplied.type === 'flat') return promoApplied.value;
+    return 0;
+  }, [promoApplied, subtotal]);
+
+  const total = Math.max(0, subtotal + shippingCost - discount);
+
+  const applyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+
+    // Simple demo promo logic (UI-focused). Adjust later if you want backend-driven promos.
+    if (code === 'SAVE10') {
+      setPromoApplied({ code, type: 'percent', value: 10 });
+      return;
+    }
+
+    if (code === 'FLAT500') {
+      setPromoApplied({ code, type: 'flat', value: 500 });
+      return;
+    }
+
+    setPromoApplied({ code, type: 'invalid', value: 0 });
+  };
 
   if (items.length === 0) {
     return (
@@ -68,108 +74,14 @@ const Cart = () => {
         <header className="modern-header">
           <div className="container">
             {/* Top Bar */}
-            <div className="top-bar">
-              <div className="row align-items-center">
-                <div className="col-md-6">
-                  <div className="contact-info">
-                    <span><FaHeadset /> +1 800-123-4567</span>
-                    {' '}
-                    <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
-                  </div>
-                </div>
-                <div className="col-md-6 text-end">
-                  <div className="social-links">
-                    <Link to="/cart" className="text-white position-relative">
-                      <FaShoppingCart />
-                      {getCartItemsCount() > 0 && (
-                        <span className="cart-badge">{getCartItemsCount()}</span>
-                      )}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <TopBar
+             onMenuToggle={() => setSideDrawerOpen(true)}
+              />
 
-            {/* Main Navigation */}
-            <nav className="main-nav">
-              <div className="row align-items-center">
-                <div className="col-md-3">
-                  <div className="logo">
-                    <Link to="/">
-                      <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                    </Link>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="search-bar">
-                    <form className="d-flex">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Search products..."
-                      />
-                      <button type="submit" className="btn btn-search">
-                        <FaSearch />
-                      </button>
-                    </form>
-                  </div>
-                </div>
-                <div className="col-md-3 text-end">
-                  <button
-                    className="btn btn-outline-light menu-toggle"
-                    onClick={() => setSideDrawerOpen(true)}
-                  >
-                    <FaBars /> Menu
-                  </button>
-                </div>
-              </div>
-            </nav>
-
-            {/* Custom Menu */}
-            <div className="custom_menu">
-              <ul>
-                <li><Link to="/">Home</Link></li>
-                <li><Link to="/cart">Cart</Link></li>
-                <li><Link to="/checkout">Checkout</Link></li>
-              </ul>
-            </div>
           </div>
         </header>
         
-        {/* Header Section
-        <div className="header_section">
-          <div className="container">
-            <div className="containt_main">
-              <span className="toggle_icon" onClick={() => setSideDrawerOpen(true)}>
-                <i className="fa fa-bars" style={{ 
-                  fontSize: window.innerWidth < 768 ? '24px' : '28px', 
-                  color: '#fff', 
-                  cursor: 'pointer' 
-                }}></i>
-              </span>
-              <div className="main">
-              </div>
-              <div className="header_box">
-                <div className="login_menu">
-                  <ul>
-                    <li>
-                      <Link to="/cart">
-                        <i className="fa fa-shopping-cart" aria-hidden="true"></i>
-                        <span className="padding_10">Cart ({items.length})</span>
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/account">
-                        <i className="fa fa-user" aria-hidden="true"></i>
-                        <span className="padding_10">User</span>
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> */}
+    
         
         <div className="container layout_padding">
           <div className="text-center py-5">
@@ -181,7 +93,7 @@ const Cart = () => {
               Looks like you haven't added any products to your cart yet. Explore our amazing collection and find something you'll love!
             </p>
             <div className="d-flex justify-content-center gap-3 flex-wrap">
-              <Link to="/shop" className="btn btn-primary btn-lg px-5" style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}>
+              <Link to="/all-products" className="btn btn-primary btn-lg px-5" style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}>
                 <i className="fa fa-shopping-bag me-2"></i>
                 Start Shopping
               </Link>
@@ -194,43 +106,8 @@ const Cart = () => {
         </div>
 
         {/* Footer Section */}
-        <footer className="footer-section">
-          <div className="container">
-            <div className="row">
-              <div className="col-lg-4 col-md-6 mb-4">
-                <div className="footer-about">
-                  <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-                </div>
-              </div>
-              <div className="col-lg-2 col-md-6 mb-4">
-                <div className="footer-links">
-                  <h5>Quick Links</h5>
-                  <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/cart">Cart</a></li>
-                    <li><a href="/checkout">Checkout</a></li>
-                  </ul>
-                </div>
-              </div>
-              <div className="col-lg-3 col-md-6 mb-4">
-                <div className="footer-contact">
-                  <h5>Contact Info</h5>
-                  <p><FaHeadset /> +1 800-123-4567</p>
-                  <p><FaEnvelope /> info@kidscolours.com</p>
-                  <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
-                </div>
-              </div>
-            </div>
-            <div className="footer-bottom">
-              <div className="row">
-                <div className="col-12 text-center">
-                  <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <ThemeFooter />
+
 
           <style jsx>{`
             .footer_link {
@@ -441,354 +318,550 @@ const Cart = () => {
       <header className="modern-header">
         <div className="container">
           {/* Top Bar */}
-          <div className="top-bar">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="contact-info">
-                  <span><FaHeadset /> +1 800-123-4567</span>
-                  {' '}
-                  <span className="ms-3"><FaTruck /> Free Shipping on orders over Rs 2000</span>
-                </div>
-              </div>
-              <div className="col-md-6 text-end">
-                <div className="social-links">
-                  <Link to="/cart" className="text-white position-relative">
-                    <FaShoppingCart />
-                    {getCartItemsCount() > 0 && (
-                      <span className="cart-badge">{getCartItemsCount()}</span>
-                    )}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
+          <TopBar 
+          onMenuToggle={() => setSideDrawerOpen(true)}
+          />
 
-          {/* Main Navigation */}
-          <nav className="main-nav">
-            <div className="row align-items-center">
-              <div className="col-md-3">
-                <div className="logo">
-                  <Link to="/">
-                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  </Link>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="search-bar">
-                  <form className="d-flex">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search products..."
-                    />
-                    <button type="submit" className="btn btn-search">
-                      <FaSearch />
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div className="col-md-3 text-end">
-                <button
-                  className="btn btn-outline-light menu-toggle"
-                  onClick={() => setSideDrawerOpen(true)}
-                >
-                  <FaBars /> Menu
-                </button>
-              </div>
-            </div>
-          </nav>
-
-          {/* Custom Menu */}
-          <div className="custom_menu">
-            <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/cart">Cart</Link></li>
-              <li><Link to="/checkout">Checkout</Link></li>
-            </ul>
-          </div>
         </div>
       </header>
       
 
       <div className="container layout_padding">
-        {/* Page Header */}
-        <div className="text-center mb-5">
-          <h1 className="banner_taital mb-3">Shopping Cart</h1>
-          <p className="lorem_text">
-            {items.length} {items.length === 1 ? 'Item' : 'Items'} in Your Cart
-          </p>
+        <div className="cart2-header">
+          <div className="cart2-title">Shopping Cart</div>
+          <div className="cart2-count">{itemsCount} Item{itemsCount === 1 ? '' : 's'}</div>
         </div>
-
+        
         <div className="row">
-          {/* Cart Items Section */}
           <div className="col-lg-8 mb-4">
-            <div className="cart-items-container">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h3 className="section-title">Your Items</h3>
-                {items.length > 0 && (
-                  <button
-                    onClick={clearCart}
-                    className="btn btn-outline-danger btn-sm"
-                  >
-                    <i className="fa fa-trash me-1"></i>
-                    Clear Cart
-                  </button>
-                )}
+            <div className="cart2-table">
+              <div className="cart2-table-head">
+                <div className="cart2-col cart2-col-product">PRODUCT DETAILS</div>
+                <div className="cart2-col cart2-col-qty">QUANTITY</div>
+                <div className="cart2-col cart2-col-price">PRICE</div>
+                <div className="cart2-col cart2-col-total">TOTAL</div>
               </div>
 
-              {items.length === 0 ? (
-                <div className="text-center py-5">
-                  <ShoppingBag className="w-16 h-16 mx-auto text-gray-400 mb-3" />
-                  <h4 className="shirt_text mb-2">No items in cart</h4>
-                  <p className="lorem_text mb-4">Add some products to get started!</p>
-                  <Link to="/shop" className="btn btn-primary" style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}>
-                    Browse Products
-                  </Link>
-                </div>
-              ) : (
-                <div className="cart-items-list">
-                  {items.map((item, index) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="cart-item"
-                    >
-                      <div className="row align-items-center p-3 border-bottom">
-                        <div className="col-md-2">
-                          <div className="product-image">
-                            <img
-                              src={
-                                item.images && item.images.length > 0 
-                                  ? item.images[0] 
-                                  : item.image_url || item.image || '/src/assets/images/tshirt-img.png'
-                              }
-                              alt={item.name}
-                              className="img-fluid rounded"
-                              style={{ 
-                                objectFit: 'contain',
-                                width: '100%',
-                                height: '100px',
-                                backgroundColor: '#f8f9fa'
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-5">
-                          <div className="product-info">
-                            <h4 className="shirt_text mb-1">{item.name}</h4>
-                            <p className="lorem_text small mb-2">{item.description}</p>
-                            <div className="price-display">
-                              <span className="current-price shirt_text">{item.price}</span>
-                              {item.originalPrice && (
-                                <span className="original-price text-muted text-decoration-line-through ms-2">
-                                  {item.originalPrice}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-3">
-                          <div className="quantity-control">
-                            <label className="text-muted small">Quantity</label>
-                            <div className="input-group mt-1" style={{ maxWidth: '120px' }}>
-                              <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                className="btn btn-outline-secondary"
-                                type="button"
-                                disabled={item.quantity <= 1}
-                              >
-                                <Minus className="w-4 h-4" />
-                              </button>
-                              <input
-                                type="text"
-                                className="form-control text-center"
-                                value={item.quantity}
-                                readOnly
-                              />
-                              <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                className="btn btn-outline-secondary"
-                                type="button"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-2">
-                          <div className="item-total d-flex justify-content-between align-items-center">
-                            <div>
-                              <div className="total-price shirt_text">
-                                {(item.price * item.quantity).toFixed(2)}
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="btn btn-outline-danger btn-sm"
-                              title="Remove item"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+              {items.map((item) => {
+                const imageSrc =
+                  item.images && item.images.length > 0
+                    ? item.images[0]
+                    : item.image_url || item.image || '/src/assets/images/tshirt-img.png';
+
+                return (
+                  <div className="cart2-row" key={item.id}>
+                    <div className="cart2-col cart2-col-product">
+                      <div className="cart2-product">
+                        <img className="cart2-img" src={imageSrc} alt={item.name} />
+                        <div className="cart2-product-meta">
+                          <div className="cart2-product-name">{item.name}</div>
+                          <button
+                            type="button"
+                            className="cart2-remove"
+                            onClick={() => handleRemoveItem(item.id)}
+                          >
+                            Remove
+                          </button>
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    </div>
 
-            {/* Trust Badges */}
-            {items.length > 0 && (
-              <div className="trust-badges mt-4">
-                <div className="row text-center">
-                  <div className="col-md-4 mb-3">
-                    <div className="trust-badge">
-                      <Truck className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
-                      <h6 className="shirt_text">Free Shipping</h6>
-                      <p className="lorem_text small">On orders over $50</p>
+                    <div className="cart2-col cart2-col-qty">
+                      <div className="cart2-qty">
+                        <button
+                          type="button"
+                          className="cart2-qty-btn"
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="cart2-icon" />
+                        </button>
+                        <input
+                          className="cart2-qty-input"
+                          value={item.quantity}
+                          readOnly
+                          aria-label="Quantity"
+                        />
+                        <button
+                          type="button"
+                          className="cart2-qty-btn"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="cart2-icon" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="cart2-col cart2-col-price">Rs. {Number(item.price).toFixed(2)}</div>
+                    <div className="cart2-col cart2-col-total">
+                      Rs. {(Number(item.price) * Number(item.quantity)).toFixed(2)}
                     </div>
                   </div>
-                  <div className="col-md-4 mb-3">
-                    <div className="trust-badge">
-                      <Shield className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
-                      <h6 className="shirt_text">Secure Payment</h6>
-                      <p className="lorem_text small">100% protected</p>
-                    </div>
-                  </div>
-                  <div className="col-md-4 mb-3">
-                    <div className="trust-badge">
-                      <RefreshCw className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
-                      <h6 className="shirt_text">Easy Returns</h6>
-                      <p className="lorem_text small">30-day policy</p>
-                    </div>
-                  </div>
-                </div>
+                );
+              })}
+
+              <div className="cart2-actions">
+                <button type="button" className="cart2-clear" onClick={clearCart}>
+                  <Trash2 className="cart2-icon" />
+                  Clear cart
+                </button>
+                <Link to="/all-products" className="cart2-continue">
+                  Continue shopping
+                </Link>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Order Summary */}
           <div className="col-lg-4">
-            {items.length > 0 && (
-              <div className="order-summary sticky-top" style={{ top: '20px' }}>
-                <h3 className="section-title mb-4">Order Summary</h3>
+            <div className="cart2-summary">
+              <div className="cart2-summary-title">Order Summary</div>
 
-                <div className="summary-details mb-4">
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="lorem_text">Subtotal</span>
-                    <span className="shirt_text">{subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="lorem_text">Shipping</span>
-                    <span className="shirt_text">
-                      {shipping === 0 ? 'FREE' : shipping.toFixed(2)}
-                    </span>
-                  </div>
-                  {shipping > 0 && (
-                    <div className="free-shipping-notice text-success small mb-2">
-                      <i className="fa fa-truck me-1"></i>
-                      Add {(50 - subtotal).toFixed(2)} more for free shipping!
-                    </div>
-                  )}
-                  <hr />
-                  <div className="d-flex justify-content-between">
-                    <h5 className="shirt_text">Total</h5>
-                    <h5 className="shirt_text">{total.toFixed(2)}</h5>
-                  </div>
-                </div>
-
-                {/* Promo Code */}
-                <div className="promo-code-section mb-4">
-                  <label className="shirt_text small">Promo Code</label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      placeholder="Enter code"
-                      className="form-control"
-                    />
-                    <button className="btn btn-outline-secondary">Apply</button>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="action-buttons">
-                  <Link
-                    to="/checkout"
-                    className="btn btn-primary btn-lg btn-block mb-3"
-                    style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
-                  >
-                    <i className="fa fa-lock me-2"></i>
-                    Proceed to Checkout
-                  </Link>
-                  <Link
-                    to="/shop"
-                    className="btn btn-outline-secondary btn-block"
-                  >
-                    <i className="fa fa-arrow-left me-2"></i>
-                    Continue Shopping
-                  </Link>
-                </div>
-
-                {/* Payment Methods */}
-                <div className="payment-methods mt-4 text-center">
-                  <p className="lorem_text small mb-3">We Accept</p>
-                  <div className="d-flex justify-content-center gap-2">
-                    <span className="badge bg-warning">VISA</span>
-                    <span className="badge bg-warning">MC</span>
-                    <span className="badge bg-warning">AMEX</span>
-                    <span className="badge bg-warning">PP</span>
-                  </div>
+              <div className="cart2-summary-row">
+                <div className="cart2-summary-label">ITEMS</div>
+                <div className="cart2-summary-value">
+                  {itemsCount} &nbsp;&nbsp; Rs. {subtotal.toFixed(2)}
                 </div>
               </div>
-            )}
+
+              <div className="cart2-summary-row">
+                <div className="cart2-summary-label">SHIPPING</div>
+                <div className="cart2-summary-control">
+                  <select
+                    className="cart2-select"
+                    value={shippingMethod}
+                    onChange={(e) => setShippingMethod(e.target.value)}
+                  >
+                    {shippingOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label} - Rs. {opt.cost.toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                  {subtotal >= freeShippingThreshold && (
+                    <div className="cart2-note">
+                      Free shipping on orders Rs. {freeShippingThreshold.toLocaleString()}+
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* <div className="cart2-summary-row">
+                <div className="cart2-summary-label">PROMO CODE</div>
+                <div className="cart2-summary-control">
+                  <input
+                    className="cart2-input"
+                    placeholder="Enter your code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                  />
+                  <button type="button" className="cart2-apply" onClick={applyPromo}>
+                    APPLY
+                  </button>
+                  {promoApplied?.type === 'invalid' && (
+                    <div className="cart2-error">Invalid promo code</div>
+                  )}
+                  {promoApplied && promoApplied.type !== 'invalid' && (
+                    <div className="cart2-success">
+                      Applied <strong>{promoApplied.code}</strong>{' '}
+                      <button
+                        type="button"
+                        className="cart2-link"
+                        onClick={() => setPromoApplied(null)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div> */}
+
+              <div className="cart2-divider" />
+
+              <div className="cart2-total">
+                <div className="cart2-total-label">TOTAL COST</div>
+                <div className="cart2-total-value">Rs. {total.toFixed(2)}</div>
+              </div>
+
+              <Link to="/checkout" className="cart2-checkout">
+                CHECKOUT
+              </Link>
+
+              <div className="cart2-breakdown">
+                <div className="cart2-breakdown-row">
+                  <span>Subtotal</span>
+                  <span>Rs. {subtotal.toFixed(2)}</span>
+                </div>
+                <div className="cart2-breakdown-row">
+                  <span>Shipping</span>
+                  <span>{shippingCost === 0 ? 'FREE' : `Rs. ${shippingCost.toFixed(2)}`}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="cart2-breakdown-row">
+                    <span>Discount</span>
+                    <span>- Rs. {discount.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Footer Section */}
-      <footer className="footer-section">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-4 col-md-6 mb-4">
-              <div className="footer-about">
-                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-              </div>
-            </div>
-            <div className="col-lg-2 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Quick Links</h5>
-                <ul>
-                  <li><a href="/">Home</a></li>
-                  <li><a href="/cart">Cart</a></li>
-                  <li><a href="/checkout">Checkout</a></li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-contact">
-                <h5>Contact Info</h5>
-                <p><FaHeadset /> +1 800-123-4567</p>
-                <p><FaEnvelope /> info@kidscolours.com</p>
-                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div className="row">
-              <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solution</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <ThemeFooter />
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
+
+      <style>{`
+        .cart2-header {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          margin: 10px 0 22px;
+          padding-bottom: 14px;
+          border-bottom: 1px solid #eee;
+        }
+        .cart2-title {
+          font-size: 28px;
+          font-weight: 700;
+          color: #111;
+        }
+        .cart2-count {
+          color: #666;
+          font-weight: 600;
+        }
+
+        .cart2-table {
+          background: #fff;
+          border: 1px solid #eee;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .cart2-table-head {
+          display: grid;
+          grid-template-columns: 1fr 160px 140px 140px;
+          gap: 0;
+          padding: 14px 16px;
+          background: #fafafa;
+          border-bottom: 1px solid #eee;
+          font-size: 12px;
+          font-weight: 700;
+          color: #777;
+          letter-spacing: 0.04em;
+        }
+        .cart2-row {
+          display: grid;
+          grid-template-columns: 1fr 160px 140px 140px;
+          padding: 16px;
+          border-bottom: 1px solid #f0f0f0;
+          align-items: center;
+        }
+        .cart2-row:last-child {
+          border-bottom: none;
+        }
+        .cart2-col-price,
+        .cart2-col-total {
+          text-align: right;
+          font-weight: 700;
+          color: #222;
+        }
+
+        .cart2-product {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+        .cart2-img {
+          width: 62px;
+          height: 62px;
+          object-fit: cover;
+          border-radius: 6px;
+          border: 1px solid #eee;
+          background: #fff;
+          flex: none;
+        }
+        .cart2-product-meta {
+          min-width: 0;
+        }
+        .cart2-product-name {
+          font-weight: 700;
+          color: #111;
+          line-height: 1.2;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 360px;
+        }
+        .cart2-remove {
+          margin-top: 6px;
+          padding: 0;
+          background: transparent;
+          border: none;
+          color: #999;
+          font-size: 12px;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+        .cart2-remove:hover {
+          color: #333;
+        }
+
+        .cart2-qty {
+          display: inline-flex;
+          align-items: center;
+          border: 1px solid #eee;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #fff;
+        }
+        .cart2-qty-btn {
+          width: 36px;
+          height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          background: #fff;
+          cursor: pointer;
+          color: #333;
+        }
+        .cart2-qty-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+        .cart2-qty-input {
+          width: 44px;
+          height: 36px;
+          border: none;
+          border-left: 1px solid #eee;
+          border-right: 1px solid #eee;
+          text-align: center;
+          font-weight: 700;
+          color: #111;
+          outline: none;
+        }
+        .cart2-icon {
+          width: 16px;
+          height: 16px;
+        }
+
+        .cart2-actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          background: #fff;
+          border-top: 1px solid #eee;
+        }
+        .cart2-clear {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid #f1c7c7;
+          color: #b42318;
+          background: #fff;
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .cart2-clear:hover {
+          background: #fff5f5;
+        }
+        .cart2-continue {
+          color: #444;
+          text-decoration: underline;
+          font-weight: 700;
+        }
+
+        .cart2-summary {
+          background: #fff;
+          border: 1px solid #eee;
+          border-radius: 8px;
+          padding: 16px;
+          position: sticky;
+          top: 20px;
+        }
+        .cart2-summary-title {
+          font-weight: 800;
+          font-size: 18px;
+          margin-bottom: 14px;
+        }
+        .cart2-summary-row {
+          display: grid;
+          grid-template-columns: 110px 1fr;
+          gap: 12px;
+          align-items: start;
+          padding: 10px 0;
+          border-bottom: 1px solid #f1f1f1;
+        }
+        .cart2-summary-row:last-of-type {
+          border-bottom: none;
+        }
+        .cart2-summary-label {
+          font-size: 12px;
+          font-weight: 800;
+          color: #777;
+          letter-spacing: 0.04em;
+        }
+        .cart2-summary-value {
+          text-align: right;
+          font-weight: 800;
+          color: #222;
+        }
+        .cart2-summary-control {
+          text-align: right;
+        }
+        .cart2-select {
+          width: 100%;
+          border: 1px solid #eee;
+          border-radius: 8px;
+          padding: 10px 12px;
+          background: #fff;
+          outline: none;
+        }
+        .cart2-input {
+          width: 100%;
+          border: 1px solid #eee;
+          border-radius: 8px;
+          padding: 10px 12px;
+          outline: none;
+          margin-top: 6px;
+        }
+        .cart2-apply {
+          width: 100%;
+          margin-top: 10px;
+          border: none;
+          border-radius: 8px;
+          background: #ef6b66;
+          color: #fff;
+          font-weight: 900;
+          padding: 10px 12px;
+          cursor: pointer;
+          letter-spacing: 0.06em;
+        }
+        .cart2-apply:hover {
+          background: #e65b56;
+        }
+        .cart2-note {
+          margin-top: 8px;
+          font-size: 12px;
+          color: #666;
+        }
+        .cart2-error {
+          margin-top: 8px;
+          font-size: 12px;
+          color: #b42318;
+          text-align: right;
+        }
+        .cart2-success {
+          margin-top: 8px;
+          font-size: 12px;
+          color: #067647;
+          text-align: right;
+        }
+        .cart2-link {
+          margin-left: 8px;
+          padding: 0;
+          border: none;
+          background: transparent;
+          text-decoration: underline;
+          cursor: pointer;
+          color: inherit;
+          font-weight: 800;
+        }
+        .cart2-divider {
+          height: 1px;
+          background: #eee;
+          margin: 14px 0;
+        }
+        .cart2-total {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        }
+        .cart2-total-label {
+          font-size: 12px;
+          font-weight: 900;
+          color: #777;
+          letter-spacing: 0.04em;
+        }
+        .cart2-total-value {
+          font-size: 18px;
+          font-weight: 900;
+          color: #222;
+        }
+        .cart2-checkout {
+          display: block;
+          width: 100%;
+          text-align: center;
+          background: #5a56d6;
+          color: #fff;
+          font-weight: 900;
+          padding: 12px 14px;
+          border-radius: 8px;
+          text-decoration: none;
+          letter-spacing: 0.06em;
+        }
+        .cart2-checkout:hover {
+          background: #4f4bd1;
+          color: #fff;
+        }
+        .cart2-breakdown {
+          margin-top: 12px;
+          color: #666;
+          font-size: 13px;
+        }
+        .cart2-breakdown-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 4px 0;
+        }
+
+        @media (max-width: 991px) {
+          .cart2-summary {
+            position: static;
+          }
+          .cart2-table-head,
+          .cart2-row {
+            grid-template-columns: 1fr 150px 120px 120px;
+          }
+        }
+
+        @media (max-width: 767px) {
+          .cart2-table-head {
+            display: none;
+          }
+          .cart2-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .cart2-col-price,
+          .cart2-col-total {
+            text-align: left;
+          }
+          .cart2-product-name {
+            max-width: 100%;
+            white-space: normal;
+          }
+          .cart2-actions {
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch;
+          }
+          .cart2-clear {
+            justify-content: center;
+          }
+          .cart2-continue {
+            text-align: center;
+          }
+        }
+      `}</style>
     </div>
   );
 };
