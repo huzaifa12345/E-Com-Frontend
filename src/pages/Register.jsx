@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLogo } from '../context/LogoContext';
 import toast from 'react-hot-toast';
 import { FaEye, FaEyeSlash, FaUser, FaLock, FaEnvelope, FaGoogle, FaFacebook, FaCheck } from 'react-icons/fa';
+import '../assets/css/register-styles.css';
 
 const Register = () => {
   const { websiteLogo } = useLogo();
@@ -110,308 +111,301 @@ const Register = () => {
 
   const passwordStrength = getPasswordStrength(formData.password);
 
+  const getStrengthClass = (text) => {
+    switch(text.toLowerCase()) {
+      case 'very weak': return 'strength-very-weak';
+      case 'weak': return 'strength-weak';
+      case 'fair': return 'strength-fair';
+      case 'good': return 'strength-good';
+      case 'strong': return 'strength-strong';
+      default: return 'strength-very-weak';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full">
+    <div className="register-container">
+      <div className="register-card">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center">
-            <img 
-            style={{ maxWidth: '250px', minHeight: '130px' , marginTop: '30px'}}
-              src={websiteLogo} 
-              alt="Kids Colours Logo" 
-            />
-          </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-2">
-            Create your account
-          </h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
+        <div className="logo-section">
+          <img 
+            src={websiteLogo} 
+            alt="Kids Colours Logo" 
+          />
+          <h1 className="register-title">Create Your Account</h1>
+          <p className="register-subtitle">
             Join Kids Colours today and enjoy exclusive offers, fast checkout, and personalized shopping experience
           </p>
         </div>
         
         {/* Registration Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">
-                  <FaUser className="inline mr-2 text-orange-500" />
-                  First Name
-                </label>
-                <input
-                  id="firstName"
-                  name="first_name"
-                  type="text"
-                  required
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  placeholder="Enter your first name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  name="last_name"
-                  type="text"
-                  required
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  placeholder="Enter your last name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                <FaEnvelope className="inline mr-2 text-orange-500" />
-                Email Address
+        <form className="register-form" onSubmit={handleSubmit}>
+          {/* Name Fields */}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="firstName" className="form-label">
+                <FaUser className="icon" />
+                First Name
               </label>
-              <div className="relative">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  placeholder="Enter your email address"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            {/* Phone Field */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
-                Phone Number (Optional)
-              </label>
-              <div className="relative">
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                  placeholder="Enter your phone number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            {/* Password Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                  <FaLock className="inline mr-2 text-orange-500" />
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    required
-                    className="appearance-none relative block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                    placeholder="Create a strong password (min 6 chars)"
-                    value={formData.password}
-                    onChange={handleChange}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                </div>
-                
-                {/* Password Strength Indicator */}
-                {formData.password && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600">Password Strength:</span>
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${passwordStrength.color} ${passwordStrength.text}`}>
-                        {passwordStrength.text}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color}`}
-                        style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    required
-                    className="appearance-none relative block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    ) : (
-                      <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Terms and Conditions */}
-            <div className="flex items-start">
               <input
-                id="agree-terms"
-                name="agree-terms"
-                type="checkbox"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
+                id="firstName"
+                name="first_name"
+                type="text"
                 required
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded mt-1"
+                className="form-input"
+                placeholder="Enter your first name"
+                value={formData.first_name}
+                onChange={handleChange}
               />
-              <label htmlFor="agree-terms" className="ml-3 text-sm text-gray-700">
-                I agree to the{' '}
-                <Link to="/terms" className="text-orange-600 hover:text-orange-500 transition-colors">
-                  Terms and Conditions
-                </Link>{' '}
-                and{' '}
-                <Link to="/privacy" className="text-orange-600 hover:text-orange-500 transition-colors">
-                  Privacy Policy
-                </Link>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="lastName" className="form-label">
+                Last Name
               </label>
+              <input
+                id="lastName"
+                name="last_name"
+                type="text"
+                required
+                className="form-input"
+                placeholder="Enter your last name"
+                value={formData.last_name}
+                onChange={handleChange}
+              />
             </div>
+          </div>
 
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading || !agreeTerms}
-                className="group relative w-full flex justify-center py-3 px-4 border border-orange-500 text-sm font-semibold rounded-lg text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Creating Account...
-                  </>
-                ) : (
-                  'Create Account'
-                )}
-              </button>
+          {/* Email Field */}
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
+              <FaEnvelope className="icon" />
+              Email Address
+            </label>
+            <div className="password-input-wrapper">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="form-input"
+                placeholder="Enter your email address"
+                value={formData.email}
+                onChange={handleChange}
+              />
             </div>
-          </form>
+          </div>
 
-          {/* Divider */}
-          {/* <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+          {/* Phone Field */}
+          <div className="form-group">
+            <label htmlFor="phone" className="form-label">
+              Phone Number (Optional)
+            </label>
+            <div className="password-input-wrapper">
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                className="form-input"
+                placeholder="Enter your phone number"
+                value={formData.phone}
+                onChange={handleChange}
+              />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">Or register with</span>
-            </div>
-          </div> */}
+          </div>
 
-          {/* Social Registration */}
-          {/* <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleSocialRegister('Google')}
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
-            >
-              <FaGoogle className="h-5 w-5 text-red-500 mr-2" />
-              Google
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSocialRegister('Facebook')}
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
-            >
-              <FaFacebook className="h-5 w-5 text-blue-600 mr-2" />
-              Facebook
-            </button>
-          </div> */}
-
-          {/* Sign In Link */}
-          <p className="mt-8 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500 transition-colors">
-              Sign in here
-            </Link>
-          </p>
-        </div>
-
-        {/* Benefits Section */}
-        {/* <div className="mt-8 bg-gradient-to-r from-orange-50 to-white rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-            Why Join Kids Colours?
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="flex items-center text-gray-700">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                <FaCheck className="text-green-600" />
+          {/* Password Fields */}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                <FaLock className="icon" />
+                Password
+              </label>
+              <div className="password-input-wrapper">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  className="form-input"
+                  placeholder="Create a strong password (min 6 chars)"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <FaEyeSlash />
+                  ) : (
+                    <FaEye />
+                  )}
+                </button>
               </div>
-              <div>
-                <strong>Fast and Secure Checkout</strong>
-                <p className="text-gray-600">Quick and secure payment process</p>
-              </div>
+              
+              {/* Password Strength Indicator */}
+              {formData.password && (
+                <div className="password-strength">
+                  <div className="strength-header">
+                    <span className="strength-label">Password Strength:</span>
+                    <span className={`strength-badge ${getStrengthClass(passwordStrength.text)}`}>
+                      {passwordStrength.text}
+                    </span>
+                  </div>
+                  <div className="strength-bar">
+                    <div 
+                      className="strength-fill"
+                      style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center text-gray-700">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                <FaCheck className="text-green-600" />
-              </div>
-              <div>
-                <strong>Track Your Orders</strong>
-                <p className="text-gray-600">Monitor your order status in real-time</p>
-              </div>
-            </div>
-
-            <div className="flex items-center text-gray-700">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                <FaCheck className="text-green-600" />
-              </div>
-              <div>
-                <strong>Exclusive Offers</strong>
-                <p className="text-gray-600">Get special discounts and promotions</p>
+            <div className="form-group">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password
+              </label>
+              <div className="password-input-wrapper">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
+                  className="form-input"
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <FaEyeSlash />
+                  ) : (
+                    <FaEye />
+                  )}
+                </button>
               </div>
             </div>
           </div>
-        </div> */}
+
+          {/* Terms and Conditions */}
+          <div className="terms-checkbox">
+            <input
+              id="agree-terms"
+              name="agree-terms"
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              required
+            />
+            <label htmlFor="agree-terms">
+              I agree to the{' '}
+              <Link to="/terms">
+                Terms and Conditions
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy">
+                Privacy Policy
+              </Link>
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading || !agreeTerms}
+              className="submit-btn"
+            >
+              {isLoading ? (
+                <>
+                  <div className="loading-spinner"></div>
+                  Creating Account...
+                </>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Divider */}
+        <div className="form-divider">
+          <span>Or register with</span>
+        </div>
+
+        {/* Social Registration */}
+        <div className="social-login">
+          <button
+            type="button"
+            onClick={() => handleSocialRegister('Google')}
+            className="social-btn google-btn"
+          >
+            <FaGoogle />
+            Google
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSocialRegister('Facebook')}
+            className="social-btn facebook-btn"
+          >
+            <FaFacebook />
+            Facebook
+          </button>
+        </div>
+
+        {/* Sign In Link */}
+        <div className="signin-link">
+          Already have an account?{' '}
+          <Link to="/login">
+            Sign in here
+          </Link>
+        </div>
+
+        {/* Benefits Section */}
+        <div className="benefits-section">
+          <h3 className="benefits-title">Why Join Kids Colours?</h3>
+          <div className="benefits-grid">
+            <div className="benefit-item">
+              <div className="benefit-icon">
+                <FaCheck />
+              </div>
+              <div className="benefit-text">
+                <div className="benefit-title">Fast and Secure Checkout</div>
+                <p className="benefit-description">Quick and secure payment process</p>
+              </div>
+            </div>
+
+            <div className="benefit-item">
+              <div className="benefit-icon">
+                <FaCheck />
+              </div>
+              <div className="benefit-text">
+                <div className="benefit-title">Track Your Orders</div>
+                <p className="benefit-description">Monitor your order status in real-time</p>
+              </div>
+            </div>
+
+            <div className="benefit-item">
+              <div className="benefit-icon">
+                <FaCheck />
+              </div>
+              <div className="benefit-text">
+                <div className="benefit-title">Exclusive Offers</div>
+                <p className="benefit-description">Get special discounts and promotions</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

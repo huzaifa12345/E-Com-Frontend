@@ -36,7 +36,7 @@ const Footer = () => {
           <div className="col-lg-4 col-md-6 mb-4">
             <div className="footer-contact">
               <h5>Contact Info</h5>
-              <p><FaHeadset /> 0336-4500092</p>
+              <p><FaHeadset /> 0336-4500091</p>
               <p><FaEnvelope /> rameez_yaqoob@yahoo.com</p>
               <p><FaMapMarkerAlt /> Peoples Colony, Main Market Gujranwala</p>
             </div>
