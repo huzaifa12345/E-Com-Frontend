@@ -11,6 +11,7 @@ import OrderManagement from '../components/Admin/OrderManagement';
 import StockManagement from '../components/Admin/StockManagement';
 import CategoryManagement from '../components/Admin/CategoryManagement';
 import WebsiteSettings from '../components/Admin/WebsiteSettings';
+import FailedEmails from '../components/Admin/FailedEmails';
 import { 
   LayoutDashboard, 
   Package, 
@@ -25,7 +26,8 @@ import {
   Edit,
   Trash2,
   Plus,
-  Search
+  Search,
+  Mail
 } from 'lucide-react';
 
 const Admin = () => {
@@ -120,6 +122,7 @@ const Admin = () => {
     { id: 'sizes', name: 'Sizes', icon: TrendingUp },
     // { id: 'stock', name: 'Stock Management', icon: Package },
     { id: 'orders', name: 'Orders', icon: ShoppingCart },
+    // { id: 'failed-emails', name: 'Failed Emails', icon: Mail },
     // { id: 'users', name: 'Users', icon: Users },
     { id: 'website-settings', name: 'Website Settings', icon: Settings },
     // { id: 'settings', name: 'Settings', icon: Settings },
@@ -234,14 +237,25 @@ const Admin = () => {
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      await themeApi.updateOrderStatus(orderId, { status: newStatus });
-      setOrders(orders.map(order => 
-        order.id === orderId ? { ...order, status: newStatus } : order
-      ));
-      toast.success(`Order marked as ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}!`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        toast.success('Order status updated successfully');
+        fetchOrders(); // Refresh orders
+      } else {
+        toast.error('Failed to update order status');
+      }
     } catch (error) {
       console.error('Error updating order status:', error);
-      toast.error('Failed to update order status');
+      toast.error('Error updating order status');
     }
   };
 
@@ -601,18 +615,19 @@ const Admin = () => {
             {activeTab === 'sizes' && <SizeManagement />}
             {/* {activeTab === 'stock' && <StockManagement />} */}
             {activeTab === 'orders' && <OrderManagement orders={orders} onOrdersChange={() => {
-  // Refresh orders
-  const fetchData = async () => {
-    try {
-      const ordersRes = await themeApi.getAllOrders();
-      setOrders(ordersRes.orders || []);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error('Failed to fetch orders');
-    }
-  };
-  fetchData();
-}} />}
+                  // Refresh orders
+                  const fetchData = async () => {
+                    try {
+                      const ordersRes = await themeApi.getAllOrders();
+                      setOrders(ordersRes.orders || []);
+                    } catch (error) {
+                      console.error('Error fetching orders:', error);
+                      toast.error('Failed to fetch orders');
+                    }
+                  };
+                  fetchData();
+                }} />}
+            {activeTab === 'failed-emails' && <FailedEmails />}
             {activeTab === 'website-settings' && <WebsiteSettings />}
             {activeTab === 'users' && (
               <div className="text-center py-5">

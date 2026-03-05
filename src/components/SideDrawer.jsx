@@ -546,7 +546,9 @@ const SideDrawer = ({ isOpen, onClose }) => {
             alt="Kids Colours" 
             style={logoStyle}
           />
-          <p style={copyrightStyle}>© 2024 Kids Colours Store</p>
+          <p style={copyrightStyle}>© 2026 Kids Colours Store <br />
+          <span className='text-orange'>Powered by Codebase Solutions</span></p>
+          
         </div>
       </motion.div>
     </>
