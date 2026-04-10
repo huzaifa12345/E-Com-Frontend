@@ -165,7 +165,7 @@ const Register = () => {
               <input
                 id="lastName"
                 name="last_name"
-                type="text"
+                type="text" 
                 required
                 className="form-input"
                 placeholder="Enter your last name"
