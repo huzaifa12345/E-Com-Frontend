@@ -394,9 +394,19 @@ const Cart = () => {
                       </div>
                     </div>
 
-                    <div className="cart2-col cart2-col-price">Rs. {Number(item.price).toFixed(2)}</div>
+                    <div className="cart2-col cart2-col-price">
+                      {item.discount_price ? (
+                        <>
+                          <span style={{ color: '#f26522', fontWeight: 'bold' }}>Rs. {Number(item.discount_price).toFixed(2)}</span>
+                          <br />
+                          <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '12px' }}>Rs. {Number(item.price).toFixed(2)}</span>
+                        </>
+                      ) : (
+                        <span>Rs. {Number(item.price).toFixed(2)}</span>
+                      )}
+                    </div>
                     <div className="cart2-col cart2-col-total">
-                      Rs. {(Number(item.price) * Number(item.quantity)).toFixed(2)}
+                      Rs. {(Number(item.discount_price || item.price) * Number(item.quantity)).toFixed(2)}
                     </div>
                   </div>
                 );

@@ -10,6 +10,8 @@ import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
 import TopBar from '../components/TopBar';
 import ThemeFooter from '../components/ThemeFooter';
+import websiteSettingsApi from '../services/websiteSettingsApi';
+import './ThemeProductDetail.css';
 
 const ThemeProductDetail = () => {
   const { id } = useParams();
@@ -21,6 +23,7 @@ const ThemeProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [sizes, setSizes] = useState([]);
+  const [stockData, setStockData] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -31,10 +34,18 @@ const ThemeProductDetail = () => {
     review_images: []
   });
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('shirt');
+  const [sizeData, setSizeData] = useState({
+    shirt: [],
+    tshirt: [],
+    pants: []
+  });
 
   useEffect(() => {
     fetchProduct();
     fetchSizes();
+    fetchSizeGuides();
   }, [id]);
 
   const fetchSizes = async () => {
@@ -44,19 +55,38 @@ const ThemeProductDetail = () => {
       setSizes(sizesData);
     } catch (error) {
       console.error('Failed to fetch sizes:', error);
-      // Set default sizes if API fails
-      setSizes([
-        { id: 1, size: '9-12 months', description: 'Suitable for kids aged 9-12 months (6-9 kg)' },
-        { id: 2, size: '12-18 months', description: 'Suitable for kids aged 12-18 months (9-11 kg)' },
-        { id: 3, size: '18-24 months', description: 'Suitable for kids aged 18-24 months (11-12 kg)' },
-        { id: 4, size: '2-3 years', description: 'Suitable for kids aged 2-3 years (12-14 kg)' },
-        { id: 5, size: '3-4 years', description: 'Suitable for kids aged 3-4 years (14-16 kg)' },
-        { id: 6, size: '4-5 years', description: 'Suitable for kids aged 4-5 years (16-18 kg)' },
-        { id: 7, size: '5-6 years', description: 'Suitable for kids aged 5-6 years (18-20 kg)' },
-        { id: 8, size: '6-7 years', description: 'Suitable for kids aged 6-7 years (20-22 kg)' },
-        { id: 9, size: '7-8 years', description: 'Suitable for kids aged 7-8 years (22-25 kg)' },
-        { id: 10, size: '9-10 years', description: 'Suitable for kids aged 9-10 years (25-28 kg)' }
+    }
+  };
+
+  const fetchSizeGuides = async () => {
+    const parseGuide = (value) => {
+      if (!value) return [];
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        return [];
+      }
+    };
+
+    try {
+      const [casualShirtRes, tshirtRes, pantsRes] = await Promise.all([
+        websiteSettingsApi.getSettingByKey('size_guide_casual_shirt'),
+        websiteSettingsApi.getSettingByKey('size_guide_tshirt'),
+        websiteSettingsApi.getSettingByKey('size_guide_pants')
       ]);
+
+      setSizeData({
+        shirt: parseGuide(casualShirtRes?.data?.value),
+        tshirt: parseGuide(tshirtRes?.data?.value),
+        pants: parseGuide(pantsRes?.data?.value)
+      });
+    } catch (error) {
+      setSizeData({
+        shirt: [],
+        tshirt: [],
+        pants: []
+      });
     }
   };
 
@@ -90,6 +120,44 @@ const ThemeProductDetail = () => {
       fetchReviews();
     }
   }, [id]);
+
+  // Fetch stock data for the product
+  useEffect(() => {
+    const fetchStockData = async () => {
+      try {
+        console.log('Fetching stock data for product:', id);
+        const stockResponse = await themeApi.getAllProductStock(id);
+        console.log('Stock data:', stockResponse);
+        
+        if (stockResponse && stockResponse.data) {
+          setStockData(stockResponse.data);
+        }
+      } catch (error) {
+        console.error('Error fetching stock data:', error);
+        // If stock API fails, continue with empty stock data
+        setStockData([]);
+      }
+    };
+
+    if (id) {
+      fetchStockData();
+    }
+  }, [id]);
+
+  // Function to get stock for selected size from stock table
+  const getStockForSize = (sizeName) => {
+    if (!stockData || stockData.length === 0) {
+      return 0;
+    }
+    
+    // Find stock entry for this size
+    const stockEntry = stockData.find(stock => {
+      // Match size by name (assuming size object has size.name property)
+      return stock.size && stock.size.size === sizeName;
+    });
+    
+    return stockEntry ? stockEntry.quantity : 0;
+  };
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
@@ -305,31 +373,39 @@ const ThemeProductDetail = () => {
                   <span className="rating_count ml-2">({reviews.length} Reviews) • {averageRating > 0 ? `${averageRating} ★` : 'No Rating'}</span>
                 </div>
 
-                <div className="price_section mb-4">
-                  <span className="current_price" style={{ fontSize: '28px', color: '#f26522', fontWeight: 'bold' }}>
-                    {product.price}
-                  </span>
-                </div>
+<div className="product-price-container d-flex align-items-baseline flex-wrap gap-3">
+  {product.discount_price ? (
+    <>
+      <div className="price-main-wrapper">
+        <span className="price-currency">Rs.</span>
+        <span className="price-amount">
+          {Number(product.discount_price).toLocaleString(undefined, {minimumFractionDigits: 2})}
+        </span>
+      </div>
+      
+      <span className="price-strike-original">
+        Rs. {Number(product.price).toLocaleString(undefined, {minimumFractionDigits: 2})}
+      </span>
 
+      <span className="price-discount-pill">
+        -{Math.round(((product.price - product.discount_price) / product.price) * 100)}% OFF
+      </span>
+    </>
+  ) : (
+    <div className="price-main-wrapper">
+      <span className="price-currency">Rs.</span>
+      <span className="price-amount">
+        {Number(product.price).toLocaleString(undefined, {minimumFractionDigits: 2})}
+      </span>
+    </div>
+  )}
+</div>
                 {product.sku && (
                   <div className="sku_section mb-4 p-3" style={{ backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
                     <h4 style={{ color: '#262626', fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
                       <span style={{ color: '#f26522' }}>SKU:</span> {product.sku}
                     </h4>
-                    {/* <p style={{ 
-                      color: '#495057', 
-                      fontFamily: 'monospace', 
-                      fontSize: '18px', 
-                      fontWeight: 'bold',
-                      backgroundColor: '#ffffff',
-                      padding: '8px 12px',
-                      borderRadius: '4px',
-                      border: '2px solid #f26522',
-                      display: 'inline-block',
-                      letterSpacing: '1px'
-                    }}>
-                      {product.sku}
-                    </p> */}
+                  
                   </div>
                 )}
 
@@ -372,20 +448,126 @@ const ThemeProductDetail = () => {
                         <i className="fas fa-ruler me-2" style={{ color: '#f26522' }}></i>
                         Select Size
                       </h4>
-                      <button 
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => {
-                          alert('Size Guide:\n\n9-12 months: 6-9 kg\n12-18 months: 9-11 kg\n18-24 months: 11-12 kg\n2-3 years: 12-14 kg\n3-4 years: 14-16 kg\n4-5 years: 16-18 kg\n5-6 years: 18-20 kg\n6-7 years: 20-22 kg\n7-8 years: 22-25 kg\n9-10 years: 25-28 kg\n\nFor accurate sizing, please measure your child and refer to the weight guide above.');
-                        }}
-                        style={{ 
-                          fontSize: '12px',
-                          borderColor: '#f26522',
-                          color: '#f26522'
-                        }}
-                      >
-                        <i className="fas fa-question-circle me-1"></i>
-                        Size Guide
-                      </button>
+{/* Size Guide Button */}
+      <button 
+        onClick={() => setIsModalOpen(true)}
+        className="flex items-center gap-2 px-4 py-2 border border-[#f26522] text-[#f26522] rounded-full text-sm font-semibold hover:bg-[#f26522] hover:text-white transition-all duration-300"
+      >
+        <i className="fas fa-ruler-combined"></i>
+        Size Guide
+      </button>
+
+      {/* Tailwind Modal Overlay */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+          onClick={() => setIsModalOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '12px'
+          }}
+        >
+          <div
+            className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '560px',
+              margin: '0 auto',
+              position: 'relative',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800">Size Chart</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  background: 'transparent',
+                  lineHeight: 1
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="p-4" style={{ overflowY: 'auto' }}>
+              <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
+                {['shirt', 'tshirt', 'pants'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg capitalize transition-all ${
+                      activeTab === tab ? 'bg-white text-[#f26522] shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    {tab === 'tshirt' ? 'T-Shirt' : tab}
+                  </button>
+                ))}
+              </div>
+
+              {/* Table Container */}
+              <div className="overflow-y-auto max-h-[400px] border border-gray-100 rounded-xl">
+                <table className="w-full text-center text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr className="text-gray-600 uppercase text-[10px] tracking-wider font-black">
+                      <th className="py-3 px-4 border-b">Age</th>
+                      <th className="py-3 px-4 border-b">Chest (in)</th>
+                      {activeTab !== 'pants' && <th className="py-3 px-4 border-b">Length (in)</th>}
+                      {activeTab === 'pants' && <th className="py-3 px-4 border-b">Length (in)</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {sizeData[activeTab].length > 0 ? (
+                      sizeData[activeTab].map((row, idx) => (
+                        <tr key={idx} className="hover:bg-orange-50 transition-colors">
+                          <td className="py-3 px-4 font-bold text-gray-700">{row[0]}</td>
+                          <td className="py-3 px-4 text-gray-500">{row[1]}</td>
+                          {row[2] && <td className="py-3 px-4 text-gray-500">{row[2]}</td>}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          className="py-6 px-4 text-center text-gray-500"
+                          colSpan={3}
+                        >
+                          Size guide will be added separately.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="mt-4 text-[11px] text-gray-400 text-center italic leading-relaxed">
+                * All measurements are in inches. Slight variations may occur.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
                     </div>
                     <div className="size_controls d-flex flex-wrap gap-2" style={{ marginBottom: '10px' }}>
                       {/* If sizes exist, show them */}
@@ -416,16 +598,6 @@ const ThemeProductDetail = () => {
                                 position: 'relative'
                               }}
                             >
-                              {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
-                              <span className="ms-2 badge" style={{
-                                backgroundColor: '#28a745',
-                                color: 'white',
-                                fontSize: '11px',
-                                padding: '2px 6px',
-                                borderRadius: '12px'
-                              }}>
-                                {sizeItem.quantity}
-                              </span>
                             </button>
                           );
                         })
@@ -468,7 +640,7 @@ const ThemeProductDetail = () => {
                         <i className="fas fa-check-circle me-2" style={{ color: '#28a745' }}></i>
                         <strong>Selected:</strong> {selectedSize} 
                         <span className="ms-2 text-muted">
-                          ({product.sizes?.find(s => s.size === selectedSize)?.quantity || product.stock_quantity || 0} available)
+                          ({getStockForSize(selectedSize)} available)
                         </span>
                       </div>
                     )}
@@ -486,15 +658,6 @@ const ThemeProductDetail = () => {
                     <ShoppingCart className="w-5 h-5 mr-2" />
                     Add to Cart
                   </motion.button>
-                  {/* <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="btn btn-outline-secondary"
-                    onClick={handleAddToWishlist}
-                  >
-                    <Heart className="w-5 h-5 mr-2" />
-                    Wishlist
-                  </motion.button> */}
                 </div>
 
                 <div className="trust_badges">
@@ -636,19 +799,7 @@ const ThemeProductDetail = () => {
                   <p className="mt-2 text-muted">Loading reviews...</p>
                 </div>
               )}
-              
-              {/* Debug Info - Remove in production
-              {!reviewsLoading && process.env.NODE_ENV === 'development' && (
-                <div className="alert alert-info mb-3">
-                  <small>
-                    <strong>Debug:</strong> Reviews count: {Array.isArray(reviews) ? reviews.length : 0}
-                    {Array.isArray(reviews) && reviews.length > 0 && (
-                      <span>, First review has images: {reviews[0].review_images ? reviews[0].review_images.length : 0}</span>
-                    )}
-                  </small>
-                </div>
-              )} */}
-              
+                            
               {!reviewsLoading && Array.isArray(reviews) && reviews.map((review, index) => (
                 <div key={review.id} className="review-card mb-4">
                   <div className="review-header">
@@ -786,9 +937,9 @@ const ThemeProductDetail = () => {
                 </div>
               ) : (
                 relatedProducts.map((relatedProduct) => (
-                  <div className="col-lg-4 col-md-6 mb-4" key={relatedProduct.id}>
-                    <div className="product-card">
-                      <div className="product-image">
+                  <div className="col-lg-4 col-md-6 col-6 mb-4" key={relatedProduct.id}>
+                    <div className="card-v2">
+                      <div className="card-img-v2" onClick={() => window.location.href = `/product/${relatedProduct.id}`}>
                         <img
                           src={
                             relatedProduct.images && relatedProduct.images.length > 0 
@@ -797,44 +948,29 @@ const ThemeProductDetail = () => {
                           }
                           alt={relatedProduct.name}
                         />
-                        <div className="product-overlay">
-                          <button 
-                            className="btn btn-primary"
-                            onClick={() => {
-                              // Check if product is single size and has sizes
-                              if (relatedProduct.product_type === 'single' && relatedProduct.sizes && relatedProduct.sizes.length > 0) {
-                                toast.error('Please select a size from product details before adding to cart');
-                                return;
-                              }
-                              
-                              addToCart(relatedProduct, 1);
-                              toast.success(`${relatedProduct.name} added to cart!`);
-                            }}
-                          >
-                            Add to Cart
-                          </button>
-                          <button 
-                            className="btn btn-outline-light"
-                            onClick={() => window.location.href = `/product/${relatedProduct.id}`}
-                          >
-                            View Details
-                          </button>
-                        </div>
+                        {relatedProduct.discount_price && (
+                          <div className="discount-tag">-{Math.round(((relatedProduct.price - relatedProduct.discount_price) / relatedProduct.price) * 100)}%</div>
+                        )}
                       </div>
-                      <div className="product-info">
-                        <h5 className="product-title">{relatedProduct.name}</h5>
-                        <div className="product-rating">
-                          {[...Array(5)].map((_, i) => (
-                            <FaStar key={i} className={i < 4 ? 'text-warning' : 'text-secondary'} />
-                          ))}
-                          <span className="text-muted">(4.0)</span>
+                      <div className="card-body-v2">
+                        <h5 className="card-title-v2">{relatedProduct.name}</h5>
+                        <div className="card-price-v2">
+                          <span className="price-now">Rs. {Math.round(relatedProduct.discount_price || relatedProduct.price)}</span>
+                          {relatedProduct.discount_price && <span className="price-old">Rs. {Math.round(relatedProduct.price)}</span>}
                         </div>
-                        <div className="product-price">
-                          <span className="current-price">{relatedProduct.price}</span>
-                          {relatedProduct.original_price && (
-                            <span className="original-price">{relatedProduct.original_price}</span>
-                          )}
-                        </div>
+                        <button 
+                          className="btn-add-v2"
+                          onClick={() => {
+                            if (relatedProduct.product_type === 'single' && relatedProduct.sizes && relatedProduct.sizes.length > 0) {
+                              toast.error('Please select a size from product details before adding to cart');
+                              return;
+                            }
+                            addToCart(relatedProduct, 1);
+                            toast.success(`${relatedProduct.name} added to Cart!`);
+                          }}
+                        >
+                          Add to Cart
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -845,553 +981,11 @@ const ThemeProductDetail = () => {
         </div>
       </section>
 
-      {/* Footer Section */}
-      {/* <footer className="footer-section">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-4 col-md-6 mb-4">
-              <div className="footer-about">
-                <img src={websiteLogo} alt="Kids Colours" className="img-fluid mb-3" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                <p>Your trusted online shopping destination for quality products and exceptional service.</p>
-              </div>
-            </div>
-            <div className="col-lg-2 col-md-6 mb-4">
-              <div className="footer-links">
-                <h5>Quick Links</h5>
-                <ul>
-                  <li><a href="/">Home</a></li>
-                  <li><a href="/cart">Cart</a></li>
-                  <li><a href="/checkout">Checkout</a></li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-lg-3 col-md-6 mb-4">
-              <div className="footer-contact">
-                <h5>Contact Info</h5>
-                <p><FaHeadset /> +1 800-123-4567</p>
-                <p><FaEnvelope /> info@kidscolours.com</p>
-                <p><FaMapMarkerAlt /> 123 Shopping St, City, State 12345</p>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div className="row">
-              <div className="col-12 text-center">
-                <p>&copy; 2026 Kids Colours. All rights reserved. <span> Powered by CodeBase Solutions</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer> */}
+     
       <ThemeFooter />
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
-
-      {/* Custom Styles */}
-      <style jsx>{`
-        .products-section {
-          background: rgba(255, 255, 255, 0.95);
-          border-radius: 20px;
-          margin: 20px;
-          padding: 40px 30px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-title {
-          color: #333;
-          font-weight: bold;
-          position: relative;
-          padding-bottom: 10px;
-        }
-
-        .section-title::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 50px;
-          height: 3px;
-          background: #f26522;
-          border-radius: 2px;
-        }
-
-        .product-card {
-          background: white;
-          border-radius: 15px;
-          overflow: hidden;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-          transition: transform 0.3s, box-shadow 0.3s;
-          height: 100%;
-        }
-
-        .product-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .product-image {
-          position: relative;
-          overflow: hidden;
-          border-radius: 15px 15px 0 0;
-          width: 100%;
-        }
-
-        .product-image img {
-          width: 100%;
-          height: 250px;
-          object-fit: contain;
-          display: block;
-          background-color: #f8f9fa;
-        }
-
-        .product-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          opacity: 0;
-          transition: opacity 0.3s;
-        }
-
-        .product-card:hover .product-overlay {
-          opacity: 1;
-        }
-
-        .product-overlay .btn {
-          margin: 5px;
-          border-radius: 20px;
-          padding: 8px 20px;
-          font-size: 14px;
-        }
-
-        .product-info {
-          padding: 20px;
-        }
-
-        .product-title {
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 10px;
-          color: #333;
-        }
-
-        .product-rating {
-          margin-bottom: 10px;
-        }
-
-        .product-rating svg {
-          font-size: 14px;
-        }
-
-        .product-price {
-          font-size: 18px;
-          font-weight: bold;
-          color: #f26522;
-        }
-
-        .original-price {
-          text-decoration: line-through;
-          color: #999;
-          margin-left: 10px;
-          font-size: 14px;
-        }
-
-        /* Professional Review Styles */
-        .reviews-container {
-          max-width: 100%;
-        }
-
-        .review-card {
-          background: white;
-          border-radius: 16px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          border: 1px solid #f0f0f0;
-          overflow: hidden;
-          transition: all 0.3s ease;
-        }
-
-        .review-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-        }
-
-        .review-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          padding: 20px 24px 16px;
-          border-bottom: 1px solid #f8f9fa;
-        }
-
-        .reviewer-info {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .reviewer-avatar {
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #f26522, #ff8c42);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .avatar-text {
-          color: white;
-          font-weight: 600;
-          font-size: 18px;
-        }
-
-        .reviewer-details {
-          flex: 1;
-        }
-
-        .reviewer-name {
-          font-size: 16px;
-          font-weight: 600;
-          color: #2c3e50;
-          margin-bottom: 4px;
-        }
-
-        .review-date {
-          color: #6c757d;
-          font-size: 13px;
-        }
-
-        .review-rating {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .stars-container {
-          display: flex;
-          gap: 2px;
-        }
-
-        .star {
-          font-size: 16px;
-          transition: all 0.2s ease;
-        }
-
-        .star-filled {
-          color: #ffc107;
-        }
-
-        .star-empty {
-          color: #e0e0e0;
-        }
-
-        .rating-text {
-          font-weight: 600;
-          color: #2c3e50;
-          font-size: 14px;
-        }
-
-        .review-content {
-          padding: 16px 24px;
-        }
-
-        .review-comment {
-          color: #495057;
-          line-height: 1.6;
-          margin-bottom: 16px;
-          font-size: 15px;
-        }
-
-        .review-images-section {
-          margin-top: 16px;
-        }
-
-        .images-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-          gap: 12px;
-        }
-
-        .review-image-item {
-          position: relative;
-          border-radius: 12px;
-          overflow: hidden;
-          aspect-ratio: 1;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .review-image-item:hover {
-          transform: scale(1.05);
-        }
-
-        .review-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          border-radius: 12px;
-        }
-
-        .image-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-
-        .review-image-item:hover .image-overlay {
-          opacity: 1;
-        }
-
-        .image-overlay i {
-          color: white;
-          font-size: 20px;
-        }
-
-        .review-footer {
-          padding: 12px 24px 20px;
-          border-top: 1px solid #f8f9fa;
-        }
-
-        .review-actions {
-          display: flex;
-          gap: 16px;
-        }
-
-        .action-btn {
-          background: none;
-          border: 1px solid #e0e0e0;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 13px;
-          color: #6c757d;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-        }
-
-        .action-btn:hover {
-          background: #f8f9fa;
-          border-color: #f26522;
-          color: #f26522;
-        }
-
-        .helpful-btn:hover {
-          background: #f26522;
-          color: white;
-          border-color: #f26522;
-        }
-
-        .empty-reviews {
-          padding: 40px;
-          background: #fafafa;
-          border-radius: 16px;
-          border: 2px dashed #e0e0e0;
-        }
-
-        .empty-icon {
-          opacity: 0.6;
-        }
-
-        /* Modal styles for image view */
-        .modal-backdrop {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.8);
-        }
-
-        .modal-content {
-          position: relative;
-          max-width: 90%;
-          max-height: 90%;
-        }
-
-        .modal-content img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          border-radius: 8px;
-        }
-
-        .close-btn {
-          position: absolute;
-          top: -40px;
-          right: 0;
-          background: white;
-          border: none;
-          border-radius: 50%;
-          width: 30px;
-          height: 30px;
-          font-size: 18px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        /* Modern Header Styles */
-        .modern-header {
-          background: #000;
-          backdrop-filter: blur(10px);
-          border-radius: 0 0 30px 30px;
-        }
-        
-        .top-bar {
-          background: #000;
-          padding: 2px 0;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .contact-info span {
-          color: #fff;
-          font-size: 12px;
-        }
-          .footer-bottom span {
-          color: #f26522;
-        }
-        
-        .cart-badge {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          background: #f26522;
-          color: white;
-          border-radius: 50%;
-          width: 18px;
-          height: 18px;
-          font-size: 11px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .main-nav {
-          padding: 15px 0;
-        }
-        
-        .search-bar {
-          position: relative;
-        }
-        
-        .search-bar .form-control {
-          border-radius: 25px;
-          padding: 10px 20px;
-          border: none;
-          background: rgba(255, 255, 255, 0.1);
-          color: #fff;
-          backdrop-filter: blur(5px);
-          height: 44px;
-        }
-        
-        .search-bar .form-control::placeholder {
-          color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .search-bar .form-control:focus {
-          background: rgba(255, 255, 255, 0.2);
-          box-shadow: 0 0 10px rgba(242, 101, 34, 0.3);
-          color: #fff;
-        }
-        
-        .btn-search {
-          position: absolute;
-          right: 5px;
-          top: 50%;
-          transform: translateY(-50%);
-          border-radius: 50%;
-          width: 36px;
-          height: 36px;
-          background: #f26522;
-          border: none;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-        }
-        
-        .menu-toggle {
-          border-radius: 8px;
-          padding: 8px 16px;
-          font-size: 14px;
-          background: transparent;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          color: #fff;
-        }
-        
-        .menu-toggle:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: #f26522;
-        }
-        
-        .custom_menu {
-          background: rgba(242, 101, 34, 0.9);
-          padding: 12px 0;
-          border-radius: 20px;
-          margin-top: 15px;
-        }
-        
-        .custom_menu ul {
-          display: flex;
-          justify-content: center;
-          flex-wrap: wrap;
-          gap: 30px;
-          list-style: none;
-          margin: 0;
-          padding: 0;
-        }
-        
-        .custom_menu ul li a {
-          color: #fff;
-          text-decoration: none;
-          font-weight: 500;
-          transition: color 0.3s;
-          padding: 5px 0;
-          position: relative;
-          font-size: 14px;
-        }
-        
-        .custom_menu ul li a::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 0;
-          height: 2px;
-          background: #fff;
-          transition: width 0.3s;
-        }
-        
-        .custom_menu ul li a:hover::after,
-        .custom_menu ul li a.active::after {
-          width: 100%;
-        }
-        
-        @media (max-width: 767px) {
-          .top-bar {
-            display: none;
-          }
-        }
-      `}</style>
     </div>
   );
 };

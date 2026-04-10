@@ -223,52 +223,35 @@ const DynamicCategory = () => {
                   </div>
                 ) : (
                   filteredProducts.map((product) => (
-                    <div className="col-lg-4 col-md-6 col-sm-6 mb-4" key={product.id}>
+                    <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={product.id}>
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ y: -5 }}
-                        className="product-card"
+                        className="card-v2"
                       >
-                        <div className="product-image-container">
+                        <div className="card-img-v2" onClick={() => navigate(`/product/${product.id}`)}>
                           <img 
                             src={
                               product.images && product.images.length > 0 
                                 ? product.images[0] 
                                 : product.image_url || '/src/assets/images/tshirt-img.png'
                             } 
-                            alt={product.name} 
-                            className="product-image"
+                            alt={product.name}
                           />
-                          {/* <div className="overlay-icons">
-                            <button className="icon-btn">
-                              <Heart className="w-4 h-4" />
-                            </button>
-                            <button className="icon-btn">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </div> */}
+                          {product.discount_price && (
+                            <div className="discount-tag">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</div>
+                          )}
                         </div>
-                        <div className="product-content">
-                          <h4 className="product-name">{product.name}</h4>
-                          <p className="product-price">
-                            Rs. {product.price}
-                          </p>
-                          <div className="product-actions">
-                            <button 
-                              className="btn-add-cart"
-                              onClick={() => handleAddToCart(product)}
-                            >
-                              <ShoppingCart size={16} />
-                              Add to Cart
-                            </button>
-                            <button 
-                              className="btn-view-details"
-                              onClick={() => navigate(`/product/${product.id}`)}
-                            >
-                              View Details
-                            </button>
+                        <div className="card-body-v2">
+                          <h5 className="card-title-v2">{product.name}</h5>
+                          <div className="card-price-v2">
+                            <span className="price-now">Rs. {Math.round(product.discount_price || product.price)}</span>
+                            {product.discount_price && <span className="price-old">Rs. {Math.round(product.price)}</span>}
                           </div>
+                          <button className="btn-add-v2" onClick={() => { handleAddToCart(product); toast.success(`${product.name} added to Cart!`); }}>
+                            Add to Cart
+                          </button>
                         </div>
                       </motion.div>
                     </div>

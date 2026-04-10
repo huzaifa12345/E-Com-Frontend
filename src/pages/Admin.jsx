@@ -51,6 +51,7 @@ const Admin = () => {
     name: '',
     description: '',
     price: '',
+    discount_price: '',
     category_id: '',
     stock_quantity: '',
     image_url: '',
@@ -163,6 +164,7 @@ const Admin = () => {
       name: '',
       description: '',
       price: '',
+      discount_price: '',
       category_id: '',
       stock_quantity: '',
       image_url: '',
@@ -180,6 +182,7 @@ const Admin = () => {
       name: product.name || '',
       description: product.description || '',
       price: product.price || '',
+      discount_price: product.discount_price || '',
       category_id: product.category_id || '',
       stock_quantity: product.stock_quantity || '',
       image_url: product.image_url || '',
@@ -196,6 +199,7 @@ const Admin = () => {
         name: productForm.name,
         description: productForm.description,
         price: parseFloat(productForm.price),
+        discount_price: productForm.discount_price ? parseFloat(productForm.discount_price) : null,
         stock_quantity: parseInt(productForm.stock_quantity),
         category_id: productForm.category_id ? parseInt(productForm.category_id) : null,
         image_url: uploadedImages.length > 0 ? uploadedImages[0] : productForm.image_url,
@@ -470,13 +474,27 @@ const Admin = () => {
                         </div>
                       </td>
                       <td className="text-center">{product.category_relation?.name || 'N/A'}</td>
-                      <td className="text-center">Rs. {Number(product.price || 0).toFixed(2)}</td>
                       <td className="text-center">
+                        {product.discount_price ? (
+                          <>
+                            <span className="text-decoration-line-through text-muted">Rs. {Number(product.price || 0).toFixed(2)}</span>
+                            <br />
+                            <span className="text-success fw-bold">Rs. {Number(product.discount_price).toFixed(2)}</span>
+                            <br />
+                            <small className="text-danger">
+                              -{Math.round(((product.price - product.discount_price) / product.price) * 100)}%
+                            </small>
+                          </>
+                        ) : (
+                          <span>Rs. {Number(product.price || 0).toFixed(2)}</span>
+                        )}
+                      </td>
+                      <td className="text-center text-white">
                         <span className={`badge ${product.stock_quantity > 10 ? 'bg-success' : 'bg-danger'}`}>
                           {product.stock_quantity}
                         </span>
                       </td>
-                      <td className="text-center">
+                      <td className="text-center text-white">
                         <span className={`badge ${product.is_active ? 'bg-success' : 'bg-secondary'}`}>
                           {product.is_active ? 'Active' : 'Inactive'}
                         </span>
@@ -706,6 +724,16 @@ const Admin = () => {
                         className="form-control"
                         value={productForm.price}
                         onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Discount Price (Optional)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={productForm.discount_price}
+                        onChange={(e) => setProductForm({ ...productForm, discount_price: e.target.value })}
+                        placeholder="Leave empty for no discount"
                       />
                     </div>
                   <div className="col-12 mb-3">

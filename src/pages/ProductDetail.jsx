@@ -20,6 +20,7 @@ import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import { FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars } from 'react-icons/fa';
 import SideDrawer from '../components/SideDrawer';
+import './ProductDetail.css';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -185,9 +186,9 @@ const ProductDetail = () => {
   };
 
   const ProductCard = ({ product }) => (
-    <div className="col-lg-4 col-md-6 mb-4">
-      <div className="product-card">
-        <div className="product-image">
+    <div className="col-lg-4 col-md-6 col-6 mb-4">
+      <div className="card-v2">
+        <div className="card-img-v2" onClick={() => window.location.href = `/product/${product.id}`}>
           <img
             src={
               product.images && product.images.length > 0 
@@ -196,59 +197,45 @@ const ProductDetail = () => {
             }
             alt={product.name}
           />
-          <div className="product-overlay">
-            <button 
-              className="btn btn-primary"
-              onClick={() => window.location.href = `/product/${product.id}`}
-            >
-              View Details
-            </button>
-            <button 
-              className="btn btn-outline-light"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Check if product is single size and has sizes
-                if (product.product_type === 'single' && product.sizes && product.sizes.length > 0 && !selectedSize) {
-                  toast.error('Please select a size before adding to cart');
-                  return;
-                }
-                
-                // Add to cart functionality
-                addToCart({
-                  id: product.id,
-                  name: product.name,
-                  price: product.price,
-                  image: product.images && product.images.length > 0 
-                    ? product.images[0] 
-                    : product.image_url || product.image,
-                  quantity: 1,
-                  selectedSize: selectedSize || null
-                });
-                toast.success('Product added to cart!');
-              }}
-            >
-              Add to Cart
-            </button>
-          </div>
+          {product.discount_price && (
+            <div className="discount-tag">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</div>
+          )}
         </div>
-        <div className="product-info">
-          <h5 className="product-title">{product.name}</h5>
-          <div className="product-rating">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className={i < Math.floor(product.rating || 0) ? 'text-warning' : 'text-secondary'} />
-            ))}
-            <span className="text-muted">({product.rating || 0}.0)</span>
+        <div className="card-body-v2">
+          <h5 className="card-title-v2">{product.name}</h5>
+          <div className="card-price-v2">
+            <span className="price-now">Rs. {Math.round(product.discount_price || product.price)}</span>
+            {product.discount_price && <span className="price-old">Rs. {Math.round(product.price)}</span>}
           </div>
-          <div className="product-price">
-            <span className="current-price">{product.price}</span>
+          <button 
+            className="btn-add-v2"
+            onClick={() => {
+              if (product.product_type === 'single' && product.sizes && product.sizes.length > 0 && !selectedSize) {
+                toast.error('Please select a size before adding to cart');
+                return;
+              }
+              addToCart({
+                id: product.id,
+                name: product.name,
+                price: product.discount_price || product.price,
+                image: product.images && product.images.length > 0 
+                  ? product.images[0] 
+                  : product.image_url || product.image,
+                quantity: 1,
+                selectedSize: selectedSize || null
+              });
+              toast.success(`${product.name} added to Cart!`);
+            }}
+          >
+            Add to Cart
+          </button>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 
-return (
-  <div className="min-h-screen bg-gray-50">
+  return (
+    <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
       <header className="modern-header">
         <div className="container">
@@ -861,6 +848,21 @@ return (
         @media (max-width: 767px) {
           .top-bar {
             display: none;
+          }
+          
+          .product-image img {
+            height: 200px;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .product-image img {
+            height: 160px;
+          }
+          
+          .product-overlay .btn {
+            padding: 6px 12px;
+            font-size: 12px;
           }
         }
       `}</style>

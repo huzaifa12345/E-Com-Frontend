@@ -10,6 +10,7 @@ import TopBar from '../components/TopBar';
 import ThemeFooter from '../components/ThemeFooter';
 import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
+import './AllProducts.css';
 
 const AllProducts = () => {
   const { addToCart, getCartItemsCount } = useCart();
@@ -95,44 +96,30 @@ const AllProducts = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -5 }}
-      className="product-card"
+      className="card-v2"
     >
-      <div className="product-image-container">
+      <div className="card-img-v2" onClick={() => navigate(`/product/${product.id}`)}>
         <img 
           src={
             product.images && product.images.length > 0 
               ? product.images[0] 
               : product.image_url || '/src/assets/images/tshirt-img.png'
           } 
-          alt={product.name} 
-          className="product-image"
+          alt={product.name}
         />
-      </div>
-      <div className="product-content">
-        <h4 className="product-name">{product.name}</h4>
-        {product.sku && (
-          <div className="product-sku" style={{ fontSize: '12px', color: '#666', fontFamily: 'monospace', marginBottom: '5px' }}>
-            SKU: {product.sku}
-          </div>
+        {product.discount_price && (
+          <div className="discount-tag">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</div>
         )}
-        <p className="product-price">
-          Rs. {product.price}
-        </p>
-        <div className="product-actions">
-          <button 
-            className="btn-add-cart"
-            onClick={() => handleAddToCart(product)}
-          >
-            <ShoppingCart size={16} />
-            Add to Cart
-          </button>
-          <button 
-            className="btn-view-details"
-            onClick={() => navigate(`/product/${product.id}`)}
-          >
-            View Details
-          </button>
+      </div>
+      <div className="card-body-v2">
+        <h5 className="card-title-v2">{product.name}</h5>
+        <div className="card-price-v2">
+          <span className="price-now">Rs. {Math.round(product.discount_price || product.price)}</span>
+          {product.discount_price && <span className="price-old">Rs. {Math.round(product.price)}</span>}
         </div>
+        <button className="btn-add-v2" onClick={() => { handleAddToCart(product); toast.success(`${product.name} added to Cart!`); }}>
+          Add to Cart
+        </button>
       </div>
     </motion.div>
   );
@@ -200,7 +187,7 @@ const AllProducts = () => {
         ) : (
           <div className="row">
             {products.map((product) => (
-              <div className="col-lg-4 col-md-6 col-sm-6 mb-4" key={product.id}>
+              <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={product.id}>
                 <ProductCard product={product} />
               </div>
             ))}
@@ -419,6 +406,10 @@ const AllProducts = () => {
             margin-bottom: 20px;
           }
 
+          .product-image-container {
+            height: 320px;
+          }
+
           .product-actions {
             flex-direction: column;
           }
@@ -427,6 +418,26 @@ const AllProducts = () => {
           .btn-view-details {
             width: 100%;
             justify-content: center;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .product-image-container {
+            height: 180px;
+          }
+          
+          .product-content {
+            padding: 12px;
+          }
+          
+          .product-name {
+            font-size: 14px;
+          }
+          
+          .btn-add-cart,
+          .btn-view-details {
+            padding: 6px 8px;
+            font-size: 12px;
           }
         }
       `}</style>

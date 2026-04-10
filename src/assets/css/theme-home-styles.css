@@ -1,0 +1,412 @@
+/* --- GLOBAL THEME SETTINGS --- */
+:root {
+    --primary-orange: #f26522;
+    --dark-bg: #111111;
+    --light-bg: #f8f9fa;
+    --white: #ffffff;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.banner_bg_main {
+    background-color: var(--light-bg);
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* --- LOADER --- */
+.loader-container-v2 {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+}
+
+/* --- HEADER --- */
+.modern-header-v2 {
+    background: #000;
+    padding: 10px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1050;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* --- HERO SECTION V4 (SPLIT PREMIUM DESIGN) --- */
+.hero-v4 {
+    padding: 20px 0;
+    background: var(--light-bg);
+}
+
+.hero-wrapper-v4 {
+    background: var(--dark-bg);
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    min-height: 520px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+}
+
+/* Left Side Content */
+.hero-content-v4 {
+    padding: 60px 60px 20px;
+    color: #fff;
+    z-index: 10;
+    position: relative;
+    animation: fadeInLeft 0.8s ease-out;
+    margin-bottom: 65px;
+}
+
+.hero-badge-v4 {
+    background: var(--primary-orange);
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    display: inline-block;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+}
+
+.hero-title-v4 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+.hero-desc-v4 {
+    font-size: 1.1rem;
+    color: #bbb;
+    margin-bottom: 40px;
+    max-width: 480px;
+    line-height: 1.6;
+}
+
+.hero-btns-v4 {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-orange-v4 {
+    background: var(--primary-orange);
+    color: #fff;
+    padding: 15px 35px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: var(--transition);
+    border: none;
+}
+
+.btn-orange-v4:hover {
+    background: #d4541a;
+    transform: translateY(-3px);
+    color: #fff;
+}
+
+.btn-white-v4 {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    padding: 15px 35px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: var(--transition);
+}
+
+.btn-white-v4:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* Right Side Image */
+.hero-image-v4 {
+    position: relative;
+    height: 520px;
+    width: 100%;
+    background: #1a1a1a;
+}
+
+.main-product-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Image gaps ko fill karke container mein set karega */
+    display: block;
+}
+
+.blob-bg-v4 {
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    background: var(--primary-orange);
+    filter: blur(120px);
+    opacity: 0.15;
+    border-radius: 50%;
+}
+
+/* Slider Controls */
+.slider-controls-v4 {
+    position: absolute;
+    bottom: 35px;
+    left: 60px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    z-index: 20;
+}
+
+.nav-arrow-v4 {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.nav-arrow-v4:hover {
+    background: var(--primary-orange);
+    border-color: var(--primary-orange);
+}
+
+.dots-v4 {
+    display: flex;
+    gap: 8px;
+}
+
+.dots-v4 span {
+    width: 10px;
+    height: 10px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    /* transition: 0.3s; */
+}
+
+.dots-v4 span.active {
+    background: var(--primary-orange);
+    width: 28px;
+    border-radius: 10px;
+}
+
+/* --- PRODUCT GRID V2 --- */
+.category-block-v2 {
+    margin-top: 50px;
+}
+
+.category-header-v2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.cat-name-v2 {
+    font-weight: 800;
+    color: #222;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.view-all-v2 {
+    color: var(--primary-orange);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.card-v2 {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    height: 100%;
+    border: 1px solid #f0f0f0;
+    transition: var(--transition);
+}
+
+.card-v2:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+}
+
+.card-img-v2 {
+    height: 320px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: #fdfdfd;
+}
+
+.card-img-v2 img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.card-v2:hover .card-img-v2 img {
+    transform: scale(1.08);
+}
+
+.discount-tag {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: #000;
+    color: #fff;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    z-index: 2;
+}
+
+.card-body-v2 {
+    padding: 20px;
+    text-align: center;
+}
+
+.card-title-v2 {
+    font-size: 15px;
+    font-weight: 600;
+    height: 40px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.price-now {
+    color: var(--primary-orange);
+    font-weight: 800;
+    font-size: 19px;
+}
+
+.price-old {
+    text-decoration: line-through;
+    color: #bbb;
+    font-size: 13px;
+    margin-left: 8px;
+}
+
+.btn-add-v2 {
+    width: 100%;
+    background: #f8f9fa;
+    border: 1px solid #eee;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-add-v2:hover {
+    background: var(--primary-orange);
+    color: #fff;
+    border-color: var(--primary-orange);
+}
+
+/* --- FEATURES SECTION --- */
+.feat-box-v2 {
+    background: #fff;
+    padding: 30px 20px;
+    border-radius: 20px;
+    height: 100%;
+    border: 1px solid #f0f0f0;
+}
+
+.feat-box-v2 .icon {
+    font-size: 32px;
+    color: var(--primary-orange);
+    margin-bottom: 15px;
+}
+
+.feat-box-v2 h6 { font-weight: 700; margin-bottom: 5px; }
+.feat-box-v2 p { color: #888; font-size: 13px; margin: 0; }
+
+/* --- ANIMATIONS --- */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* --- RESPONSIVE FIXES --- */
+/* --- RESPONSIVE FIXES (FINAL IMAGE GAP & RADIUS FIX) --- */
+@media (max-width: 991px) {
+    .hero-title-v4 { font-size: 2.8rem; }
+    .hero-content-v4 { padding: 40px; }
+    .hero-image-v4 { height: 400px; min-height: 400px; }
+    .card-img-v2 { height: 260px; }
+}
+
+@media (max-width: 768px) {
+    /* Mobile Border Radius Fix */
+    .hero-wrapper-v4 { 
+        border-radius: 25px; 
+        margin: 0 10px;
+        min-height: auto;
+    }
+    
+    .hero-content-v4 { 
+        padding: 40px 20px 20px; 
+        text-align: center; 
+        order: 1; /* Text niche ayega */
+    }
+    
+    /* Fix: Mobile Image Gaps khatam karne ke liye */
+    .hero-image-v4 { 
+        height: 100%; /* Mobile ke liye munasib height */
+        min-height: 100%;
+        order: 0; /* Image upar ayegi */
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .main-product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Yeh upar/niche ki extra space khatam kar dega */
+        object-position: center;
+    }
+    
+    .hero-btns-v4 { justify-content: center; }
+    .hero-desc-v4 { margin: 0 auto 30px; }
+    
+    .slider-controls-v4 { 
+        position: relative; 
+        left: 0; 
+        bottom: 0; 
+        padding: 0 0 30px; 
+        justify-content: center; 
+        order: 2;
+    }
+}
+
+@media (max-width: 576px) {
+    .col-6 { width: 50% !important; } /* 2-Column Grid for Mobile */
+    .card-img-v2 { height: 180px; }
+    .card-body-v2 { padding: 12px; }
+    .card-title-v2 { font-size: 13px; height: 38px; }
+    .price-now { font-size: 16px; }
+    .btn-add-v2 { font-size: 12px; }
+    .hero-title-v4 { font-size: 2.2rem; }
+    
+    /* Mazeed small screens ke liye image adjustment */
+    .hero-image-v4 { height: 100%; min-height: 100%; }
+
+}

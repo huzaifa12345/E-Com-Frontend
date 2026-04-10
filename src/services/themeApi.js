@@ -310,6 +310,22 @@ export const themeApi = {
     const response = await api.get('/products/next-sku');
     return response.data;
   },
+
+  // Stock Management
+  getProductStock: async (productId) => {
+    const response = await api.get(`/stock/check?product_id=${productId}`);
+    return response.data;
+  },
+
+  getProductStockBySize: async (productId, sizeId) => {
+    const response = await api.get(`/stock/check?product_id=${productId}&size_id=${sizeId}`);
+    return response.data;
+  },
+
+  getAllProductStock: async (productId) => {
+    const response = await api.get(`/stock?product_id=${productId}`);
+    return response.data;
+  },
 };
 
 export default api;

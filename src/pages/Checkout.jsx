@@ -761,35 +761,8 @@ const Checkout = () => {
                   <div className="box_main">
                     <h3 className="shirt_text mb-4">Payment Information</h3>
                     <div className="mb-4">
+                    
                       {/* <div className="form-check form-check-inline mb-2">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="paymentMethod"
-                          id="card"
-                          value="card"
-                          checked={paymentInfo.method === 'card'}
-                          onChange={(e) => setPaymentInfo({...paymentInfo, method: e.target.value})}
-                        />
-                        <label className="form-check-label" htmlFor="card">
-                          💳 Credit Card
-                        </label>
-                      </div>
-                      <div className="form-check form-check-inline mb-2">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="paymentMethod"
-                          id="casheasy"
-                          value="casheasy"
-                          checked={paymentInfo.method === 'casheasy'}
-                          onChange={(e) => setPaymentInfo({...paymentInfo, method: e.target.value})}
-                        />
-                        <label className="form-check-label" htmlFor="casheasy">
-                          📱 Cash Easy
-                        </label>
-                      </div> */}
-                      <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
                           type="radio"
@@ -802,7 +775,7 @@ const Checkout = () => {
                         <label className="form-check-label" htmlFor="banktransfer">
                           🏦 Bank Transfer
                         </label>
-                      </div>
+                      </div> */}
                       <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
@@ -817,7 +790,7 @@ const Checkout = () => {
                           📲 Jazz Cash
                         </label>
                       </div>
-                      <div className="form-check form-check-inline mb-2">
+                      {/* <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
                           type="radio"
@@ -830,7 +803,7 @@ const Checkout = () => {
                         <label className="form-check-label" htmlFor="easypaisa">
                           📱 EasyPaisa
                         </label>
-                      </div>
+                      </div> */}
                       <div className="form-check form-check-inline">
                         <input
                           className="form-check-input"
@@ -894,7 +867,7 @@ const Checkout = () => {
                     )} */}
 
                     {/* Bank Transfer Payment */}
-                    {paymentInfo.method === 'banktransfer' && (
+                    {/* {paymentInfo.method === 'banktransfer' && (
                       <div className="alert alert-info">
                         <h5 className="alert-heading">🏦 Bank Transfer</h5>
                         <p className="mb-3">Transfer directly to our bank account.</p>
@@ -943,7 +916,7 @@ const Checkout = () => {
                         </div>
                         <small className="text-muted">Please upload the transaction receipt after payment.</small>
                       </div>
-                    )}
+                    )} */}
 
                     {/* Jazz Cash Payment */}
                     {paymentInfo.method === 'jazzcash' && (
@@ -954,8 +927,8 @@ const Checkout = () => {
                         {/* Store Owner Details */}
                         <div className="jazzcash-details p-3 bg-light rounded mb-3">
                           <h6>Send payment to:</h6>
-                          <p><strong>Account Name:</strong> Kids Colours Store</p>
-                          <p><strong>Jazz Cash Number:</strong> 03XX-XXXXXXX</p>
+                          <p><strong>Account Name:</strong>M Ramiz Yaqoob</p>
+                          <p><strong>Jazz Cash Number:</strong> 03026654999</p>
                           <p className="text-muted mb-0">Please send the exact amount and keep the transaction receipt.</p>
                         </div>
 
@@ -1010,12 +983,12 @@ const Checkout = () => {
                     )}
 
                     {/* EasyPaisa Payment */}
-                    {paymentInfo.method === 'easypaisa' && (
+                    {/* {paymentInfo.method === 'easypaisa' && (
                       <div className="alert alert-info">
                         <h5 className="alert-heading">📱 EasyPaisa Payment</h5>
                         <p className="mb-3">Pay using your EasyPaisa account.</p>
                         
-                        {/* Store Owner Details */}
+                        
                         <div className="easypaisa-details p-3 bg-light rounded mb-3">
                           <h6>Send payment to:</h6>
                           <p><strong>Account Name:</strong> Kids Colours Store</p>
@@ -1071,7 +1044,7 @@ const Checkout = () => {
                         </div>
                         <small className="text-muted">You will receive a payment confirmation on your EasyPaisa number.</small>
                       </div>
-                    )}
+                    )} */}
 
                     {/* Cash on Delivery */}
                     {paymentInfo.method === 'cod' && (
