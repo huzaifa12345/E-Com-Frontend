@@ -375,3 +375,20 @@
     .price-currency { font-size: 22px; }
     .product-price-container { gap: 10px; }
 }
+
+/* Size Guide Button Hover */
+.size-guide-btn {
+    border: 2px solid #f26522;
+    color: #f26522;
+    background: transparent;
+}
+
+.size-guide-btn:hover {
+    background: #f26522;
+    color: white !important;
+}
+
+.size-guide-btn:hover i,
+.size-guide-btn:hover span {
+    color: white !important;
+}

@@ -294,6 +294,11 @@ export const themeApi = {
     return response.data;
   },
 
+  reorderSizes: async (sizes) => {
+    const response = await api.post('/sizes/reorder', { sizes });
+    return response.data;
+  },
+
   // Product creation methods
   createSingleSizeProduct: async (productData) => {
     const response = await api.post('/products/single-size', productData);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Package } from 'lucide-react';
+import { Plus, Trash2, Edit2, Package, ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { themeApi } from '../../services/themeApi';
 import websiteSettingsApi from '../../services/websiteSettingsApi';
 import toast from 'react-hot-toast';
@@ -25,6 +25,8 @@ const SizeManagement = () => {
     pants: false
   });
   const [loading, setLoading] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [hasOrderChanges, setHasOrderChanges] = useState(false);
 
   useEffect(() => {
     fetchSizes();
@@ -222,6 +224,47 @@ const SizeManagement = () => {
     setEditingSize(null);
   };
 
+  // Move size up in the order
+  const moveSizeUp = (index) => {
+    if (index === 0) return;
+    const newSizes = [...sizes];
+    const temp = newSizes[index];
+    newSizes[index] = newSizes[index - 1];
+    newSizes[index - 1] = temp;
+    setSizes(newSizes);
+    setHasOrderChanges(true);
+  };
+
+  // Move size down in the order
+  const moveSizeDown = (index) => {
+    if (index === sizes.length - 1) return;
+    const newSizes = [...sizes];
+    const temp = newSizes[index];
+    newSizes[index] = newSizes[index + 1];
+    newSizes[index + 1] = temp;
+    setSizes(newSizes);
+    setHasOrderChanges(true);
+  };
+
+  // Save the new order to backend
+  const saveOrder = async () => {
+    try {
+      setSavingOrder(true);
+      const sizesOrder = sizes.map((size, index) => ({
+        id: size.id,
+        sort_order: index
+      }));
+      await themeApi.reorderSizes(sizesOrder);
+      toast.success('Size order saved successfully!');
+      setHasOrderChanges(false);
+      fetchSizes();
+    } catch (error) {
+      toast.error('Failed to save size order');
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
@@ -365,8 +408,18 @@ const SizeManagement = () => {
 
       {/* Sizes List */}
       <div className="card">
-        <div className="card-header bg-dark text-white">
+        <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
           <h6 className="mb-0">Available Sizes ({sizes.length})</h6>
+          {hasOrderChanges && (
+            <button
+              className="btn btn-sm btn-success"
+              onClick={saveOrder}
+              disabled={savingOrder}
+            >
+              <Save size={14} className="me-1" />
+              {savingOrder ? 'Saving...' : 'Save Order'}
+            </button>
+          )}
         </div>
         <div className="card-body">
           {sizes.length === 0 ? (
@@ -379,6 +432,7 @@ const SizeManagement = () => {
               <table className="table table-striped">
                 <thead>
                   <tr>
+                    <th>Order</th>
                     <th>ID</th>
                     <th>Size Name</th>
                     <th>Description</th>
@@ -386,8 +440,31 @@ const SizeManagement = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sizes.map((size) => (
+                  {sizes.map((size, index) => (
                     <tr key={size.id}>
+                      <td>
+                        <div className="btn-group-vertical" role="group">
+                          <button
+                            className="btn btn-sm btn-outline-secondary p-1"
+                            onClick={() => moveSizeUp(index)}
+                            disabled={index === 0 || editingSize?.id === size.id}
+                            style={{ fontSize: '10px', lineHeight: 1 }}
+                          >
+                            <ArrowUp size={12} />
+                          </button>
+                          <span className="badge bg-light text-dark border" style={{ fontSize: '11px', padding: '2px 6px' }}>
+                            {index + 1}
+                          </span>
+                          <button
+                            className="btn btn-sm btn-outline-secondary p-1"
+                            onClick={() => moveSizeDown(index)}
+                            disabled={index === sizes.length - 1 || editingSize?.id === size.id}
+                            style={{ fontSize: '10px', lineHeight: 1 }}
+                          >
+                            <ArrowDown size={12} />
+                          </button>
+                        </div>
+                      </td>
                       <td>{size.id}</td>
                       <td>
                         {editingSize?.id === size.id ? (

@@ -24,7 +24,10 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
 
   const addSize = () => {
     if (newSize.size) {
-      const updatedSizes = [...sizes, { size: newSize.size }];
+      // Find the size object from availableSizes to get sort_order
+      const sizeObj = availableSizes.find(s => (typeof s === 'string' ? s : s.size) === newSize.size);
+      const sortOrder = sizeObj?.sort_order || 0;
+      const updatedSizes = [...sizes, { size: newSize.size, sort_order: sortOrder }];
       onChange(updatedSizes);
       setNewSize({ size: '' });
     }
@@ -44,8 +47,9 @@ const EnhancedSizeManager = ({ productType, sizes, onChange }) => {
 
   const applyToAllSizes = () => {
     const updatedSizes = availableSizes.map(size => ({
-      size: typeof size === 'string' ? size : size.size
-    }));
+      size: typeof size === 'string' ? size : size.size,
+      sort_order: typeof size === 'string' ? 0 : (size.sort_order || 0)
+    })).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     onChange(updatedSizes);
   };
 

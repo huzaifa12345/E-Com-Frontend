@@ -449,12 +449,33 @@ const ThemeProductDetail = () => {
                         Select Size
                       </h4>
 {/* Size Guide Button */}
-      <button 
+      <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 border border-[#f26522] text-[#f26522] rounded-full text-sm font-semibold hover:bg-[#f26522] hover:text-white transition-all duration-300"
+        className="size-guide-btn flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-semibold transition-all duration-300"
+        style={{
+          borderColor: '#f26522',
+          color: '#f26522',
+          backgroundColor: 'transparent'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#f26522';
+          e.currentTarget.style.color = 'white';
+          const icon = e.currentTarget.querySelector('i');
+          const text = e.currentTarget.querySelector('span');
+          if (icon) icon.style.color = 'white';
+          if (text) text.style.color = 'white';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.color = '#f26522';
+          const icon = e.currentTarget.querySelector('i');
+          const text = e.currentTarget.querySelector('span');
+          if (icon) icon.style.color = '#f26522';
+          if (text) text.style.color = '#f26522';
+        }}
       >
-        <i className="fas fa-ruler-combined"></i>
-        Size Guide
+        <i className="fas fa-ruler-combined" style={{ color: '#f26522', transition: 'color 0.3s' }}></i>
+        <span style={{ color: '#f26522', transition: 'color 0.3s' }}>Size Guide</span>
       </button>
 
       {/* Tailwind Modal Overlay */}
@@ -570,39 +591,41 @@ const ThemeProductDetail = () => {
       )}
                     </div>
                     <div className="size_controls d-flex flex-wrap gap-2" style={{ marginBottom: '10px' }}>
-                      {/* If sizes exist, show them */}
+                      {/* If sizes exist, show them - sorted by sort_order */}
                       {product.sizes && product.sizes.length > 0 ? (
-                        product.sizes.map((sizeItem, index) => {
-                          console.log('Rendering size button:', sizeItem);
-                          // Remove stock check - allow size selection regardless of stock
-                          return (
-                            <button
-                              key={index}
-                              className={`btn ${selectedSize === sizeItem.size ? 'btn-primary' : 'btn-outline-secondary'} position-relative`}
-                              onClick={() => {
-                                console.log('Size clicked:', sizeItem.size);
-                                setSelectedSize(sizeItem.size);
-                                setQuantity(Math.max(1, sizeItem.quantity > 0 ? sizeItem.quantity : quantity));
-                              }}
-                              style={{ 
-                                backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
-                                borderColor: '#f26522',
-                                color: selectedSize === sizeItem.size ? 'white' : '#f26522',
-                                minWidth: '120px',
-                                padding: '8px 12px',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                transition: 'all 0.3s ease',
-                                border: '2px solid #f26522',
-                                position: 'relative'
-                              }}
-                            >
-                            </button>
-                          );
-                        })
+                        [...product.sizes]
+                          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+                          .map((sizeItem, index) => {
+                            console.log('Rendering size button:', sizeItem);
+                            return (
+                              <button
+                                key={index}
+                                className={`btn ${selectedSize === sizeItem.size ? 'btn-primary' : 'btn-outline-secondary'} position-relative`}
+                                onClick={() => {
+                                  console.log('Size clicked:', sizeItem.size);
+                                  setSelectedSize(sizeItem.size);
+                                  setQuantity(Math.max(1, sizeItem.quantity > 0 ? sizeItem.quantity : quantity));
+                                }}
+                                style={{
+                                  backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
+                                  borderColor: '#f26522',
+                                  color: selectedSize === sizeItem.size ? 'white' : '#f26522',
+                                  minWidth: '120px',
+                                  padding: '8px 12px',
+                                  borderRadius: '8px',
+                                  fontSize: '14px',
+                                  fontWeight: '500',
+                                  transition: 'all 0.3s ease',
+                                  border: '2px solid #f26522',
+                                  position: 'relative'
+                                }}
+                              >
+                                {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
+                              </button>
+                            );
+                          })
                       ) : (
-                        /* If no sizes but has stock, show default size options from fetched sizes */
+                        /* If no sizes but has stock, show default size options from fetched sizes - already sorted by API */
                         sizes.map((sizeItem) => (
                           <button
                             key={sizeItem.id}
@@ -612,7 +635,7 @@ const ThemeProductDetail = () => {
                               setSelectedSize(sizeItem.size);
                               setQuantity(1);
                             }}
-                            style={{ 
+                            style={{
                               backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
                               borderColor: '#f26522',
                               color: selectedSize === sizeItem.size ? 'white' : '#f26522',
