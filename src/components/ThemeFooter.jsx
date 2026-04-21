@@ -27,9 +27,9 @@ const Footer = () => {
             <div className="footer-links">
               <h5>Quick Links</h5>
               <ul>
-                <li><Link to="/" onClick={handleLinkClick}>Home</Link></li>
-                <li><Link to="/all-products" onClick={handleLinkClick}>Products</Link></li>
-                <li><Link to="/cart" onClick={handleLinkClick}>Cart</Link></li>
+                <li><Link to="/" onClick={handleLinkClick}>Exchange And Return Policy</Link></li>
+                <li><Link to="/all-products" onClick={handleLinkClick}>Cancellation Policy</Link></li>
+                <li><Link to="/cart" onClick={handleLinkClick}>Terms And Conditions</Link></li>
               </ul>
             </div>
           </div>
@@ -38,7 +38,7 @@ const Footer = () => {
               <h5>Contact Info</h5>
               <p><FaHeadset /> 0336-4500091</p>
               <p><FaEnvelope /> rameez_yaqoob@yahoo.com</p>
-              <p><FaMapMarkerAlt /> Peoples Colony, Main Market Gujranwala</p>
+              {/* <p><FaMapMarkerAlt /> Peoples Colony, Main Market Gujranwala</p> */}
             </div>
           </div>
         </div>

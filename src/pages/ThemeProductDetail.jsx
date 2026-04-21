@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaBars , FaStar, FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch} from 'react-icons/fa';
-import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowRight } from 'lucide-react';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
 import SideDrawer from '../components/SideDrawer';
@@ -12,10 +12,11 @@ import TopBar from '../components/TopBar';
 import ThemeFooter from '../components/ThemeFooter';
 import websiteSettingsApi from '../services/websiteSettingsApi';
 import './ThemeProductDetail.css';
+import '../assets/css/BuyNowButton.css';
 
 const ThemeProductDetail = () => {
   const { id } = useParams();
-  const { addToCart, getCartItemsCount } = useCart();
+  const { addToCart, getCartItemsCount, clearCart } = useCart();
   const { websiteLogo } = useLogo();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -247,19 +248,39 @@ const ThemeProductDetail = () => {
     console.log('selectedSize:', selectedSize);
     
     // Simple validation: Always require size selection
-    if (!selectedSize || selectedSize === '') {
-      console.log('No size selected - showing error');
-      toast.error('Please select a size before adding to cart');
+    if (!selectedSize) {
+      toast.error('Please select a size');
       return;
     }
+    
+    try {
+      await addToCart(product, 1, selectedSize);
+      toast.success(`${product.name} added to cart!`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Failed to add to cart');
+    }
+  };
 
-    console.log('Size selected - adding to cart');
-    // Add selected size to the product object
-    const productWithSize = {
-      ...product,
-      selectedSize: selectedSize
-    };
-    addToCart(productWithSize, quantity);
+  const handleBuyNow = async () => {
+    console.log('handleBuyNow called');
+    console.log('selectedSize:', selectedSize);
+    
+    // Simple validation: Always require size selection
+    if (!selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+    
+    try {
+      // Clear existing cart and add this product
+      clearCart();
+      await addToCart(product, 1, selectedSize);
+      navigate('/checkout');
+    } catch (error) {
+      console.error('Error with buy now:', error);
+      toast.error('Failed to proceed to checkout');
+    }
     toast.success(`${product.name} (Size: ${selectedSize}) added to cart!`);
   };
 
@@ -414,30 +435,7 @@ const ThemeProductDetail = () => {
                   <p style={{ color: '#666' }}>{product.description}</p>
                 </div>
 
-                <div className="quantity_section mb-4">
-                  <h4 style={{ color: '#262626' }}>Quantity</h4>
-                  <div className="quantity_controls d-flex align-items-center">
-                    <button 
-                      className="btn btn-outline-secondary"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="form-control mx-2"
-                      style={{ width: '60px', textAlign: 'center' }}
-                    />
-                    <button 
-                      className="btn btn-outline-secondary"
-                      onClick={() => setQuantity(quantity + 1)}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
+                
 
                 {/* Size Selection */}
                 {console.log('Rendering size section, product.sizes:', product?.sizes)}
@@ -670,6 +668,31 @@ const ThemeProductDetail = () => {
                   </div>
                 )}
 
+                <div className="quantity_section mb-4">
+                  <h4 style={{ color: '#262626' }}>Quantity</h4>
+                  <div className="quantity_controls d-flex align-items-center">
+                    <button 
+                      className="btn btn-outline-secondary"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="form-control mx-2"
+                      style={{ width: '60px', textAlign: 'center' }}
+                    />
+                    <button 
+                      className="btn btn-outline-secondary"
+                      onClick={() => setQuantity(quantity + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
                 <div className="action_buttons mb-4">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -681,15 +704,25 @@ const ThemeProductDetail = () => {
                     <ShoppingCart className="w-5 h-5 mr-2" />
                     Add to Cart
                   </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="btn btn-lg"
+                    style={{ backgroundColor: '#000000', color: 'white' }}
+                    onClick={handleBuyNow}
+                  >
+                    <ArrowRight className="w-5 h-5 mr-2" />
+                    Buy Now
+                  </motion.button>
                 </div>
 
-                <div className="trust_badges">
+                {/* <div className="trust_badges">
                   <div className="row">
                     <div className="col-6">
                       <div className="text-center">
                         <Truck className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
                         <span className='d-block'>Shipping Fee Rs 250</span>
-                        {/* <span className="d-block">Free Shipping on Orders over Rs 10,000</span> */}
+                         <span className="d-block">Free Shipping on Orders over Rs 10,000</span> 
                       </div>
                     </div>
                     <div className="col-6">
@@ -699,7 +732,7 @@ const ThemeProductDetail = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -707,15 +740,15 @@ const ThemeProductDetail = () => {
       </div>
 
       {/* Customer Reviews Section */}
-      <div className="container mt-5 mb-5">
+      {/* <div className="container mt-5 mb-5">
         <div className="row">
           <div className="col-12">
             <h2 className="text-center mb-4" style={{ color: '#262626', fontSize: '2rem', fontWeight: 'bold' }}>
               Customer Reviews
-            </h2>
+            </h2> */}
             
             {/* Review Form */}
-            <div className="card mb-4">
+            {/* <div className="card mb-4">
               <div className="card-header" style={{ backgroundColor: '#f26522', color: 'white' }}>
                 <h5 className="mb-0">Write a Review</h5>
               </div>
@@ -760,10 +793,10 @@ const ThemeProductDetail = () => {
                       onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
                       required
                     ></textarea>
-                  </div>
+                  </div> */}
                   
                   {/* Image Upload Section */}
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <label className="form-label">Upload Images (Optional)</label>
                     <input
                       type="file"
@@ -773,10 +806,10 @@ const ThemeProductDetail = () => {
                       onChange={handleImageUpload}
                     />
                     <small className="text-muted">You can upload multiple images</small>
-                  </div>
+                  </div> */}
 
                   {/* Image Preview */}
-                  {reviewForm.review_images.length > 0 && (
+                  {/* {reviewForm.review_images.length > 0 && (
                     <div className="mb-3">
                       <label className="form-label">Image Preview</label>
                       <div className="row">
@@ -809,11 +842,10 @@ const ThemeProductDetail = () => {
                   </button>
                 </form>
               </div>
-            </div>
+            </div> */}
 
             {/* Existing Reviews */}
-            <div className="reviews-container">
-              {/* Loading State */}
+            {/* <div className="reviews-container">
               {reviewsLoading && (
                 <div className="text-center py-5">
                   <div className="spinner-border text-primary" role="status">
@@ -855,10 +887,10 @@ const ThemeProductDetail = () => {
                   </div>
                   
                   <div className="review-content">
-                    <p className="review-comment">{review.comment}</p>
+                    <p className="review-comment">{review.comment}</p> */}
                     
                     {/* Review Images */}
-                    {review.review_images && review.review_images.length > 0 && (
+                    {/* {review.review_images && review.review_images.length > 0 && (
                       <div className="review-images-section">
                         <div className="images-grid">
                           {review.review_images.map((image, imgIndex) => (
@@ -935,7 +967,7 @@ const ThemeProductDetail = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Related Products */}
       <section className="products-section py-5">

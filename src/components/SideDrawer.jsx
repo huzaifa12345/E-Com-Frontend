@@ -289,13 +289,17 @@ const SideDrawer = ({ isOpen, onClose }) => {
       
       {/* Side Drawer */}
       <motion.div
-        initial={{ x: -300 }}
-        animate={{ x: isOpen ? 0 : -300 }}
-        exit={{ x: -300 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        initial={{ x: '-100%' }}
+        animate={{ x: isOpen ? 0 : '-100%' }}
+        exit={{ x: '-100%' }}
+        transition={{ 
+          type: 'tween', 
+          duration: 0.15,
+          ease: 'easeOut'
+        }}
         style={{
           ...drawerStyle,
-          display: isOpen ? 'block' : 'none'
+          willChange: 'transform'
         }}
       >
         {/* Header */}

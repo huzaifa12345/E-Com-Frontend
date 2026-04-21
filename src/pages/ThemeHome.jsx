@@ -10,10 +10,11 @@ import SideDrawer from '../components/SideDrawer';
 import TopBar from '../components/TopBar';
 import ThemeFooter from '../components/ThemeFooter';
 import '../assets/css/theme-home-styles.css';
+import '../assets/css/BuyNowButton.css';
 
 const ThemeHome = () => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, clearCart } = useCart();
   const { user } = useAuth();
   
   const [categories, setCategories] = useState([]);
@@ -138,7 +139,7 @@ const ThemeHome = () => {
               {/* Left Side: Content */}
               <div className="col-lg-6">
                 <div className="hero-content-v4">
-                  <span className="hero-badge-v4">New Arrival 2026</span>
+                  {/* <span className="hero-badge-v4">New Arrival 2026</span> */}
                   <h1 className="hero-title-v4">{heroSlides[currentSlide].title}</h1>
                   <p className="hero-desc-v4">{heroSlides[currentSlide].description}</p>
                   <div className="hero-btns-v4">
@@ -203,9 +204,18 @@ const ThemeHome = () => {
                           <span className="price-now">Rs. {Math.round(product.discount_price || product.price)}</span>
                           {product.discount_price && <span className="price-old">Rs. {Math.round(product.price)}</span>}
                         </div>
-                        <button className="btn-add-v2" onClick={() => { addToCart(product); toast.success('Added to Cart!'); }}>
-                          Add to Cart
-                        </button>
+                        <div className="btn-group-v2">
+                          <button className="btn-add-v2" onClick={() => { addToCart(product); toast.success('Added to Cart!'); }}>
+                            Add to Cart
+                          </button>
+                          <button className="btn-buy-now-v2" onClick={() => {
+                            clearCart();
+                            addToCart(product);
+                            navigate('/checkout');
+                          }}>
+                            Buy Now
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -8,9 +8,21 @@ import '../assets/css/Topbar.css';
 
 const TopBar = ({ onMenuToggle }) => {
   const { user } = useAuth();
-  const { getCartItemsCount } = useCart();
+  const { getCartItemsCount, toggleCart } = useCart();
   const { websiteLogo } = useLogo();
   const location = useLocation();
+
+  const handleCartClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Cart icon clicked, calling toggleCart');
+    try {
+      toggleCart();
+      console.log('toggleCart called successfully');
+    } catch (err) {
+      console.error('Error calling toggleCart:', err);
+    }
+  };
 
   const isActive = (path) => location.pathname === path ? 'active-link' : '';
 
@@ -41,36 +53,64 @@ const TopBar = ({ onMenuToggle }) => {
         <div className="container py-2">
           <div className="row align-items-center">
             
-            {/* Logo Section */}
-            <div className="col-4 col-md-3">
-              <Link to="/" className="navbar-brand">
+            {/* Mobile: Left Side Icons (Cart & Menu) | Desktop: Logo */}
+            <div className="col-4 col-md-3 order-1 order-md-1">
+              {/* Mobile view: Show buttons on left */}
+              <div className="d-flex d-md-none align-items-center justify-content-start gap-3">
+                <button 
+                  className="icon-circle cart-wrapper text-white position-relative"
+                  onClick={handleCartClick}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  <FaShoppingCart size={22} />
+                  {getCartItemsCount() > 0 && (
+                    <span className="cart-badge-orange pulse-animation">{getCartItemsCount()}</span>
+                  )}
+                </button>
+                <button 
+                  className="icon-circle menu-toggle-btn text-white" 
+                  onClick={onMenuToggle}
+                >
+                  <div className="hamburger-box">
+                    <span className="ham-line"></span>
+                    <span className="ham-line"></span>
+                    <span className="ham-line"></span>
+                  </div>
+                </button>
+              </div>
+              {/* Desktop view: Show logo */}
+              <Link to="/" className="navbar-brand d-none d-md-block">
                 <img src={websiteLogo} alt="Kids Colours" className="brand-logo" />
               </Link>
             </div>
 
             {/* Desktop Center Links */}
-            <div className="col-md-6 d-none d-lg-block text-center">
+            <div className="col-md-6 d-none d-lg-block text-center order-md-2">
               <div className="nav-menu-links">
                 <Link to="/" className={`nav-link-item text-white ${isActive('/')}`}>Home</Link>
                 <Link to="/all-products" className={`nav-link-item text-white ${isActive('/all-products')}`}>Shop</Link>
                 <Link to="/about" className={`nav-link-item text-white ${isActive('/about')}`}>About Us</Link>
-                {/* <Link to="/contact" className={`nav-link-item text-white ${isActive('/contact')}`}>Contact Us</Link> */}
               </div>
             </div>
 
-            {/* Right Side Icons (Cart & Menu) */}
-            <div className="col-8 col-md-3">
-              <div className="header-icon-group d-flex align-items-center justify-content-end gap-3">
-                
-                {/* Modern Cart */}
-                <Link to="/cart" className="icon-circle cart-wrapper text-white position-relative">
+            {/* Mobile: Center Logo | Desktop: Right Side Icons */}
+            <div className="col-4 col-md-3 order-2 order-md-3">
+              {/* Mobile view: Center logo */}
+              <Link to="/" className="navbar-brand d-flex d-md-none justify-content-center">
+                <img src={websiteLogo} alt="Kids Colours" className="brand-logo" />
+              </Link>
+              {/* Desktop view: Show icons on right */}
+              <div className="d-none d-md-flex header-icon-group align-items-center justify-content-end gap-3">
+                <button 
+                  className="icon-circle cart-wrapper text-white position-relative"
+                  onClick={handleCartClick}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
                   <FaShoppingCart size={22} />
                   {getCartItemsCount() > 0 && (
                     <span className="cart-badge-orange pulse-animation">{getCartItemsCount()}</span>
                   )}
-                </Link>
-
-                {/* Professional Menu Toggle */}
+                </button>
                 <button 
                   className="icon-circle menu-toggle-btn text-white" 
                   onClick={onMenuToggle}

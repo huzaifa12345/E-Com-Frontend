@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaHeadset, FaTruck, FaShoppingCart, FaSearch, FaBars, FaEnvelope } from 'react-icons/fa';
@@ -11,9 +11,138 @@ import ThemeFooter from '../components/ThemeFooter';
 import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
 import './AllProducts.css';
+import '../assets/css/BuyNowButton.css';
+
+// Price Range Slider Component
+const PriceRangeSlider = ({ min, max, value, onChange, onApply }) => {
+  const [localValue, setLocalValue] = useState(value || [0, 10000]);
+  const [dragging, setDragging] = useState(null);
+  const trackRef = useRef(null);
+  const valueRef = useRef(localValue);
+
+  useEffect(() => {
+    valueRef.current = localValue;
+  }, [localValue]);
+
+  useEffect(() => {
+    setLocalValue(value || [0, 10000]);
+  }, [value]);
+
+  const getPercentage = useCallback((val) => {
+    return ((val - min) / (max - min)) * 100;
+  }, [min, max]);
+
+  const getValueFromPosition = useCallback((clientX) => {
+    if (!trackRef.current) return min;
+    const rect = trackRef.current.getBoundingClientRect();
+    const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return Math.round(min + percentage * (max - min));
+  }, [min, max]);
+
+  const handleMouseDown = (index) => (e) => {
+    e.preventDefault();
+    setDragging(index);
+  };
+
+  useEffect(() => {
+    if (dragging === null) return;
+
+    const handleMouseMove = (e) => {
+      const newValue = getValueFromPosition(e.clientX);
+      setLocalValue(prev => {
+        const newValues = [...prev];
+        if (dragging === 0) {
+          newValues[0] = Math.min(newValue, prev[1] - 100);
+        } else {
+          newValues[1] = Math.max(newValue, prev[0] + 100);
+        }
+        return newValues;
+      });
+    };
+
+    const handleMouseUp = () => {
+      setDragging(null);
+      onChange(valueRef.current);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging, localValue, onChange, getValueFromPosition]);
+
+  const handleInputChange = (index, val) => {
+    const numVal = parseInt(val) || 0;
+    const newValues = [...localValue];
+    if (index === 0) {
+      newValues[0] = Math.min(Math.max(numVal, min), localValue[1] - 100);
+    } else {
+      newValues[1] = Math.max(Math.min(numVal, max), localValue[0] + 100);
+    }
+    setLocalValue(newValues);
+    onChange(newValues);
+  };
+
+  return (
+    <div className="price-filter-section">
+      <div className="price-slider-container">
+        <span className="price-slider-label">Filter by Price Range</span>
+        
+        <div className="price-slider-track" ref={trackRef}>
+          <div 
+            className="price-slider-fill"
+            style={{
+              left: `${getPercentage(localValue[0])}%`,
+              width: `${getPercentage(localValue[1]) - getPercentage(localValue[0])}%`
+            }}
+          />
+          <div
+            className="price-slider-handle"
+            style={{ left: `${getPercentage(localValue[0])}%` }}
+            onMouseDown={handleMouseDown(0)}
+          />
+          <div
+            className="price-slider-handle"
+            style={{ left: `${getPercentage(localValue[1])}%` }}
+            onMouseDown={handleMouseDown(1)}
+          />
+        </div>
+
+        <div className="price-slider-values">
+          <div className="price-input-group">
+            <span className="price-separator">Rs</span>
+            <input
+              type="number"
+              className="price-input"
+              value={localValue[0]}
+              onChange={(e) => handleInputChange(0, e.target.value)}
+              min={min}
+              max={localValue[1] - 100}
+            />
+            <span className="price-separator">-</span>
+            <input
+              type="number"
+              className="price-input"
+              value={localValue[1]}
+              onChange={(e) => handleInputChange(1, e.target.value)}
+              min={localValue[0] + 100}
+              max={max}
+            />
+          </div>
+          <button className="price-filter-btn" onClick={() => onApply(localValue)}>
+            Apply Filter
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AllProducts = () => {
-  const { addToCart, getCartItemsCount } = useCart();
+  const { addToCart, getCartItemsCount, clearCart } = useCart();
   const { websiteLogo } = useLogo();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,7 +151,7 @@ const AllProducts = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
-  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [priceRange, setPriceRange] = useState(null);
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({});
@@ -42,15 +171,14 @@ const AllProducts = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (range = priceRange) => {
     try {
       setLoading(true);
       const params = {
         page: currentPage,
         limit: 12,
         sortBy,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
+        ...(priceRange && { min_price: priceRange[0], max_price: priceRange[1] }),
         search: searchQuery
       };
       
@@ -80,6 +208,13 @@ const AllProducts = () => {
   const handleAddToCart = (product) => {
     addToCart(product, 1);
     toast.success(`${product.name} added to cart!`);
+  };
+
+  const handleBuyNow = (product) => {
+    // Clear existing cart and add this product
+    clearCart();
+    addToCart(product, 1);
+    navigate('/checkout');
   };
 
   const handleAddToWishlist = async (productId) => {
@@ -117,9 +252,14 @@ const AllProducts = () => {
           <span className="price-now">Rs. {Math.round(product.discount_price || product.price)}</span>
           {product.discount_price && <span className="price-old">Rs. {Math.round(product.price)}</span>}
         </div>
-        <button className="btn-add-v2" onClick={() => { handleAddToCart(product); toast.success(`${product.name} added to Cart!`); }}>
-          Add to Cart
-        </button>
+        <div className="btn-group-v2">
+          <button className="btn-add-v2" onClick={() => { handleAddToCart(product); toast.success(`${product.name} added to Cart!`); }}>
+            Add to Cart
+          </button>
+          <button className="btn-buy-now-v2" onClick={() => handleBuyNow(product)}>
+            Buy Now
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -148,51 +288,76 @@ const AllProducts = () => {
           </div>
         </div>
 
-        {/* Filters and Controls */}
-        {/* <div className="row mb-4">
-          <div className="col-md-6">
-            <div className="d-flex align-items-center gap-3">
-              <select 
-                className="form-select" 
-                style={{ width: 'auto' }}
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="created_at">Latest First</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="name">Name: A to Z</option>
-              </select>
-            </div>
-          </div>
-          <div className="col-md-6 text-end">
-            <span style={{ color: '#666' }}>
-              Showing {products.length} products
-            </span>
-          </div>
-        </div> */}
+        {/* Sidebar Layout: Filter Left, Products Right */}
+        <div className="row">
+          {/* Left Sidebar - Filter Section */}
+          <div className="col-lg-3 col-md-4 mb-4">
+            <div className="sidebar-filter-section compact">
+              <div className="sidebar-content">
+                {/* Search Input */}
+                <div className="sidebar-search-wrapper">
+                  <label className="sidebar-label">Search</label>
+                  <form onSubmit={handleSearch} className="sidebar-search-form">
+                    <div className="sidebar-search-input-group">
+                      <FaSearch className="sidebar-search-icon" />
+                      <input
+                        type="text"
+                        className="sidebar-search-input"
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <button className="sidebar-search-btn" type="submit">
+                      Search
+                    </button>
+                  </form>
+                </div>
 
-        {/* Products Grid/List */}
-        {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+                {/* Divider */}
+                <div className="sidebar-divider"></div>
+
+                {/* Price Range Slider */}
+                <div className="sidebar-price-wrapper">
+                  <label className="sidebar-label">Price Range</label>
+                  <PriceRangeSlider
+                    min={0}
+                    max={10000}
+                    value={priceRange}
+                    onChange={(newRange) => {
+                      setPriceRange(newRange);
+                      setCurrentPage(1);
+                    }}
+                    onApply={fetchProducts}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-5">
-            <h4 style={{ color: '#666' }}>No products found</h4>
-            <p style={{ color: '#999' }}>Try adjusting your search or filters</p>
-          </div>
-        ) : (
-          <div className="row">
-            {products.map((product) => (
-              <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={product.id}>
-                <ProductCard product={product} />
+
+          {/* Right Side - Products Grid */}
+          <div className="col-lg-9 col-md-8">
+            {/* Products Grid/List */}
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
+            ) : products.length === 0 ? (
+              <div className="text-center py-5">
+                <h4 style={{ color: '#666' }}>No products found</h4>
+                <p style={{ color: '#999' }}>Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <div className="row">
+                {products.map((product) => (
+                  <div className="col-lg-4 col-md-6 col-6 mb-4" key={product.id}>
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            )}
 
         {/* Pagination */}
         {pagination.pages > 1 && (
@@ -239,8 +404,10 @@ const AllProducts = () => {
           </div>
         )}
       </div>
+    </div>
+  </div>
 
-      {/* Footer - Same as ThemeHome */}
+  {/* Footer - Same as ThemeHome */}
 
       <ThemeFooter />
 

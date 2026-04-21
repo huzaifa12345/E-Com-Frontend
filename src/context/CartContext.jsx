@@ -53,6 +53,7 @@ const cartReducer = (state, action) => {
       };
 
     case 'TOGGLE_CART':
+      console.log('[CartReducer] TOGGLE_CART, current isOpen:', state.isOpen, 'new isOpen:', !state.isOpen);
       return {
         ...state,
         isOpen: !state.isOpen
@@ -132,6 +133,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const toggleCart = () => {
+    console.log('[CartContext] toggleCart called, current isOpen:', state.isOpen);
     dispatch({ type: 'TOGGLE_CART' });
   };
 

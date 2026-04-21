@@ -8,6 +8,7 @@ import ThemeProductDetail from './pages/ThemeProductDetail';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import MiniCart from './components/MiniCart';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -47,8 +48,7 @@ function App() {
                 </Routes>
               </AnimatePresence>
             </main>
-            {/* <Footer />
-            <MiniCart /> */}
+            <MiniCart />
           </div>
           <Toaster
             position="top-right"

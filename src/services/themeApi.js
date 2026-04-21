@@ -96,8 +96,8 @@ export const themeApi = {
     if (params.sortBy) queryParams.append('sortBy', params.sortBy);
     
     // Add filter parameters
-    if (params.minPrice) queryParams.append('minPrice', params.minPrice);
-    if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice);
+    if (params.min_price) queryParams.append('min_price', params.min_price);
+    if (params.max_price) queryParams.append('max_price', params.max_price);
     if (params.search) queryParams.append('search', params.search);
     
     const response = await api.get(`/products/category/${category}?${queryParams.toString()}`);
