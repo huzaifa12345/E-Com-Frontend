@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaHeadset, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaHeadset, FaEnvelope, FaMapMarkerAlt, FaInstagram, FaFacebook } from 'react-icons/fa';
 import { useLogo } from '../context/LogoContext';
+import '../assets/css/ThemeFooter.css';
 
 const Footer = () => {
   const { websiteLogo } = useLogo();
@@ -39,6 +40,30 @@ const Footer = () => {
               <p><FaHeadset /> 0336-4500091</p>
               <p><FaEnvelope /> rameez_yaqoob@yahoo.com</p>
               {/* <p><FaMapMarkerAlt /> Peoples Colony, Main Market Gujranwala</p> */}
+              
+              <div className="footer-social mt-3">
+                <h5>Follow Us</h5>
+                <div className="social-links">
+                  <a 
+                    href="https://www.instagram.com/colourspeoplecolonygujranwala?igsh=MWM4NWlhc2VjbmVmbw==" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="social-icon instagram"
+                    aria-label="Instagram"
+                  >
+                    <FaInstagram />
+                  </a>
+                  <a 
+                    href="https://www.facebook.com/share/1REtN5nwdP/?mibextid=wwXIfr" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="social-icon facebook"
+                    aria-label="Facebook"
+                  >
+                    <FaFacebook />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
