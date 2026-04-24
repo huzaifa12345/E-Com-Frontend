@@ -384,7 +384,7 @@ const ThemeProductDetail = () => {
                   {product.name}
                 </h1>
                 
-                <div className="rating_section mb-3">
+                {/* <div className="rating_section mb-3">
                   <div className="stars">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -394,7 +394,7 @@ const ThemeProductDetail = () => {
                     ))}
                   </div>
                   <span className="rating_count ml-2">({reviews.length} Reviews) • {averageRating > 0 ? `${averageRating} ★` : 'No Rating'}</span>
-                </div>
+                </div> */}
 
 <div className="product-price-container d-flex align-items-baseline flex-wrap gap-3">
   {product.discount_price ? (
@@ -611,20 +611,34 @@ const ThemeProductDetail = () => {
                                   }
                                 }}
                                 style={{
-                                  backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
-                                  borderColor: '#f26522',
-                                  color: selectedSize === sizeItem.size ? 'white' : '#f26522',
+                                  backgroundColor: selectedSize === sizeItem.size ? '#333333' : 'transparent',
+                                  borderColor: '#666666',
+                                  color: selectedSize === sizeItem.size ? 'white' : '#333333',
                                   minWidth: '120px',
-                                  padding: '8px 12px',
-                                  // borderRadius: '25px',
+                                  padding: '8px 8px',
+                                  borderRadius: '25px',
                                   fontSize: '14px',
                                   fontWeight: '500',
                                   transition: 'all 0.3s ease',
-                                  border: '2px solid #f26522',
+                                  border: '2px solid #666666',
                                   position: 'relative',
                                   marginLeft: '5px',
                                   opacity: getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) === 0 ? 0.5 : 1,
                                   cursor: getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) === 0 ? 'not-allowed' : 'pointer'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) > 0) {
+                                    e.currentTarget.style.backgroundColor = selectedSize === sizeItem.size ? '#222222' : '#f8f9fa';
+                                    e.currentTarget.style.borderColor = '#333333';
+                                    e.currentTarget.style.color = selectedSize === sizeItem.size ? 'white' : '#222222';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) > 0) {
+                                    e.currentTarget.style.backgroundColor = selectedSize === sizeItem.size ? '#333333' : 'transparent';
+                                    e.currentTarget.style.borderColor = '#666666';
+                                    e.currentTarget.style.color = selectedSize === sizeItem.size ? 'white' : '#333333';
+                                  }
                                 }}
                               >
                                 {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
@@ -649,19 +663,33 @@ const ThemeProductDetail = () => {
                               }
                             }}
                             style={{
-                              backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
-                              borderColor: '#f26522',
-                              color: selectedSize === sizeItem.size ? 'white' : '#f26522',
+                              backgroundColor: selectedSize === sizeItem.size ? '#333333' : 'transparent',
+                              borderColor: '#666666',
+                              color: selectedSize === sizeItem.size ? 'white' : '#333333',
                               minWidth: '120px',
-                              padding: '8px 12px',
-                              // borderRadius: '25px',
+                              padding: '8px 8px',
+                              borderRadius: '25px',
                               fontSize: '14px',
                               fontWeight: '500',
                               transition: 'all 0.3s ease',
-                              border: '2px solid #f26522',
+                              border: '2px solid #666666',
                               marginLeft: '5px',
                               opacity: getStockForSize(sizeItem.size) === 0 ? 0.5 : 1,
                               cursor: getStockForSize(sizeItem.size) === 0 ? 'not-allowed' : 'pointer'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (getStockForSize(sizeItem.size) > 0) {
+                                e.currentTarget.style.backgroundColor = selectedSize === sizeItem.size ? '#222222' : '#f8f9fa';
+                                e.currentTarget.style.borderColor = '#333333';
+                                e.currentTarget.style.color = selectedSize === sizeItem.size ? 'white' : '#222222';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (getStockForSize(sizeItem.size) > 0) {
+                                e.currentTarget.style.backgroundColor = selectedSize === sizeItem.size ? '#333333' : 'transparent';
+                                e.currentTarget.style.borderColor = '#666666';
+                                e.currentTarget.style.color = selectedSize === sizeItem.size ? 'white' : '#333333';
+                              }
                             }}
                           >
                             {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
