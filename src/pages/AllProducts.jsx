@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaHeadset, FaTruck, FaShoppingCart, FaSearch, FaBars, FaEnvelope } from 'react-icons/fa';
+import { FaHeadset, FaTruck, FaShoppingCart, FaSearch, FaBars, FaEnvelope, FaFilter, FaSort, FaThLarge, FaTh } from 'react-icons/fa';
 import { ShoppingCart, Heart, Star } from 'lucide-react';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
@@ -10,8 +10,11 @@ import TopBar from '../components/TopBar';
 import ThemeFooter from '../components/ThemeFooter';
 import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
+import QuickViewModal from '../components/QuickViewModal';
+import WhatsAppFloatingButton from '../components/WhatsAppFloatingButton';
 import './AllProducts.css';
 import '../assets/css/BuyNowButton.css';
+import '../assets/css/FilterBar.css';
 
 // Price Range Slider Component
 const PriceRangeSlider = ({ min, max, value, onChange, onApply }) => {
@@ -147,6 +150,9 @@ const AllProducts = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
+  const [showFilters, setShowFilters] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [layoutView, setLayoutView] = useState(3); // 3, 5, 2, or 1 products per row
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,10 +161,23 @@ const AllProducts = () => {
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({});
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   useEffect(() => {
     fetchProducts();
   }, [searchQuery, sortBy, priceRange, currentPage]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSortDropdown && !event.target.closest('.sort-dropdown')) {
+        setShowSortDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSortDropdown]);
 
   // Initialize searchQuery from URL (TopBar default navigation uses ?search=...)
   useEffect(() => {
@@ -202,19 +221,6 @@ const AllProducts = () => {
     } else {
       setSearchParams({});
     }
-    fetchProducts();
-  };
-
-  const handleAddToCart = (product) => {
-    addToCart(product, 1);
-    toast.success(`${product.name} added to cart!`);
-  };
-
-  const handleBuyNow = (product) => {
-    // Clear existing cart and add this product
-    clearCart();
-    addToCart(product, 1);
-    navigate('/checkout');
   };
 
   const handleAddToWishlist = async (productId) => {
@@ -234,31 +240,32 @@ const AllProducts = () => {
       className="card-v2"
     >
       <div className="card-img-v2" onClick={() => navigate(`/product/${product.id}`)}>
-        <img 
+        <img
           src={
-            product.images && product.images.length > 0 
-              ? product.images[0] 
+            product.images && product.images.length > 0
+              ? product.images[0]
               : product.image_url || '/src/assets/images/tshirt-img.png'
-          } 
+          }
           alt={product.name}
         />
         {product.discount_price && (
           <div className="discount-tag">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</div>
         )}
+        <button
+          className="quickview-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            setQuickViewProduct(product);
+          }}
+        >
+          +
+        </button>
       </div>
       <div className="card-body-v2">
         <h5 className="card-title-v2">{product.name}</h5>
         <div className="card-price-v2">
           <span className="price-now">Rs. {Math.round(product.discount_price || product.price)}</span>
           {product.discount_price && <span className="price-old">Rs. {Math.round(product.price)}</span>}
-        </div>
-        <div className="btn-group-v2">
-          <button className="btn-add-v2" onClick={() => { handleAddToCart(product); toast.success(`${product.name} added to Cart!`); }}>
-            Add to Cart
-          </button>
-          <button className="btn-buy-now-v2" onClick={() => handleBuyNow(product)}>
-            Buy Now
-          </button>
         </div>
       </div>
     </motion.div>
@@ -278,44 +285,127 @@ const AllProducts = () => {
         </div>
       </header>
 
-      {/* Page Content */}
-      <div className="container" style={{ marginTop: '30px', marginBottom: '50px' }}>
-        {/* Page Title */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <h2 style={{ color: '#333', fontWeight: 'bold', marginBottom: '10px' }}>All Products</h2>
-            <p style={{ color: '#666' }}>Discover our complete collection of kids' fashion</p>
+      {/* Filter Bar */}
+      <div className="filter-bar-section">
+        <div className="container">
+          <div className="filter-bar">
+            <div className="filter-bar-left">
+              <div className="search-bar-inline">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input-inline"
+                />
+                <button onClick={handleSearch} className="search-btn-inline">
+                  <FaSearch />
+                </button>
+              </div>
+            </div>
+            <div className="filter-bar-right">
+              <div className="sort-dropdown">
+                <button 
+                  className="sort-toggle-btn"
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                >
+                  <FaSort className="filter-icon" />
+                  Sort By
+                </button>
+                <div className={`sort-dropdown-menu ${showSortDropdown ? 'show' : ''}`}>
+                  <button 
+                    className={`sort-option ${sortBy === 'created_at' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('created_at');
+                      setShowSortDropdown(false);
+                    }}
+                  >
+                    Latest First
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'price_low' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('price_low');
+                      setShowSortDropdown(false);
+                    }}
+                  >
+                    Price: Low to High
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'price_high' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('price_high');
+                      setShowSortDropdown(false);
+                    }}
+                  >
+                    Price: High to Low
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'name_asc' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('name_asc');
+                      setShowSortDropdown(false);
+                    }}
+                  >
+                    Name: A to Z
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'name_desc' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('name_desc');
+                      setShowSortDropdown(false);
+                    }}
+                  >
+                    Name: Z to A
+                  </button>
+                </div>
+              </div>
+              
+              {/* Layout View Buttons */}
+              
+              
+              <button 
+                className="filter-toggle-btn"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <FaFilter className="filter-icon" />
+                Filters
+                {priceRange || searchQuery ? (
+                  <span className="filter-active-dot"></span>
+                ) : null}
+              </button>
+
+              <div className="layout-view-buttons">
+                <button 
+                  className={`layout-btn ${layoutView === 3 || layoutView === 2 ? 'active' : ''}`}
+                  onClick={() => setLayoutView(window.innerWidth < 768 ? 2 : 3)}
+                  title={window.innerWidth < 768 ? "2 per row" : "3 per row"}
+                >
+                  <FaThLarge />
+                </button>
+                <button 
+                  className={`layout-btn ${layoutView === 5 || layoutView === 1 ? 'active' : ''}`}
+                  onClick={() => setLayoutView(window.innerWidth < 768 ? 1 : 5)}
+                  title={window.innerWidth < 768 ? "1 per row" : "5 per row"}
+                >
+                  <FaTh />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Page Content */}
+      <div className="container" style={{ marginTop: '20px', marginBottom: '50px' }}>
 
         {/* Sidebar Layout: Filter Left, Products Right */}
         <div className="row">
           {/* Left Sidebar - Filter Section */}
-          <div className="col-lg-3 col-md-4 mb-4">
-            <div className="sidebar-filter-section compact">
-              <div className="sidebar-content">
-                {/* Search Input */}
-                <div className="sidebar-search-wrapper">
-                  <label className="sidebar-label">Search</label>
-                  <form onSubmit={handleSearch} className="sidebar-search-form">
-                    <div className="sidebar-search-input-group">
-                      <FaSearch className="sidebar-search-icon" />
-                      <input
-                        type="text"
-                        className="sidebar-search-input"
-                        placeholder="Search products..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <button className="sidebar-search-btn" type="submit">
-                      Search
-                    </button>
-                  </form>
-                </div>
-
-                {/* Divider */}
-                <div className="sidebar-divider"></div>
+          {showFilters && (
+            <div className="col-lg-3 col-md-4 mb-4">
+              <div className="sidebar-filter-section compact">
+                <div className="sidebar-content">
 
                 {/* Price Range Slider */}
                 <div className="sidebar-price-wrapper">
@@ -328,15 +418,16 @@ const AllProducts = () => {
                       setPriceRange(newRange);
                       setCurrentPage(1);
                     }}
-                    onApply={fetchProducts}
+                    onApply={() => {}}
                   />
                 </div>
               </div>
+              </div>
             </div>
-          </div>
-
+          )}
+          
           {/* Right Side - Products Grid */}
-          <div className="col-lg-9 col-md-8">
+          <div className={`col-lg-${showFilters ? '9' : '12'} col-md-${showFilters ? '8' : '12'}`}>
             {/* Products Grid/List */}
             {loading ? (
               <div className="text-center py-5">
@@ -351,11 +442,29 @@ const AllProducts = () => {
               </div>
             ) : (
               <div className="row">
-                {products.map((product) => (
-                  <div className="col-lg-4 col-md-6 col-6 mb-4" key={product.id}>
-                    <ProductCard product={product} />
-                  </div>
-                ))}
+                {products.map((product) => {
+                  // Get column classes based on layout view
+                  const getColClasses = () => {
+                    switch(layoutView) {
+                      case 5:
+                        return 'col-xl-2 col-lg-3 col-md-4 col-6 mb-4';
+                      case 3:
+                        return 'col-lg-4 col-md-6 col-6 mb-4';
+                      case 2:
+                        return 'col-lg-6 col-md-6 col-6 mb-4';
+                      case 1:
+                        return 'col-12 mb-4';
+                      default:
+                        return 'col-lg-4 col-md-6 col-6 mb-4';
+                    }
+                  };
+                  
+                  return (
+                    <div className={getColClasses()} key={product.id}>
+                      <ProductCard product={product} />
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -613,6 +722,12 @@ const AllProducts = () => {
 
       {/* SideDrawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
+      <QuickViewModal
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+      />
+      <WhatsAppFloatingButton />
     </div>
   );
 };

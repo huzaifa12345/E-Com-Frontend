@@ -1,120 +1,137 @@
 /* General Colors */
 :root {
-    --primary-orange: #FF8C00;
-    --pure-black: #000000;
-    --dark-grey: #1a1a1a;
+  --primary-orange: #FF8C00;
+  --pure-black: #000000;
+  --dark-grey: #1a1a1a;
+}
+
+.bg-black { background-color: var(--pure-black) !important; }
+.text-orange { color: var(--primary-orange) !important; }
+
+/* Announcement Bar Style */
+.announcement-bar {
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+/* Logo Styles */
+.brand-logo {
+  max-height: 60px;
+  transition: transform 0.3s ease;
+}
+
+.brand-logo-mobile {
+  max-height: 48px;
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Navigation Links */
+.nav-link-item {
+  text-decoration: none;
+  font-weight: 500;
+  margin: 0 15px;
+  font-size: 1rem;
+  transition: 0.3s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.nav-link-item:hover, .active-link {
+  color: var(--primary-orange) !important;
+}
+
+.active-link::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-orange);
+  box-shadow: 0 0 8px var(--primary-orange);
+}
+
+/* Icons Section - Circles */
+.icon-circle {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--dark-grey);
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 0;
+}
+
+.icon-circle:hover {
+  background: rgba(255, 140, 0, 0.1);
+  border-color: var(--primary-orange);
+  color: var(--primary-orange) !important;
+}
+
+/* Hamburger Style */
+.hamburger-box {
+  width: 20px;
+  height: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ham-line {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: currentColor;
+  border-radius: 4px;
+}
+
+/* Cart Badge */
+.cart-badge-orange {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--primary-orange);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: bold;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--pure-black);
+}
+
+/* Animation for Cart */
+.pulse-animation {
+  animation: pulse-orange 2s infinite;
+}
+
+@keyframes pulse-orange {
+  0% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 140, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .brand-logo-mobile { max-height: 45px; }
+  .icon-circle { 
+    width: 38px; 
+    height: 38px; 
+    background: transparent; /* Cleaner look on mobile */
   }
   
-  .bg-black { background-color: var(--pure-black) !important; }
-  .text-orange { color: var(--primary-orange) !important; }
-  
-  /* Announcement Bar Style */
-  .announcement-bar {
-    font-size: 0.8rem;
-    letter-spacing: 0.5px;
+  /* Remove container side padding for true edge-to-edge icons if needed */
+  .navbar-main .container {
+    padding-left: 15px;
+    padding-right: 15px;
   }
-  
-  /* Logo */
-  .brand-logo {
-    max-height: 60px;
-    transition: transform 0.3s ease;
-  }
-  
-  /* Navigation Links */
-  .nav-link-item {
-    text-decoration: none;
-    font-weight: 500;
-    margin: 0 15px;
-    font-size: 1rem;
-    transition: 0.3s ease;
-    position: relative;
-    display: inline-block;
-  }
-  
-  .nav-link-item:hover, .active-link {
-    color: var(--primary-orange) !important;
-  }
-  
-  .active-link::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: var(--primary-orange);
-    box-shadow: 0 0 8px var(--primary-orange);
-  }
-  
-  /* Icons Section - Circles */
-  .icon-circle {
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--dark-grey);
-    border: 1px solid transparent;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    padding: 0;
-  }
-  
-  .icon-circle:hover {
-    background: rgba(255, 140, 0, 0.1);
-    border-color: var(--primary-orange);
-    color: var(--primary-orange) !important;
-  }
-  
-  /* Hamburger Style */
-  .hamburger-box {
-    width: 20px;
-    height: 14px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  
-  .ham-line {
-    display: block;
-    height: 2px;
-    width: 100%;
-    background-color: currentColor;
-    border-radius: 4px;
-  }
-  
-  /* Cart Badge */
-  .cart-badge-orange {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: var(--primary-orange);
-    color: #000;
-    font-size: 0.65rem;
-    font-weight: bold;
-    height: 18px;
-    width: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--pure-black);
-  }
-  
-  /* Animation for Cart */
-  .pulse-animation {
-    animation: pulse-orange 2s infinite;
-  }
-  
-  @keyframes pulse-orange {
-    0% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.7); }
-    70% { box-shadow: 0 0 0 8px rgba(255, 140, 0, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); }
-  }
-  
-  /* Mobile Adjustments */
-  @media (max-width: 768px) {
-    .brand-logo { max-height: 50px; }
-    .icon-circle { width: 38px; height: 38px; }
-  }
+}

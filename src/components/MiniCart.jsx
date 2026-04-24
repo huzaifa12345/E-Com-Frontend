@@ -68,15 +68,15 @@ const MiniCart = () => {
                       <div className="item-content">
                         <div className="d-flex justify-content-between">
                           <h4 className="item-title-text">{item.name}</h4>
-                          <button onClick={() => removeFromCart(item.id)} className="btn-del">
+                          <button onClick={() => removeFromCart(item.id, item.selectedSize)} className="btn-del">
                             <Trash2 size={12} />
                           </button>
                         </div>
                         <div className="d-flex justify-content-between align-items-center mt-2">
                           <div className="qty-control-mini">
-                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}><Minus size={10} /></button>
+                            <button onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedSize)} disabled={item.quantity <= 1}><Minus size={10} /></button>
                             <span>{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)}><Plus size={10} /></button>
+                            <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedSize)}><Plus size={10} /></button>
                           </div>
                           <span className="price-text">Rs. {(Number(item.discount_price || item.price) * item.quantity).toLocaleString()}</span>
                         </div>

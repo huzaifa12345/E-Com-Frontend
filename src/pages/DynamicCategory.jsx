@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Heart, Eye, Filter, Search } from 'lucide-react';
+import { ShoppingCart, Heart, Eye, Filter, Search, ArrowUpDown,} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
+import QuickViewModal from '../components/QuickViewModal';
+import WhatsAppFloatingButton from '../components/WhatsAppFloatingButton';
 import './DynamicCategory.css';
 import '../assets/css/BuyNowButton.css';
-import {FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars } from 'react-icons/fa'
+import '../assets/css/FilterBar.css';
+import {FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars, FaThLarge, FaTh } from 'react-icons/fa'
 import SideDrawer from '../components/SideDrawer';
 import ThemeFooter from '../components/ThemeFooter';
 import TopBar from '../components/TopBar';
@@ -147,6 +150,9 @@ const DynamicCategory = () => {
   const navigate = useNavigate();
   const { addToCart, getCartItemsCount, clearCart } = useCart();
   const { websiteLogo } = useLogo();
+  const [showFilters, setShowFilters] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [layoutView, setLayoutView] = useState(3); // 3, 5, 2, or 1 products per row
   
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
@@ -159,61 +165,63 @@ const DynamicCategory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+  const fetchCategoryData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch category details by ID
+      const categoryData = await themeApi.getCategoryById(categorySlug);
+      setCategory(categoryData);
+      
+      // Fetch products for this category with pagination
+      console.log('[DynamicCategory] Fetching products for category ID:', categorySlug);
+      const productsData = await themeApi.getProductsByCategory(categorySlug, {
+        page: currentPage,
+        limit: 12,
+        sortBy,
+        ...(priceRange && { min_price: priceRange[0], max_price: priceRange[1] }),
+        search: searchQuery
+      });
+      console.log('[DynamicCategory] Products response:', productsData);
+      console.log('[DynamicCategory] Products array:', productsData.products);
+      console.log('[DynamicCategory] Pagination:', productsData.pagination);
+      setProducts(productsData.products || []);
+      setPagination(productsData.pagination || {});
+      setTotalPages(productsData.pagination?.pages || 1);
+      setFilteredProducts(productsData.products || []);
+      
+    } catch (error) {
+      console.error('Error fetching category data:', error);
+      toast.error('Failed to load category');
+      navigate('/home');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCategoryData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch category details by ID
-        const categoryData = await themeApi.getCategoryById(categorySlug);
-        setCategory(categoryData);
-        
-        // Fetch products for this category with pagination
-        console.log('[DynamicCategory] Fetching products for category ID:', categorySlug);
-        const productsData = await themeApi.getProductsByCategory(categorySlug, {
-          page: currentPage,
-          limit: 12,
-          sortBy,
-          ...(priceRange && { min_price: priceRange[0], max_price: priceRange[1] }),
-          search: searchQuery
-        });
-        console.log('[DynamicCategory] Products response:', productsData);
-        console.log('[DynamicCategory] Products array:', productsData.products);
-        console.log('[DynamicCategory] Pagination:', productsData.pagination);
-        setProducts(productsData.products || []);
-        setPagination(productsData.pagination || {});
-        setTotalPages(productsData.pagination?.pages || 1);
-        setFilteredProducts(productsData.products || []);
-        
-      } catch (error) {
-        console.error('Error fetching category data:', error);
-        toast.error('Failed to load category');
-        navigate('/home');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (categorySlug) {
       fetchCategoryData();
     }
   }, [categorySlug, navigate]);
 
-  const handleAddToCart = (product) => {
-    addToCart(product, 1);
-    toast.success(`${product.name} added to cart!`);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSortDropdown && !event.target.closest('.sort-dropdown')) {
+        setShowSortDropdown(false);
+      }
+    };
 
-  const handleBuyNow = (product) => {
-    // Clear existing cart and add this product
-    clearCart();
-    addToCart(product, 1);
-    navigate('/checkout');
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSortDropdown]);
+
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    applyFilters({ page });
   };
 
   const handlePriceRangeChange = (newRange) => {
@@ -221,25 +229,30 @@ const DynamicCategory = () => {
     setCurrentPage(1);
   };
 
-  const applyFilters = async (range = priceRange) => {
-    const actualRange = range || [0, 10000];
-    console.log('applyFilters called with range:', actualRange);
+  const applyFilters = async (overrides = {}) => {
+    const actualRange = overrides.priceRange ?? priceRange ?? [0, 10000];
+    const actualSort = overrides.sortBy ?? sortBy;
+    const actualSearch = overrides.searchQuery ?? searchQuery;
+    const actualPage = overrides.page ?? 1;
+    console.log('applyFilters called with range:', actualRange, 'sort:', actualSort, 'page:', actualPage);
     try {
       setLoading(true);
       const params = {
-        page: 1,
+        page: actualPage,
         limit: 12,
-        sortBy,
+        sortBy: actualSort,
         min_price: actualRange[0],
         max_price: actualRange[1],
-        search: searchQuery
+        search: actualSearch
       };
       console.log('API params:', params);
       const filteredData = await themeApi.getProductsByCategory(categorySlug, params);
       console.log('API response:', filteredData);
+      setProducts(filteredData.products || []);
       setFilteredProducts(filteredData.products || []);
+      setPagination(filteredData.pagination || {});
       setTotalPages(filteredData.pagination?.pages || 1);
-      setCurrentPage(1);
+      setCurrentPage(actualPage);
       setLoading(false);
     } catch (error) {
       console.error('Filter error:', error);
@@ -248,21 +261,15 @@ const DynamicCategory = () => {
     }
   };
 
-  const handleSearch = async (e) => {
+  const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      try {
-        setLoading(true);
-        const searchResults = await themeApi.searchProducts(searchQuery.trim());
-        setFilteredProducts(searchResults.products || []);
-        setTotalPages(searchResults.totalPages || 1);
-        setCurrentPage(1);
-        setLoading(false);
-      } catch (error) {
-        console.error('Search error:', error);
-        toast.error('Failed to search products');
-        setLoading(false);
-      }
+      setCurrentPage(1);
+      applyFilters({ searchQuery: searchQuery.trim(), page: 1 });
+    } else {
+      setSearchQuery('');
+      setCurrentPage(1);
+      applyFilters({ searchQuery: '', page: 1 });
     }
   };
 
@@ -296,6 +303,7 @@ const DynamicCategory = () => {
   }
 
   return (
+
     <div className="fashion_main">
       {/* Modern Header */}
       <header className="modern-header">
@@ -307,19 +315,122 @@ const DynamicCategory = () => {
         </div>
       </header>
 
-      <br/>
-      <br/>
+      {/* Filter Bar */}
+      <div className="filter-bar-section">
+        <div className="container">
+          <div className="filter-bar">
+            <div className="filter-bar-left">
+              <div className="search-bar-inline">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input-inline"
+                />
+                <button onClick={handleSearch} className="search-btn-inline">
+                  <FaSearch />
+                </button>
+              </div>
+            </div>
+            <div className="filter-bar-right">
+              <div className="sort-dropdown">
+                <button 
+                  className="sort-toggle-btn"
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                >
+                  <ArrowUpDown className="filter-icon" />
+                  Sort By
+                </button>
+                <div className={`sort-dropdown-menu ${showSortDropdown ? 'show' : ''}`}>
+                  <button 
+                    className={`sort-option ${sortBy === 'created_at' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('created_at');
+                      setShowSortDropdown(false);
+                      setCurrentPage(1);
+                      applyFilters({ sortBy: 'created_at', page: 1 });
+                    }}
+                  >
+                    Latest First
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'price_low' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('price_low');
+                      setShowSortDropdown(false);
+                      setCurrentPage(1);
+                      applyFilters({ sortBy: 'price_low', page: 1 });
+                    }}
+                  >
+                    Price: Low to High
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'price_high' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('price_high');
+                      setShowSortDropdown(false);
+                      setCurrentPage(1);
+                      applyFilters({ sortBy: 'price_high', page: 1 });
+                    }}
+                  >
+                    Price: High to Low
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'name_asc' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('name_asc');
+                      setShowSortDropdown(false);
+                      setCurrentPage(1);
+                      applyFilters({ sortBy: 'name_asc', page: 1 });
+                    }}
+                  >
+                    Name: A to Z
+                  </button>
+                  <button 
+                    className={`sort-option ${sortBy === 'name_desc' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSortBy('name_desc');
+                      setShowSortDropdown(false);
+                      setCurrentPage(1);
+                      applyFilters({ sortBy: 'name_desc', page: 1 });
+                    }}
+                  >
+                    Name: Z to A
+                  </button>
+                </div>
+              </div>
+              
+             
+              
+              <button 
+                className="filter-toggle-btn"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="filter-icon" />
+                Filters
+                {priceRange || searchQuery ? (
+                  <span className="filter-active-dot"></span>
+                ) : null}
+              </button>
 
-      
-      {/* Header Section */}
-      <div className="container">
-        <div className="row">
-          <div className="col-12">
-            <div className="title_section">
-              <h1 className="fashion_taital">{category.name}</h1>
-              {category.description && (
-                <p className="category_description">{category.description}</p>
-              )}
+               {/* Layout View Buttons */}
+              <div className="layout-view-buttons">
+                <button 
+                  className={`layout-btn ${layoutView === 3 || layoutView === 2 ? 'active' : ''}`}
+                  onClick={() => setLayoutView(window.innerWidth < 768 ? 2 : 3)}
+                  title={window.innerWidth < 768 ? "2 per row" : "3 per row"}
+                >
+                  <FaThLarge />
+                </button>
+                <button 
+                  className={`layout-btn ${layoutView === 5 || layoutView === 1 ? 'active' : ''}`}
+                  onClick={() => setLayoutView(window.innerWidth < 768 ? 1 : 5)}
+                  title={window.innerWidth < 768 ? "1 per row" : "5 per row"}
+                >
+                  <FaTh />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -329,31 +440,10 @@ const DynamicCategory = () => {
       <div className="container">
         <div className="row">
           {/* Left Sidebar - Filter Section */}
-          <div className="col-lg-3 col-md-4 mb-4">
-            <div className="sidebar-filter-section compact">
-              <div className="sidebar-content">
-                {/* Search Input */}
-                <div className="sidebar-search-wrapper">
-                  <label className="sidebar-label">Search</label>
-                  <form onSubmit={handleSearch} className="sidebar-search-form">
-                    <div className="sidebar-search-input-group">
-                      <Search size={16} className="sidebar-search-icon" />
-                      <input
-                        type="text"
-                        className="sidebar-search-input"
-                        placeholder={`Search in ${category?.name || 'category'}...`}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <button className="sidebar-search-btn" type="submit">
-                      Search
-                    </button>
-                  </form>
-                </div>
-
-                {/* Divider */}
-                <div className="sidebar-divider"></div>
+          {showFilters && (
+            <div className="col-lg-3 col-md-4 mb-4">
+              <div className="sidebar-filter-section compact">
+                <div className="sidebar-content">
 
                 {/* Price Range Slider */}
                 <div className="sidebar-price-wrapper">
@@ -367,11 +457,12 @@ const DynamicCategory = () => {
                   />
                 </div>
               </div>
+              </div>
             </div>
-          </div>
-
+          )}
+          
           {/* Right Side - Products Grid */}
-          <div className="col-lg-9 col-md-8">
+          <div className={`col-lg-${showFilters ? '9' : '12'} col-md-${showFilters ? '8' : '12'}`}>
             <div className="products_section">
               <div className="row">
                 {filteredProducts.length === 0 ? (
@@ -380,8 +471,25 @@ const DynamicCategory = () => {
                     <p>Try adjusting your search or filters</p>
                   </div>
                 ) : (
-                  filteredProducts.map((product) => (
-                    <div className="col-lg-4 col-md-6 col-6 mb-4" key={product.id}>
+                  filteredProducts.map((product) => {
+                    // Get column classes based on layout view
+                    const getColClasses = () => {
+                      switch(layoutView) {
+                        case 5:
+                          return 'col-xl-2 col-lg-3 col-md-4 col-6 mb-4';
+                        case 3:
+                          return 'col-lg-4 col-md-6 col-6 mb-4';
+                        case 2:
+                          return 'col-lg-6 col-md-6 col-6 mb-4';
+                        case 1:
+                          return 'col-12 mb-4';
+                        default:
+                          return 'col-lg-4 col-md-6 col-6 mb-4';
+                      }
+                    };
+                    
+                    return (
+                      <div className={getColClasses()} key={product.id}>
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -389,17 +497,26 @@ const DynamicCategory = () => {
                         className="card-v2"
                       >
                         <div className="card-img-v2" onClick={() => navigate(`/product/${product.id}`)}>
-                          <img 
+                          <img
                             src={
-                              product.images && product.images.length > 0 
-                                ? product.images[0] 
+                              product.images && product.images.length > 0
+                                ? product.images[0]
                                 : product.image_url || '/src/assets/images/tshirt-img.png'
-                            } 
+                            }
                             alt={product.name}
                           />
                           {product.discount_price && (
                             <div className="discount-tag">-{Math.round(((product.price - product.discount_price) / product.price) * 100)}%</div>
                           )}
+                          <button
+                            className="quickview-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQuickViewProduct(product);
+                            }}
+                          >
+                            +
+                          </button>
                         </div>
                         <div className="card-body-v2">
                           <h5 className="card-title-v2">{product.name}</h5>
@@ -407,18 +524,11 @@ const DynamicCategory = () => {
                             <span className="price-now">Rs. {Math.round(product.discount_price || product.price)}</span>
                             {product.discount_price && <span className="price-old">Rs. {Math.round(product.price)}</span>}
                           </div>
-                          <div className="btn-group-v2">
-                            <button className="btn-add-v2" onClick={() => { handleAddToCart(product); toast.success(`${product.name} added to Cart!`); }}>
-                              Add to Cart
-                            </button>
-                            <button className="btn-buy-now-v2" onClick={() => handleBuyNow(product)}>
-                              Buy Now
-                            </button>
-                          </div>
                         </div>
                       </motion.div>
-                    </div>
-                  ))
+                      </div>
+                    );
+                  })
                 )}
               </div>
               
@@ -469,8 +579,14 @@ const DynamicCategory = () => {
       </div>
 
       {/* Footer Section */}
-     <ThemeFooter />
+      <ThemeFooter />
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
+      <QuickViewModal
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+      />
+      <WhatsAppFloatingButton />
     </div>
   );
 };

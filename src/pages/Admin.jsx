@@ -365,16 +365,16 @@ const Admin = () => {
                     <h6 className="mb-1 text-truncate" style={{ maxWidth: '220px' }}>
                       {product.name}
                     </h6>
-                    <small className="text-muted d-block">
+                    {/* <small className="text-muted d-block">
                       Rs. {Number(product.price || 0).toFixed(2)}
-                    </small>
+                    </small> */}
                   </div>
                 </div>
                 <span
                   className="ms-3"
                   style={{ color: '#f26522', fontWeight: 'bold', whiteSpace: 'nowrap' }}
                 >
-                  {product.stock_quantity || 0} in stock
+                  Rs. {Number(product.price || 0).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -446,7 +446,7 @@ const Admin = () => {
                     <th>Product</th>
                     <th className="text-center">Category</th>
                     <th className="text-center">Price</th>
-                    <th className="text-center">Stock</th>
+                    {/* <th className="text-center">Stock</th> */}
                     <th className="text-center">Status</th>
                     <th className="text-center">Actions</th>
                   </tr>
@@ -489,11 +489,11 @@ const Admin = () => {
                           <span>Rs. {Number(product.price || 0).toFixed(2)}</span>
                         )}
                       </td>
-                      <td className="text-center text-white">
+                      {/* <td className="text-center text-white">
                         <span className={`badge ${product.stock_quantity > 10 ? 'bg-success' : 'bg-danger'}`}>
                           {product.stock_quantity}
                         </span>
-                      </td>
+                      </td> */}
                       <td className="text-center text-white">
                         <span className={`badge ${product.is_active ? 'bg-success' : 'bg-secondary'}`}>
                           {product.is_active ? 'Active' : 'Inactive'}

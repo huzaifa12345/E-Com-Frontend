@@ -106,6 +106,14 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
+    // Validate that all items have sizes selected
+    const itemsWithoutSize = items.filter(item => !item.selectedSize);
+    if (itemsWithoutSize.length > 0) {
+      toast.error(`Please select size for: ${itemsWithoutSize.map(item => item.name).join(', ')}`);
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const orderData = {
@@ -1104,6 +1112,11 @@ const Checkout = () => {
                             <div>
                               <h6 className="mb-1">{item.name}</h6>
                               <small className="text-muted">Qty: {item.quantity}</small>
+                              {item.selectedSize ? (
+                                <div className="text-success small">Size: {item.selectedSize}</div>
+                              ) : (
+                                <div className="text-danger small">⚠️ Size not selected</div>
+                              )}
                             </div>
                           </div>
                           <span className="shirt_text">{(item.price * item.quantity).toFixed(2)}</span>

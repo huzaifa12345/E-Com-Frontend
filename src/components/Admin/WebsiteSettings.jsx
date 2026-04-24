@@ -64,13 +64,15 @@ const WebsiteSettings = () => {
       
       const response = await websiteSettingsApi.updateWebsiteSetting(settingId, value, imageFile);
       
-      if (response.success) {
+      // Check if update was successful (either response.success or no error)
+      if (response.success || response.data || response.message) {
         toast.success('Setting updated successfully!');
         
         // If this is a logo setting, update the global logo
-        if (settingId.includes('logo') || settingId.includes('website_logo')) {
-          updateLogo(response.data.value);
-          console.log('WebsiteSettings: Updated global logo to:', response.data.value);
+        if (typeof settingId === 'string' && (settingId.includes('logo') || settingId.includes('website_logo'))) {
+          const logoValue = response.data?.value || response.value || value;
+          updateLogo(logoValue);
+          console.log('WebsiteSettings: Updated global logo to:', logoValue);
         }
         
         // Update local state
@@ -78,13 +80,18 @@ const WebsiteSettings = () => {
           const updated = { ...prev };
           Object.keys(updated).forEach(category => {
             updated[category] = updated[category].map(setting => 
-              setting.id === settingId ? { ...setting, value: response.data.value } : setting
+              setting.id === settingId ? { ...setting, value: response.data?.value || response.value || value } : setting
             );
           });
           return updated;
         });
+      } else {
+        // Only show error if response indicates failure
+        toast.error('Failed to update setting');
       }
     } catch (error) {
+      // Only show error toast if there's an actual error
+      console.error('Update setting error:', error);
       toast.error('Failed to update setting');
     } finally {
       setSaving(prev => ({ ...prev, [settingId]: false }));
@@ -200,7 +207,7 @@ const WebsiteSettings = () => {
         <div className="card">
           <div className="card-header d-flex justify-content-between align-items-center" 
                style={{ backgroundColor: '#262626', color: 'white' }}>
-            <h5 className="mb-0">Website Settings</h5>
+            <h5 className="mb-0 text-white">Website Settings</h5>
             <div className="d-flex gap-2">
               <button 
                 className="btn btn-success"

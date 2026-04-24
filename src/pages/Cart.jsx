@@ -28,12 +28,12 @@ const Cart = () => {
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(null);
 
-  const handleRemoveItem = (productId) => {
-    removeFromCart(productId);
+  const handleRemoveItem = (productId, selectedSize) => {
+    removeFromCart(productId, selectedSize);
   };
 
-  const handleQuantityChange = (productId, newQuantity) => {
-    updateQuantity(productId, newQuantity);
+  const handleQuantityChange = (productId, newQuantity, selectedSize) => {
+    updateQuantity(productId, newQuantity, selectedSize);
   };
 
   const subtotal = getCartTotal();
@@ -358,7 +358,7 @@ const Cart = () => {
                           <button
                             type="button"
                             className="cart2-remove"
-                            onClick={() => handleRemoveItem(item.id)}
+                            onClick={() => handleRemoveItem(item.id, item.selectedSize)}
                           >
                             Remove
                           </button>
@@ -367,26 +367,33 @@ const Cart = () => {
                     </div>
 
                     <div className="cart2-col cart2-col-qty">
-                      <div className="cart2-qty">
+                      <div className="cart2-qty-control">
                         <button
                           type="button"
                           className="cart2-qty-btn"
-                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1, item.selectedSize)}
                           disabled={item.quantity <= 1}
                           aria-label="Decrease quantity"
                         >
                           <Minus className="cart2-icon" />
                         </button>
                         <input
+                          type="number"
                           className="cart2-qty-input"
                           value={item.quantity}
-                          readOnly
-                          aria-label="Quantity"
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 1;
+                            if (val > 0) {
+                              handleQuantityChange(item.id, val, item.selectedSize);
+                            }
+                          }}
+                          min="1"
+                          max="99"
                         />
                         <button
                           type="button"
                           className="cart2-qty-btn"
-                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1, item.selectedSize)}
                           aria-label="Increase quantity"
                         >
                           <Plus className="cart2-icon" />

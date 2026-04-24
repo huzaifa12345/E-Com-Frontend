@@ -288,7 +288,7 @@ const SizeManagement = () => {
       <div className="card mb-4">
         <div className="card-header bg-dark text-white">
           <div className="d-flex justify-content-between align-items-center">
-            <h6 className="mb-0">Size Guide Management (Separate)</h6>
+            <h6 className="mb-0 text-white">Size Guide Management</h6>
             <button
               className="btn btn-sm btn-warning"
               onClick={replaceWithProvidedGuides}
@@ -368,7 +368,7 @@ const SizeManagement = () => {
       {/* Add New Size */}
       <div className="card mb-4">
         <div className="card-header bg-primary text-white" style={{ backgroundColor: '#f26522' }}>
-          <h6 className="mb-0">Add New Size</h6>
+          <h6 className="mb-0 text-white">Add New Size</h6>
         </div>
         <div className="card-body">
           <div className="row g-3">
@@ -409,7 +409,7 @@ const SizeManagement = () => {
       {/* Sizes List */}
       <div className="card">
         <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <h6 className="mb-0">Available Sizes ({sizes.length})</h6>
+          <h6 className="mb-0 text-white">Available Sizes ({sizes.length})</h6>
           {hasOrderChanges && (
             <button
               className="btn btn-sm btn-success"

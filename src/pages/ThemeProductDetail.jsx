@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaBars , FaStar, FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch} from 'react-icons/fa';
 import { ShoppingCart, Heart, Star, Truck, Shield, RefreshCw, ArrowRight } from 'lucide-react';
@@ -10,12 +10,14 @@ import { useCart } from '../context/CartContext';
 import { useLogo } from '../context/LogoContext';
 import TopBar from '../components/TopBar';
 import ThemeFooter from '../components/ThemeFooter';
+import WhatsAppFloatingButton from '../components/WhatsAppFloatingButton';
 import websiteSettingsApi from '../services/websiteSettingsApi';
 import './ThemeProductDetail.css';
 import '../assets/css/BuyNowButton.css';
 
 const ThemeProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart, getCartItemsCount, clearCart } = useCart();
   const { websiteLogo } = useLogo();
   const [product, setProduct] = useState(null);
@@ -254,8 +256,8 @@ const ThemeProductDetail = () => {
     }
     
     try {
-      await addToCart(product, 1, selectedSize);
-      toast.success(`${product.name} added to cart!`);
+      await addToCart(product, quantity, selectedSize);
+      toast.success(`${product.name} (${quantity} units) added to cart!`);
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add to cart');
@@ -275,13 +277,13 @@ const ThemeProductDetail = () => {
     try {
       // Clear existing cart and add this product
       clearCart();
-      await addToCart(product, 1, selectedSize);
+      await addToCart(product, quantity, selectedSize);
+      toast.success(`${product.name} (${quantity} units, Size: ${selectedSize}) added to cart!`);
       navigate('/checkout');
     } catch (error) {
       console.error('Error with buy now:', error);
       toast.error('Failed to proceed to checkout');
     }
-    toast.success(`${product.name} (Size: ${selectedSize}) added to cart!`);
   };
 
   const handleAddToWishlist = async () => {
@@ -598,11 +600,15 @@ const ThemeProductDetail = () => {
                             return (
                               <button
                                 key={index}
-                                className={`btn ${selectedSize === sizeItem.size ? 'btn-primary' : 'btn-outline-secondary'} position-relative`}
+                                className={`btn ${selectedSize === sizeItem.size ? 'btn-primary' : 'btn-outline-secondary'} position-relative ${getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) === 0 ? 'out-of-stock-size' : ''}`}
                                 onClick={() => {
-                                  console.log('Size clicked:', sizeItem.size);
-                                  setSelectedSize(sizeItem.size);
-                                  setQuantity(Math.max(1, sizeItem.quantity > 0 ? sizeItem.quantity : quantity));
+                                  const sizeName = typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size);
+                                  const stock = getStockForSize(sizeName);
+                                  if (stock > 0) {
+                                    console.log('Size clicked:', sizeItem.size);
+                                    setSelectedSize(sizeItem.size);
+                                    setQuantity(Math.max(1, sizeItem.quantity > 0 ? sizeItem.quantity : quantity));
+                                  }
                                 }}
                                 style={{
                                   backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
@@ -610,15 +616,21 @@ const ThemeProductDetail = () => {
                                   color: selectedSize === sizeItem.size ? 'white' : '#f26522',
                                   minWidth: '120px',
                                   padding: '8px 12px',
-                                  borderRadius: '8px',
+                                  // borderRadius: '25px',
                                   fontSize: '14px',
                                   fontWeight: '500',
                                   transition: 'all 0.3s ease',
                                   border: '2px solid #f26522',
-                                  position: 'relative'
+                                  position: 'relative',
+                                  marginLeft: '5px',
+                                  opacity: getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) === 0 ? 0.5 : 1,
+                                  cursor: getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) === 0 ? 'not-allowed' : 'pointer'
                                 }}
                               >
                                 {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
+                                {getStockForSize(typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)) === 0 && (
+                                  <div className="out-of-stock-line"></div>
+                                )}
                               </button>
                             );
                           })
@@ -627,11 +639,14 @@ const ThemeProductDetail = () => {
                         sizes.map((sizeItem) => (
                           <button
                             key={sizeItem.id}
-                            className={`btn ${selectedSize === sizeItem.size ? 'btn-primary' : 'btn-outline-secondary'}`}
+                            className={`btn ${selectedSize === sizeItem.size ? 'btn-primary' : 'btn-outline-secondary'} ${getStockForSize(sizeItem.size) === 0 ? 'out-of-stock-size' : ''}`}
                             onClick={() => {
-                              console.log('Default size clicked:', sizeItem.size);
-                              setSelectedSize(sizeItem.size);
-                              setQuantity(1);
+                              const stock = getStockForSize(sizeItem.size);
+                              if (stock > 0) {
+                                console.log('Default size clicked:', sizeItem.size);
+                                setSelectedSize(sizeItem.size);
+                                setQuantity(1);
+                              }
                             }}
                             style={{
                               backgroundColor: selectedSize === sizeItem.size ? '#f26522' : 'transparent',
@@ -639,14 +654,20 @@ const ThemeProductDetail = () => {
                               color: selectedSize === sizeItem.size ? 'white' : '#f26522',
                               minWidth: '120px',
                               padding: '8px 12px',
-                              borderRadius: '8px',
+                              // borderRadius: '25px',
                               fontSize: '14px',
                               fontWeight: '500',
                               transition: 'all 0.3s ease',
-                              border: '2px solid #f26522'
+                              border: '2px solid #f26522',
+                              marginLeft: '5px',
+                              opacity: getStockForSize(sizeItem.size) === 0 ? 0.5 : 1,
+                              cursor: getStockForSize(sizeItem.size) === 0 ? 'not-allowed' : 'pointer'
                             }}
                           >
                             {typeof sizeItem.size === 'string' ? sizeItem.size : JSON.stringify(sizeItem.size)}
+                            {getStockForSize(sizeItem.size) === 0 && (
+                              <div className="out-of-stock-line"></div>
+                            )}
                           </button>
                         ))
                       )}
@@ -694,26 +715,50 @@ const ThemeProductDetail = () => {
                 </div>
 
                 <div className="action_buttons mb-4">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="btn btn-lg mr-3"
-                    style={{ backgroundColor: '#f26522', color: 'white' }}
-                    onClick={handleAddToCart}
-                  >
-                    <ShoppingCart className="w-5 h-5 mr-2" />
-                    Add to Cart
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="btn btn-lg"
-                    style={{ backgroundColor: '#000000', color: 'white' }}
-                    onClick={handleBuyNow}
-                  >
-                    <ArrowRight className="w-5 h-5 mr-2" />
-                    Buy Now
-                  </motion.button>
+                  {(() => {
+                    const availableSizes = product.sizes && product.sizes.length > 0
+                      ? product.sizes.filter(s => getStockForSize(typeof s.size === 'string' ? s.size : JSON.stringify(s.size)) > 0)
+                      : sizes.filter(s => getStockForSize(s.size) > 0);
+                    const isOutOfStock = availableSizes.length === 0;
+                    
+                    return isOutOfStock ? (
+                      <button
+                        className="btn btn-lg"
+                        disabled
+                        style={{
+                          backgroundColor: '#6c757d',
+                          color: 'white',
+                          cursor: 'not-allowed',
+                          opacity: 0.7
+                        }}
+                      >
+                        Out of Stock
+                      </button>
+                    ) : (
+                      <>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="btn btn-lg mr-3"
+                          style={{ backgroundColor: '#f26522', color: 'white' }}
+                          onClick={handleAddToCart}
+                        >
+                          <ShoppingCart className="w-5 h-5 mr-2" />
+                          Add to Cart
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="btn btn-lg"
+                          style={{ backgroundColor: '#000000', color: 'white' }}
+                          onClick={handleBuyNow}
+                        >
+                          <ArrowRight className="w-5 h-5 mr-2" />
+                          Buy Now
+                        </motion.button>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* <div className="trust_badges">
@@ -722,7 +767,7 @@ const ThemeProductDetail = () => {
                       <div className="text-center">
                         <Truck className="w-8 h-8 mb-2" style={{ color: '#f26522' }} />
                         <span className='d-block'>Shipping Fee Rs 250</span>
-                         <span className="d-block">Free Shipping on Orders over Rs 10,000</span> 
+                         <span className="d-block">Free Shipping on Orders over Rs 5,000</span> 
                       </div>
                     </div>
                     <div className="col-6">
@@ -1041,6 +1086,7 @@ const ThemeProductDetail = () => {
 
       {/* Side Drawer */}
       <SideDrawer isOpen={sideDrawerOpen} onClose={() => setSideDrawerOpen(false)} />
+      <WhatsAppFloatingButton />
     </div>
   );
 };

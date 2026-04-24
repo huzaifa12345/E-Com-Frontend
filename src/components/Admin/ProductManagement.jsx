@@ -335,7 +335,7 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
                     style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
                   >
                     <Edit size={14} />
-                  </button>
+                  </button>b
                   <button 
                     className="btn btn-sm btn-danger"
                     onClick={() => handleDeleteProduct(product.id)}

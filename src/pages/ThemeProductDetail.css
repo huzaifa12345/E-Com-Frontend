@@ -48,6 +48,23 @@
     z-index: 2;
 }
 
+/* Out of stock size button strikethrough */
+.out-of-stock-size {
+    position: relative;
+}
+
+.out-of-stock-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #dc3545;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
 .card-body-v2 {
     padding: 20px;
     text-align: center;
