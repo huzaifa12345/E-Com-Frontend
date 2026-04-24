@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaHeadset, FaTruck, FaShoppingCart, FaSearch, FaBars, FaEnvelope, FaFilter, FaSort, FaThLarge, FaTh } from 'react-icons/fa';
+import { FaHeadset, FaTruck, FaShoppingCart, FaSearch, FaBars, FaEnvelope, FaFilter, FaSort, FaThLarge, FaTh, FaSquare } from 'react-icons/fa';
 import { ShoppingCart, Heart, Star } from 'lucide-react';
 import { themeApi } from '../services/themeApi';
 import toast from 'react-hot-toast';
@@ -153,6 +153,7 @@ const AllProducts = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [layoutView, setLayoutView] = useState(3); // 3, 5, 2, or 1 products per row
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -290,7 +291,8 @@ const AllProducts = () => {
         <div className="container">
           <div className="filter-bar">
             <div className="filter-bar-left">
-              <div className="search-bar-inline">
+              {/* Desktop Search Bar */}
+              <div className="search-bar-inline d-none d-md-flex">
                 <input
                   type="text"
                   placeholder="Search..."
@@ -302,6 +304,37 @@ const AllProducts = () => {
                   <FaSearch />
                 </button>
               </div>
+              
+              {/* Mobile Search Button */}
+              <button 
+                className="mobile-search-toggle-btn d-flex d-md-none"
+                onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+              >
+                <FaSearch />
+              </button>
+              
+              {/* Mobile Search Bar (Hidden by default) */}
+              {mobileSearchOpen && (
+                <div className="mobile-search-bar d-flex d-md-none">
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="mobile-search-input"
+                    autoFocus
+                  />
+                  <button onClick={handleSearch} className="mobile-search-btn">
+                    <FaSearch />
+                  </button>
+                  <button 
+                    onClick={() => setMobileSearchOpen(false)}
+                    className="mobile-search-close"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
             </div>
             <div className="filter-bar-right">
               <div className="sort-dropdown">
@@ -388,7 +421,7 @@ const AllProducts = () => {
                   onClick={() => setLayoutView(window.innerWidth < 768 ? 1 : 5)}
                   title={window.innerWidth < 768 ? "1 per row" : "5 per row"}
                 >
-                  <FaTh />
+                  {window.innerWidth < 768 ? <FaSquare /> : <FaTh />}
                 </button>
               </div>
             </div>

@@ -14,7 +14,7 @@ import WhatsAppFloatingButton from '../components/WhatsAppFloatingButton';
 import '../assets/css/theme-home-styles.css';
 import '../assets/css/BuyNowButton.css';
 
-const ThemeHome = () => {
+const ThemeHome = () => {   
   const navigate = useNavigate();
   const { addToCart, clearCart } = useCart();
   const { user } = useAuth();
@@ -27,6 +27,10 @@ const ThemeHome = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [websiteLogo, setWebsiteLogo] = useState('/src/assets/images/kidcolor(1).png');
+  const [dynamicCategoryCards, setDynamicCategoryCards] = useState({
+    boys: [],
+    girls: []
+  });
   const [heroSlides, setHeroSlides] = useState([
     {
       image: "/src/assets/images/kids.webp",
@@ -75,11 +79,49 @@ const ThemeHome = () => {
             }
             if (dynamicSlides.length > 0) setHeroSlides(dynamicSlides);
           }
+
+          // Fetch dynamic category cards
+          if (settings.category_cards) {
+            const boysCards = [];
+            const girlsCards = [];
+            
+            for (let i = 1; i <= 6; i++) {
+              // Boys category cards
+              const boysImg = settings.category_cards.find(s => s.key === `boys_category_${i}_image`);
+              
+              if (boysImg?.value) {
+                // Get corresponding original category for title and link
+                const originalCategory = categories['Boys']?.[i - 1];
+                boysCards.push({
+                  id: `boys_${i}`,
+                  title: originalCategory?.name || `Category ${i}`,
+                  image: boysImg.value,
+                  link: originalCategory ? `/category/${originalCategory.id}` : `/all-products`
+                });
+              }
+              
+              // Girls category cards
+              const girlsImg = settings.category_cards.find(s => s.key === `girls_category_${i}_image`);
+              
+              if (girlsImg?.value) {
+                // Get corresponding original category for title and link
+                const originalCategory = categories['Girls']?.[i - 1];
+                girlsCards.push({
+                  id: `girls_${i}`,
+                  title: originalCategory?.name || `Category ${i}`,
+                  image: girlsImg.value,
+                  link: originalCategory ? `/category/${originalCategory.id}` : `/all-products`
+                });
+              }
+            }
+            
+            setDynamicCategoryCards({ boys: boysCards, girls: girlsCards });
+          }
         }
       } catch (error) { console.error('Settings error:', error); }
     };
     fetchWebsiteSettings();
-  }, []);
+  }, [categories]); // Re-fetch when categories change
 
   // --- Logic 3: Categories (Level 3 grouped by Level 2) ---
   useEffect(() => {
@@ -98,9 +140,17 @@ const ThemeHome = () => {
         // Group Level 3 categories by their Level 2 parent
         const groupedCategories = {};
         level2Categories.forEach(parent => {
-          groupedCategories[parent.name] = level3Categories
-            .filter(cat => cat.parent_id === parent.id)
-            .slice(0, 4); // Take only 4 per gender
+          const groupName = parent.name.toLowerCase(); // Normalize to lowercase
+          
+          // Only process "boys" and "girls" categories
+          if (groupName === 'boys' || groupName === 'girls') {
+            // Capitalize first letter for consistent display
+            const displayName = groupName.charAt(0).toUpperCase() + groupName.slice(1);
+            
+            groupedCategories[displayName] = level3Categories
+              .filter(cat => cat.parent_id === parent.id)
+              .slice(0, 6); // Take up to 6 per gender for more options
+          }
         });
         
         setCategories(groupedCategories);
@@ -162,53 +212,97 @@ const ThemeHome = () => {
       <section className="categories-grid py-5">
         <div className="container-fluid">
           {/* Boys Section */}
-          {categories['Boys'] && (
+          {(dynamicCategoryCards.boys.length > 0 || categories['Boys']) && (
             <div className="gender-section mb-5">
               <h2 className="gender-title text-center mb-4">BOYS</h2>
               <div className="row g-4">
-                {categories['Boys'].map((category) => (
-                  <div key={category.id} className="col-lg-4 col-md-6 ">
-                    <div className="category-card" onClick={() => navigate(`/category/${category.id}`)}>
-                      <div className="category-image-wrapper">
-                        <img 
-                          src={category.image_url || '/src/assets/images/tshirt-img.png'} 
-                          alt={category.name} 
-                          className="category-image"
-                        />
-                        <div className="category-overlay">
-                          <h3 className="category-title">{category.name}</h3>
-                          <button className="category-btn">Shop Now</button>
+                {/* Show dynamic cards first if available */}
+                {dynamicCategoryCards.boys.length > 0 ? (
+                  dynamicCategoryCards.boys.map((card) => (
+                    <div key={card.id} className="col-lg-4 col-md-6">
+                      <div className="category-card" onClick={() => navigate(card.link)}>
+                        <div className="category-image-wrapper">
+                          <img 
+                            src={card.image} 
+                            alt={card.title} 
+                            className="category-image"
+                          />
+                          <div className="category-overlay">
+                            <h3 className="category-title">{card.title}</h3>
+                            <button className="category-btn">Shop Now</button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  // Fallback to original categories
+                  categories['Boys']?.map((category) => (
+                    <div key={category.id} className="col-lg-4 col-md-6">
+                      <div className="category-card" onClick={() => navigate(`/category/${category.id}`)}>
+                        <div className="category-image-wrapper">
+                          <img 
+                            src={category.image_url || '/src/assets/images/tshirt-img.png'} 
+                            alt={category.name} 
+                            className="category-image"
+                          />
+                          <div className="category-overlay">
+                            <h3 className="category-title">{category.name}</h3>
+                            <button className="category-btn">Shop Now</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
 
           {/* Girls Section */}
-          {categories['Girls'] && (
+          {(dynamicCategoryCards.girls.length > 0 || categories['Girls']) && (
             <div className="gender-section">
               <h2 className="gender-title text-center mb-4">GIRLS</h2>
               <div className="row g-4">
-                {categories['Girls'].map((category) => (
-                  <div key={category.id} className="col-lg-4 col-md-6">
-                    <div className="category-card" onClick={() => navigate(`/category/${category.id}`)}>
-                      <div className="category-image-wrapper">
-                        <img 
-                          src={category.image_url || '/src/assets/images/tshirt-img.png'} 
-                          alt={category.name} 
-                          className="category-image"
-                        />
-                        <div className="category-overlay">
-                          <h3 className="category-title">{category.name}</h3>
-                          <button className="category-btn">Shop Now</button>
+                {/* Show dynamic cards first if available */}
+                {dynamicCategoryCards.girls.length > 0 ? (
+                  dynamicCategoryCards.girls.map((card) => (
+                    <div key={card.id} className="col-lg-4 col-md-6">
+                      <div className="category-card" onClick={() => navigate(card.link)}>
+                        <div className="category-image-wrapper">
+                          <img 
+                            src={card.image} 
+                            alt={card.title} 
+                            className="category-image"
+                          />
+                          <div className="category-overlay">
+                            <h3 className="category-title">{card.title}</h3>
+                            <button className="category-btn">Shop Now</button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  // Fallback to original categories
+                  categories['Girls']?.map((category) => (
+                    <div key={category.id} className="col-lg-4 col-md-6">
+                      <div className="category-card" onClick={() => navigate(`/category/${category.id}`)}>
+                        <div className="category-image-wrapper">
+                          <img 
+                            src={category.image_url || '/src/assets/images/tshirt-img.png'} 
+                            alt={category.name} 
+                            className="category-image"
+                          />
+                          <div className="category-overlay">
+                            <h3 className="category-title">{category.name}</h3>
+                            <button className="category-btn">Shop Now</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

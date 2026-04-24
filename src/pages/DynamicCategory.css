@@ -57,16 +57,107 @@
   color: var(--primary-orange);
 }
 
+/* Mobile Search Button */
+.mobile-search-toggle-btn {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.mobile-search-toggle-btn:hover {
+  border-color: var(--primary-orange);
+  color: var(--primary-orange);
+  box-shadow: 0 2px 8px rgba(242, 101, 34, 0.2);
+}
+
+/* Mobile Search Bar */
+.mobile-search-bar {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 25px;
+  padding: 8px 15px;
+  margin-top: 5px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  z-index: 1000;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 8px 10px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.mobile-search-btn {
+  background: none;
+  border: none;
+  color: var(--primary-orange);
+  padding: 5px;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.mobile-search-btn:hover {
+  background: rgba(242, 101, 34, 0.1);
+}
+
+.mobile-search-close {
+  background: #f0f0f0;
+  border: none;
+  color: #666;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.mobile-search-close:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
 /* Mobile Responsive Filter Bar */
 @media (max-width: 768px) {
   .filter-bar {
     flex-direction: row;
     align-items: center;
     gap: 15px;
+    position: relative;
   }
   
   .filter-bar-left {
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
   
   .filter-bar-right {
@@ -76,9 +167,7 @@
   }
   
   .search-bar-inline {
-    width: 100%;
-    max-width: 200px;
-    flex-shrink: 0;
+    display: none !important;
   }
   
   .sort-toggle-btn,

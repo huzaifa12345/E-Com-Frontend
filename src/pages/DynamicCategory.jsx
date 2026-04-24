@@ -12,7 +12,7 @@ import WhatsAppFloatingButton from '../components/WhatsAppFloatingButton';
 import './DynamicCategory.css';
 import '../assets/css/BuyNowButton.css';
 import '../assets/css/FilterBar.css';
-import {FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars, FaThLarge, FaTh } from 'react-icons/fa'
+import {FaHeadset, FaEnvelope, FaMapMarkerAlt, FaTruck, FaShoppingCart, FaSearch, FaBars, FaThLarge, FaTh, FaSquare } from 'react-icons/fa'
 import SideDrawer from '../components/SideDrawer';
 import ThemeFooter from '../components/ThemeFooter';
 import TopBar from '../components/TopBar';
@@ -153,6 +153,7 @@ const DynamicCategory = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [layoutView, setLayoutView] = useState(3); // 3, 5, 2, or 1 products per row
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   
   const [category, setCategory] = useState(null);
   const [products, setProducts] = useState([]);
@@ -320,7 +321,8 @@ const DynamicCategory = () => {
         <div className="container">
           <div className="filter-bar">
             <div className="filter-bar-left">
-              <div className="search-bar-inline">
+              {/* Desktop Search Bar */}
+              <div className="search-bar-inline d-none d-md-flex">
                 <input
                   type="text"
                   placeholder="Search..."
@@ -332,6 +334,37 @@ const DynamicCategory = () => {
                   <FaSearch />
                 </button>
               </div>
+              
+              {/* Mobile Search Button */}
+              <button 
+                className="mobile-search-toggle-btn d-flex d-md-none"
+                onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+              >
+                <FaSearch />
+              </button>
+              
+              {/* Mobile Search Bar (Hidden by default) */}
+              {mobileSearchOpen && (
+                <div className="mobile-search-bar d-flex d-md-none">
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="mobile-search-input"
+                    autoFocus
+                  />
+                  <button onClick={handleSearch} className="mobile-search-btn">
+                    <FaSearch />
+                  </button>
+                  <button 
+                    onClick={() => setMobileSearchOpen(false)}
+                    className="mobile-search-close"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
             </div>
             <div className="filter-bar-right">
               <div className="sort-dropdown">
@@ -428,7 +461,7 @@ const DynamicCategory = () => {
                   onClick={() => setLayoutView(window.innerWidth < 768 ? 1 : 5)}
                   title={window.innerWidth < 768 ? "1 per row" : "5 per row"}
                 >
-                  <FaTh />
+                  {window.innerWidth < 768 ? <FaSquare /> : <FaTh />}
                 </button>
               </div>
             </div>
