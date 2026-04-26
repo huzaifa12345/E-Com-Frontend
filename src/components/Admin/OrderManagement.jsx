@@ -207,9 +207,9 @@ const OrderManagement = ({ orders, onOrdersChange }) => {
       <div className="col-md-6">
         <strong>Account Number:</strong> {selectedOrder.account_number || 'N/A'}
       </div>
-      <div className="col-md-6">
+      {/* <div className="col-md-6">
         <strong>Transaction ID:</strong> {selectedOrder.transaction_id || 'N/A'}
-      </div>
+      </div> */}
     </div>
     
     {selectedOrder.payment_screenshot && (
@@ -262,14 +262,14 @@ const OrderManagement = ({ orders, onOrdersChange }) => {
                   <div className="card bg-light mt-2">
                     <div className="card-body">
                       <div className="row">
-                        <div className="col-md-6">
+                        {/* <div className="col-md-6">
                           <strong>Subtotal:</strong> {selectedOrder.subtotal || '0.00'}
-                        </div>
+                        </div> */}
                         <div className="col-md-6">
                           <strong>Shipping:</strong> {selectedOrder.shipping_amount || '0.00'}
                         </div>
                         <div className="col-md-6">
-                          <strong>Total:</strong> <span className="text-success fw-bold">{selectedOrder.total_amount || '0.00'}</span>
+                          <strong>Total:</strong> <span className="text-success fw-bold">{selectedOrder.subtotal || '0.00'}</span>
                         </div>
                       </div>
                     </div>

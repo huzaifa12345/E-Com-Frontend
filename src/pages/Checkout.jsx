@@ -263,18 +263,26 @@ const Checkout = () => {
           zip_code: shippingInfo.zipCode,
           country: shippingInfo.country
         },
-        items: items.map(item => ({
-          product_id: item.id,
-          quantity: item.quantity,
-          unit_price: parseFloat(item.price),
-          total_price: parseFloat(item.price) * item.quantity,
-          selected_size: item.selectedSize || null,
-          product_snapshot: {
-            name: item.name,
-            sku: item.sku || '',
-            image_url: item.image_url || item.image || '/src/assets/images/tshirt-img.png'
-          }
-        })),
+        items: items.map(item => {
+          console.log('Cart item:', item);
+          console.log('Item discount_price:', item.discount_price);
+          console.log('Item price:', item.price);
+          const finalPrice = item.discount_price || item.price;
+          console.log('Final price to use:', finalPrice);
+          
+          return {
+            product_id: item.id,
+            quantity: item.quantity,
+            unit_price: parseFloat(finalPrice),
+            total_price: parseFloat(finalPrice) * item.quantity,
+            selected_size: item.selectedSize || null,
+            product_snapshot: {
+              name: item.name,
+              sku: item.sku || '',
+              image_url: item.image_url || item.image || '/src/assets/images/tshirt-img.png'
+            }
+          };
+        }),
         payment_method: paymentInfo.method,
         payment_status: (paymentInfo.payment_screenshot && typeof paymentInfo.payment_screenshot === 'string') ? 'paid' : 'pending', // If screenshot provided, mark as paid
         // Add payment details for bank transfer

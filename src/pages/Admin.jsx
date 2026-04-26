@@ -77,7 +77,7 @@ const Admin = () => {
 
       try {
         const [productsRes, categoriesRes, ordersRes] = await Promise.all([
-          themeApi.getProducts().catch(err => {
+          themeApi.getProducts({ limit: 1000 }).catch(err => {
             console.error('Products API error:', err);
             return { products: [] };
           }),
@@ -90,12 +90,17 @@ const Admin = () => {
             return { orders: [] };
           })
         ]);
+        console.log('API Response - Products:', productsRes);
+        console.log('Products count from API:', productsRes.products?.length || 0);
+        console.log('Pagination info:', productsRes.pagination);
+        
         setProducts(productsRes.products || []);
         setCategories(categoriesRes || []);
         setOrders(ordersRes.orders || []);
 
         // Calculate stats
         const totalProducts = productsRes.products?.length || 0;
+        console.log('Total products set in state:', totalProducts);
         const totalRevenue = ordersRes.orders?.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0) || 0;
 
         setStats({
