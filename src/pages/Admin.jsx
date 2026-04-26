@@ -68,22 +68,27 @@ const Admin = () => {
   // Fetch data from backend
   useEffect(() => {
     const fetchData = async () => {
-      console.log('Admin - useEffect triggered');
-      console.log('Admin - user object:', user);
-      console.log('Admin - isAuthenticated:', isAuthenticated);
-      
+            
       // Only fetch data if user is authenticated
       if (!isAuthenticated || !user) {
-        console.log('Admin: User not authenticated, skipping data fetch');
-        setLoading(false);
+                setLoading(false);
         return;
       }
 
       try {
         const [productsRes, categoriesRes, ordersRes] = await Promise.all([
-          themeApi.getProducts(),
-          themeApi.getCategories(),
-          themeApi.getAllOrders()
+          themeApi.getProducts().catch(err => {
+            console.error('Products API error:', err);
+            return { products: [] };
+          }),
+          themeApi.getCategories().catch(err => {
+            console.error('Categories API error:', err);
+            return [];
+          }),
+          themeApi.getAllOrders().catch(err => {
+            console.error('Orders API error:', err);
+            return { orders: [] };
+          })
         ]);
         setProducts(productsRes.products || []);
         setCategories(categoriesRes || []);
@@ -452,71 +457,81 @@ const Admin = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map((product) => (
-                    <tr key={product.id}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <img 
-                            src={product.image_url || '/src/assets/images/tshirt-img.png'} 
-                            alt={product.name} 
-                            className="rounded me-3" 
-                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                          />
-                          <div>
-                            <h6 className="mb-0">{product.name}</h6>
-                            {product.description && (
-                              <small className="text-muted d-block">
-                                {product.description.substring(0, 50)}
-                                {product.description.length > 50 && '...'}
-                              </small>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="text-center">{product.category_relation?.name || 'N/A'}</td>
-                      <td className="text-center">
-                        {product.discount_price ? (
-                          <>
-                            <span className="text-decoration-line-through text-muted">Rs. {Number(product.price || 0).toFixed(2)}</span>
-                            <br />
-                            <span className="text-success fw-bold">Rs. {Number(product.discount_price).toFixed(2)}</span>
-                            <br />
-                            <small className="text-danger">
-                              -{Math.round(((product.price - product.discount_price) / product.price) * 100)}%
-                            </small>
-                          </>
-                        ) : (
-                          <span>Rs. {Number(product.price || 0).toFixed(2)}</span>
-                        )}
-                      </td>
-                      {/* <td className="text-center text-white">
-                        <span className={`badge ${product.stock_quantity > 10 ? 'bg-success' : 'bg-danger'}`}>
-                          {product.stock_quantity}
-                        </span>
-                      </td> */}
-                      <td className="text-center text-white">
-                        <span className={`badge ${product.is_active ? 'bg-success' : 'bg-secondary'}`}>
-                          {product.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="text-center">
-                        <div className="btn-group justify-content-center">
-                          <button 
-                            onClick={() => handleEditProduct(product)}
-                            className="btn btn-sm btn-outline-primary"
-                          >
-                            <Edit size={14} />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="btn btn-sm btn-outline-danger"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                  {filteredProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-4">
+                        <div className="text-muted">
+                          {searchTerm ? 'No products found matching your search.' : 'No products available.'}
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <tr key={product.id}>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <img 
+                              src={product.image_url || '/src/assets/images/tshirt-img.png'} 
+                              alt={product.name} 
+                              className="rounded me-3" 
+                              style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                            />
+                            <div>
+                              <h6 className="mb-0">{product.name}</h6>
+                              {product.description && (
+                                <small className="text-muted d-block">
+                                  {product.description.substring(0, 50)}
+                                  {product.description.length > 50 && '...'}
+                                </small>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="text-center">{product.category_relation?.name || 'N/A'}</td>
+                        <td className="text-center">
+                          {product.discount_price ? (
+                            <>
+                              <span className="text-decoration-line-through text-muted">Rs. {Number(product.price || 0).toFixed(2)}</span>
+                              <br />
+                              <span className="text-success fw-bold">Rs. {Number(product.discount_price).toFixed(2)}</span>
+                              <br />
+                              <small className="text-danger">
+                                -{Math.round(((product.price - product.discount_price) / product.price) * 100)}%
+                              </small>
+                            </>
+                          ) : (
+                            <span>Rs. {Number(product.price || 0).toFixed(2)}</span>
+                          )}
+                        </td>
+                        {/* <td className="text-center text-white">
+                          <span className={`badge ${product.stock_quantity > 10 ? 'bg-success' : 'bg-danger'}`}>
+                            {product.stock_quantity}
+                          </span>
+                        </td> */}
+                        <td className="text-center text-white">
+                          <span className={`badge ${product.is_active ? 'bg-success' : 'bg-secondary'}`}>
+                            {product.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="text-center">
+                          <div className="btn-group justify-content-center">
+                            <button 
+                              onClick={() => handleEditProduct(product)}
+                              className="btn btn-sm btn-outline-primary"
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteProduct(product.id)}
+                              className="btn btn-sm btn-outline-danger"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

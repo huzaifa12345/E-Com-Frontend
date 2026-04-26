@@ -43,7 +43,7 @@ const Checkout = () => {
   });
   
   const [paymentInfo, setPaymentInfo] = useState({
-    method: 'card',
+    method: '', // Empty string to force user selection
     cardNumber: '',
     cardholderName: '',
     expiryDate: '',
@@ -105,7 +105,126 @@ const Checkout = () => {
     }
   };
 
+  const validateShippingInfo = () => {
+    const errors = [];
+    
+    // First Name validation
+    if (!shippingInfo.firstName.trim()) {
+      errors.push('First name is required');
+    } else if (shippingInfo.firstName.trim().length < 2) {
+      errors.push('First name must be at least 2 characters');
+    }
+    
+    // Last Name validation
+    if (!shippingInfo.lastName.trim()) {
+      errors.push('Last name is required');
+    } else if (shippingInfo.lastName.trim().length < 2) {
+      errors.push('Last name must be at least 2 characters');
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!shippingInfo.email.trim()) {
+      errors.push('Email is required');
+    } else if (!emailRegex.test(shippingInfo.email.trim())) {
+      errors.push('Please enter a valid email address');
+    }
+    
+    // Phone validation
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!shippingInfo.phone.trim()) {
+      errors.push('Phone number is required');
+    } else if (!phoneRegex.test(shippingInfo.phone.trim())) {
+      errors.push('Please enter a valid phone number');
+    } else if (shippingInfo.phone.trim().length < 11) {
+      errors.push('Phone number must be at least 11 digits');
+    }
+    
+    // Address validation
+    if (!shippingInfo.address.trim()) {
+      errors.push('Address is required');
+    } else if (shippingInfo.address.trim().length < 10) {
+      errors.push('Please enter a complete address (at least 10 characters)');
+    }
+    
+    // City validation
+    if (!shippingInfo.city.trim()) {
+      errors.push('City is required');
+    } else if (shippingInfo.city.trim().length < 2) {
+      errors.push('City name must be at least 2 characters');
+    }
+    
+    // State validation
+    // if (!shippingInfo.state.trim()) {
+    //   errors.push('State is required');
+    // } else if (shippingInfo.state.trim().length < 2) {
+    //   errors.push('State name must be at least 2 characters');
+    // }
+    
+    // Zip Code validation
+    // const zipRegex = /^[\d\s\-\A-Z]+$/i;
+    // if (!shippingInfo.zipCode.trim()) {
+    //   errors.push('Zip code is required');
+    // } else if (!zipRegex.test(shippingInfo.zipCode.trim())) {
+    //   errors.push('Please enter a valid zip code');
+    // } else if (shippingInfo.zipCode.trim().length < 3) {
+    //   errors.push('Zip code must be at least 3 characters');
+    // }
+    
+    // Country validation
+    // if (!shippingInfo.country.trim()) {
+    //   errors.push('Country is required');
+    // } else if (shippingInfo.country.trim().length < 2) {
+    //   errors.push('Country name must be at least 2 characters');
+    // }
+    
+    return errors;
+  };
+
   const handlePlaceOrder = async () => {
+    // Validate shipping information
+    const validationErrors = validateShippingInfo();
+    if (validationErrors.length > 0) {
+      toast.error(validationErrors[0]); // Show first error
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Validate payment method selection
+    console.log('Payment method validation:', paymentInfo.method);
+    if (!paymentInfo.method || paymentInfo.method === '') {
+      toast.error('Please select a payment method');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Validate that selected payment method is valid
+    const validMethods = ['banktransfer', 'cod'];
+    if (!validMethods.includes(paymentInfo.method)) {
+      toast.error('Invalid payment method selected');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Validate payment method specific fields
+    if (paymentInfo.method === 'banktransfer') {
+      if (!paymentInfo.account_holder_name || !paymentInfo.account_holder_name.trim()) {
+        toast.error('Account holder name is required for Bank Transfer');
+        setIsSubmitting(false);
+        return;
+      }
+      // if (!paymentInfo.account_number || !paymentInfo.account_number.trim()) {
+      //   toast.error('Account number is required for Jazz Cash');
+      //   setIsSubmitting(false);
+      //   return;
+      // }
+      // if (!paymentInfo.transaction_id || !paymentInfo.transaction_id.trim()) {
+      //   toast.error('Transaction ID is required for Jazz Cash');
+      //   setIsSubmitting(false);
+      //   return;
+      // }
+    }
+    
     // Validate that all items have sizes selected
     const itemsWithoutSize = items.filter(item => !item.selectedSize);
     if (itemsWithoutSize.length > 0) {
@@ -179,8 +298,8 @@ const Checkout = () => {
 
   const steps = [
     { id: 1, name: 'Shipping', icon: MapPin },
-    { id: 2, name: 'Payment', icon: CreditCard },
-    { id: 3, name: 'Review', icon: Check }
+    { id: 2, name: 'Payment', icon: CreditCard }
+    // { id: 3, name: 'Review', icon: Check } // Commented out - direct place order
   ];
 
   if (items.length === 0) {
@@ -564,62 +683,7 @@ const Checkout = () => {
           <TopBar 
             onMenuToggle={() => setSideDrawerOpen(true)}
           />
-          {/* <div className="top-bar">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="contact-info">
-                  <span><FaHeadset /> +1 800-123-4567</span>
-                  {' '}
-                  <span className="ms-3"><FaTruckIcon /> Free Shipping on orders over Rs 10,000</span>
-                </div>
-              </div>
-              <div className="col-md-6 text-end">
-                <div className="social-links">
-                  <Link to="/cart" className="text-white position-relative">
-                    <FaShoppingCart />
-                    {getCartItemsCount() > 0 && (
-                      <span className="cart-badge">{getCartItemsCount()}</span>
-                    )}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div> */}
 
-          {/* Main Navigation */}
-          {/* <nav className="main-nav">
-            <div className="row align-items-center">
-              <div className="col-md-3">
-                <div className="logo">
-                  <Link to="/">
-                    <img src={websiteLogo} alt="Kids Colours" className="img-fluid" style={{ maxWidth: '200px', minHeight: '80px' }} />
-                  </Link>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="search-bar">
-                  <form className="d-flex">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search products..."
-                    />
-                    <button type="submit" className="btn btn-search">
-                      <FaSearch />
-                    </button>
-                  </form>
-                </div>
-              </div>
-              <div className="col-md-3 text-end">
-                <button 
-                  className="btn btn-outline-light menu-toggle"
-                  onClick={() => setSideDrawerOpen(true)}
-                >
-                  <FaBars /> Menu
-                </button>
-              </div>
-            </div>
-          </nav> */}
         </div>
       </header>
 
@@ -753,7 +817,14 @@ const Checkout = () => {
                     <div className="text-end">
                       <button 
                         className="btn btn-primary" 
-                        onClick={() => setCurrentStep(2)}
+                        onClick={() => {
+                          const validationErrors = validateShippingInfo();
+                          if (validationErrors.length > 0) {
+                            toast.error(validationErrors[0]); // Show first error
+                            return;
+                          }
+                          setCurrentStep(2);
+                        }}
                         style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
                       >
                         Continue to Payment
@@ -770,7 +841,7 @@ const Checkout = () => {
                     <h3 className="shirt_text mb-4">Payment Information</h3>
                     <div className="mb-4">
                     
-                      {/* <div className="form-check form-check-inline mb-2">
+                      <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
                           type="radio"
@@ -783,8 +854,8 @@ const Checkout = () => {
                         <label className="form-check-label" htmlFor="banktransfer">
                           🏦 Bank Transfer
                         </label>
-                      </div> */}
-                      <div className="form-check form-check-inline mb-2">
+                      </div>
+                      {/* <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
                           type="radio"
@@ -797,7 +868,7 @@ const Checkout = () => {
                         <label className="form-check-label" htmlFor="jazzcash">
                           📲 Jazz Cash
                         </label>
-                      </div>
+                      </div> */}
                       {/* <div className="form-check form-check-inline mb-2">
                         <input
                           className="form-check-input"
@@ -875,17 +946,17 @@ const Checkout = () => {
                     )} */}
 
                     {/* Bank Transfer Payment */}
-                    {/* {paymentInfo.method === 'banktransfer' && (
+                    {paymentInfo.method === 'banktransfer' && (
                       <div className="alert alert-info">
                         <h5 className="alert-heading">🏦 Bank Transfer</h5>
                         <p className="mb-3">Transfer directly to our bank account.</p>
                         <div className="bank-details p-3 bg-light rounded">
                           <h6>Bank Details:</h6>
-                          <p><strong>Bank:</strong> Kids Colours Bank</p>
-                          <p><strong>Account Title:</strong> Kids Colours Pvt Ltd</p>
-                          <p><strong>Account Number:</strong> 1234-567890</p>
-                          <p><strong>IBAN:</strong> PK36-0001-2345-6789</p>
-                          <p><strong>Swift Code:</strong> KIDSPKKA</p>
+                          <p><strong>Bank:</strong> United Bank Limited (UBL)</p>
+                          <p><strong>Account Title:</strong> Kidz colours</p>
+                          <p><strong>Account Number:</strong> 1478275437413</p>
+                          {/* <p><strong>IBAN:</strong> PK36-0001-2345-6789</p>
+                          <p><strong>Swift Code:</strong> KIDSPKKA</p> */}
                         </div>
                         <div className="row">
                           <div className="col-md-6 mb-3">
@@ -899,7 +970,7 @@ const Checkout = () => {
                               required
                             />
                           </div>
-                          <div className="col-md-6 mb-3">
+                          {/* <div className="col-md-6 mb-3">
                             <label className="form-label">Transaction ID</label>
                             <input
                               type="text"
@@ -909,7 +980,7 @@ const Checkout = () => {
                               onChange={(e) => setPaymentInfo({...paymentInfo, transaction_id: e.target.value})}
                               required
                             />
-                          </div>
+                          </div> */}
                           <div className="col-12 mb-3">
                             <label className="form-label">Payment Screenshot</label>
                             <input
@@ -924,16 +995,16 @@ const Checkout = () => {
                         </div>
                         <small className="text-muted">Please upload the transaction receipt after payment.</small>
                       </div>
-                    )} */}
+                    )}
 
                     {/* Jazz Cash Payment */}
-                    {paymentInfo.method === 'jazzcash' && (
+                    {/* {paymentInfo.method === 'jazzcash' && (
                       <div className="alert alert-info">
                         <h5 className="alert-heading">📲 Jazz Cash Payment</h5>
-                        <p className="mb-3">Pay using your Jazz Cash account.</p>
+                        <p className="mb-3">Pay using your Jazz Cash account.</p> */}
                         
                         {/* Store Owner Details */}
-                        <div className="jazzcash-details p-3 bg-light rounded mb-3">
+                        {/* <div className="jazzcash-details p-3 bg-light rounded mb-3">
                           <h6>Send payment to:</h6>
                           <p><strong>Account Name:</strong>M Ramiz Yaqoob</p>
                           <p><strong>Jazz Cash Number:</strong> 03026654999</p>
@@ -988,7 +1059,7 @@ const Checkout = () => {
                         </div>
                         <small className="text-muted">You will receive a payment confirmation on your Jazz Cash number.</small>
                       </div>
-                    )}
+                    )} */}
 
                     {/* EasyPaisa Payment */}
                     {/* {paymentInfo.method === 'easypaisa' && (
@@ -1071,91 +1142,25 @@ const Checkout = () => {
                         Back to Shipping
                       </button>
                       <button 
-                        className="btn btn-primary" 
-                        onClick={() => setCurrentStep(3)}
+                        className="btn btn-primary btn-lg" 
+                        onClick={handlePlaceOrder}
+                        disabled={isSubmitting}
                         style={{ backgroundColor: '#f26522', borderColor: '#f26522' }}
                       >
-                        Review Order
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        {isSubmitting ? 'Placing Order...' : 'Place Order'}
+                        <Check className="w-4 h-4 ml-2" />
                       </button>
                     </div>
                   </div>
                 </motion.div>
               )}
 
-              {currentStep === 3 && (
+              {/* Review step commented out - direct place order from payment step */}
+              {/* {currentStep === 3 && (
                 <motion.div key="review" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="checkout_form">
                   <div className="box_main">
                     <h3 className="shirt_text mb-4">Order Review</h3>
                     
-                    {/* Order Items */}
-                    <div className="mb-4">
-                      <h5 className="mb-3">Order Items</h5>
-                      {items.map((item) => (
-                        <div key={item.id} className="d-flex justify-content-between align-items-center mb-3 p-3 border-bottom">
-                          <div className="d-flex align-items-center">
-                            <img
-                              src={
-                                item.images && item.images.length > 0 
-                                  ? item.images[0] 
-                                  : item.image_url || item.image || '/src/assets/images/tshirt-img.png'
-                              }
-                              alt={item.name}
-                              className="img-fluid rounded me-3"
-                              style={{ 
-                                objectFit: 'contain',
-                                width: '60px',
-                                height: '60px',
-                                backgroundColor: '#f8f9fa'
-                              }}
-                            />
-                            <div>
-                              <h6 className="mb-1">{item.name}</h6>
-                              <small className="text-muted">Qty: {item.quantity}</small>
-                              {item.selectedSize ? (
-                                <div className="text-success small">Size: {item.selectedSize}</div>
-                              ) : (
-                                <div className="text-danger small">⚠️ Size not selected</div>
-                              )}
-                            </div>
-                          </div>
-                          <span className="shirt_text">{(item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Shipping Address */}
-                    <div className="mb-4">
-                      <h5 className="mb-3">Shipping Address</h5>
-                      <div className="p-3 border rounded">
-                        <p className="mb-1">
-                          <strong>{shippingInfo.firstName} {shippingInfo.lastName}</strong>
-                        </p>
-                        <p className="mb-1">{shippingInfo.address}</p>
-                        <p className="mb-1">
-                          {shippingInfo.city}, {shippingInfo.state} {shippingInfo.zipCode}
-                        </p>
-                        <p className="mb-1">{shippingInfo.country}</p>
-                        <p className="mb-1">{shippingInfo.email}</p>
-                        <p className="mb-1">{shippingInfo.phone}</p>
-                      </div>
-                    </div>
-
-                    {/* Payment Method */}
-                    <div className="mb-4">
-                      <h5 className="mb-3">Payment Method</h5>
-                      <div className="p-3 border rounded">
-                        <p className="mb-0">
-                          {paymentInfo.method === 'card' && '💳 Credit Card'}
-                          {paymentInfo.method === 'casheasy' && '📱 Cash Easy'}
-                          {paymentInfo.method === 'banktransfer' && '🏦 Bank Transfer'}
-                          {paymentInfo.method === 'jazzcash' && '📲 Jazz Cash'}
-                          {paymentInfo.method === 'easypaisa' && '📱 EasyPaisa'}
-                          {paymentInfo.method === 'cod' && '🚚 Cash on Delivery'}
-                        </p>
-                      </div>
-                    </div>
-
                     <div className="d-flex justify-content-between">
                       <button 
                         className="btn btn-outline-secondary" 
@@ -1176,7 +1181,7 @@ const Checkout = () => {
                     </div>
                   </div>
                 </motion.div>
-              )}
+              )} */}
             </AnimatePresence>
           </div>
 

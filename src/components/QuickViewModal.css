@@ -202,14 +202,14 @@
 }
 
 .size-btn:hover {
-  border-color: #f26522;
-  color: #f26522;
+  border-color: #565656;
+  color: #000000;
 }
 
 .size-btn.active {
-  background: #f26522;
-  border-color: #f26522;
-  color: white;
+  background: #dadada;
+  border-color: #878787;
+  color: rgb(0, 0, 0);
 }
 
 .size-btn.out-of-stock {

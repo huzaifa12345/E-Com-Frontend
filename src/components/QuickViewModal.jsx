@@ -163,7 +163,7 @@ const QuickViewModal = ({ product, isOpen, onClose }) => {
                           disabled={stock === 0}
                         >
                           {sizeName}
-                          {stock > 0 && <span className="stock-badge">{stock}</span>}
+                          {/* {stock > 0 && <span className="stock-badge">{stock}</span>} */}
                           {stock === 0 && <div className="out-of-stock-line"></div>}
                         </button>
                       );
