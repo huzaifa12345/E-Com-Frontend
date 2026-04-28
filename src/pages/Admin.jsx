@@ -408,7 +408,7 @@ const Admin = () => {
                     <small className="text-muted">{category.description || 'No description'}</small>
                   </div>
                 </div>
-                <span className="badge badge-primary">{category.product_count || 0} products</span>
+                {/* <span className="badge badge-primary">{category.product_count || 0} products</span> */}
               </div>
             ))}
           </div>
@@ -773,11 +773,28 @@ const Admin = () => {
                       onChange={(e) => setProductForm({ ...productForm, category_id: e.target.value })}
                     >
                       <option value="">Select Category</option>
-                      {categories.filter(category => category.level === 3).map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
+                      {(() => {
+                        // Get all Level 3 categories with their full hierarchy path
+                        const level3Categories = categories.filter(cat => cat.level === 3);
+                        
+                        return level3Categories.map(category => {
+                          // Find parent (Level 2 - Gender)
+                          const gender = categories.find(cat => cat.id === category.parent_id);
+                          if (!gender) return null;
+                          
+                          // Find grandparent (Level 1 - Season)
+                          const season = categories.find(cat => cat.id === gender.parent_id);
+                          if (!season) return null;
+                          
+                          const displayName = `${season.name} → ${gender.name} → ${category.name}`;
+                          
+                          return (
+                            <option key={category.id} value={category.id}>
+                              {displayName}
+                            </option>
+                          );
+                        }).filter(Boolean);
+                      })()}
                     </select>
                   </div>
                   <div className="col-md-6 mb-3">

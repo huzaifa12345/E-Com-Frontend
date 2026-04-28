@@ -23,23 +23,49 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
 
-  // Filter only Level 3 categories (product categories)
-  const getProductCategories = () => {
-    return categories.filter(category => category.level === 3);
+  // Get hierarchical categories with Season → Gender → Product structure
+  const getHierarchicalCategories = () => {
+    // Find Level 1 (Season) categories
+    const seasonCategories = categories.filter(cat => cat.level === 1);
+    
+    return seasonCategories.map(season => {
+      // Find Level 2 (Gender) categories under this season
+      const genderCategories = categories.filter(cat => 
+        cat.parent_id === season.id && cat.level === 2
+      );
+      
+      return {
+        season,
+        genders: genderCategories.map(gender => {
+          // Find Level 3 (Product) categories under this gender
+          const productCategories = categories.filter(cat => 
+            cat.parent_id === gender.id && cat.level === 3
+          );
+          
+          return {
+            gender,
+            products: productCategories
+          };
+        })
+      };
+    });
   };
 
-  // Get hierarchical path for a category
-  const getCategoryPath = (category) => {
-    if (!category.parent_id) return category.name;
-    
-    // Find parent categories
-    const parent = categories.find(cat => cat.id === category.parent_id);
-    if (!parent) return category.name;
-    
-    const grandParent = categories.find(cat => cat.id === parent.parent_id);
-    if (!grandParent) return `${parent.name} → ${category.name}`;
-    
-    return `${grandParent.name} → ${parent.name} → ${category.name}`;
+  // Get display name for category option
+  const getCategoryDisplayName = (category) => {
+    if (category.level === 3) {
+      // Find the complete hierarchy: Season → Gender → Product
+      const gender = categories.find(cat => cat.id === category.parent_id);
+      if (gender) {
+        const season = categories.find(cat => cat.id === gender.parent_id);
+        if (season) {
+          return `${season.name} → ${gender.name} → ${category.name}`;
+        }
+        return `${gender.name} → ${category.name}`;
+      }
+      return category.name;
+    }
+    return category.name;
   };
 
   const handleAddProduct = () => {
@@ -226,14 +252,22 @@ const ProductManagement = ({ products, categories, onProductsChange }) => {
                       onChange={(e) => setProductForm({ ...productForm, category_id: e.target.value })}
                     >
                       <option value="">Select Product Category</option>
-                      {getProductCategories().map(category => (
-                        <option key={category.id} value={category.id}>
-                          {getCategoryPath(category)}
-                        </option>
+                      {getHierarchicalCategories().map(seasonGroup => (
+                        <optgroup key={seasonGroup.season.id} label={seasonGroup.season.name}>
+                          {seasonGroup.genders.map(genderGroup => (
+                            <optgroup key={genderGroup.gender.id} label={`${seasonGroup.season.name} → ${genderGroup.gender.name}`}>
+                              {genderGroup.products.map(category => (
+                                <option key={category.id} value={category.id}>
+                                  {getCategoryDisplayName(category)}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                     <small className="text-muted">
-                      Only Level 3 categories (e.g., Winter → Boys → Fashion)
+                      Season → Gender → Product (e.g., Winter → Boys → Fashion)
                     </small>
                   </div>
                   <div className="col-md-6 mb-3">
