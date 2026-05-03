@@ -62,7 +62,31 @@ const websiteSettingsApi = {
       console.error('Error initializing settings:', error);
       throw error;
     }
-  }
+  },
+
+  /** Admin: create missing boys_category_N / girls_category_N rows to match current L3 category counts */
+  ensureCategoryCardSlots: async () => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/website-settings/ensure-category-cards`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {
+      /* non-JSON body */
+    }
+    if (!response.ok) {
+      const err = new Error(data.error || 'Failed to sync category card slots');
+      err.status = response.status;
+      throw err;
+    }
+    return data;
+  },
 };
 
 export default websiteSettingsApi;

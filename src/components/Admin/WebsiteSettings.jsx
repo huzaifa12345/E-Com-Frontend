@@ -1,8 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Upload, Image as ImageIcon, Save, RefreshCw, Trash2 } from 'lucide-react';
 import websiteSettingsApi from '../../services/websiteSettingsApi';
+import { themeApi } from '../../services/themeApi';
 import toast from 'react-hot-toast';
 import { useLogo } from '../../context/LogoContext';
+
+function getThemeHomeCategoryInfo(categoriesData) {
+  if (!categoriesData || !Array.isArray(categoriesData)) {
+    return { boys: 0, girls: 0, boysNames: [], girlsNames: [] };
+  }
+  const level2 = categoriesData.filter((cat) => cat.is_active && cat.level === 2);
+  const level3 = categoriesData
+    .filter((cat) => cat.is_active && cat.level === 3)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.id - b.id);
+  let boys = 0;
+  let girls = 0;
+  const boysNames = [];
+  const girlsNames = [];
+  level2.forEach((parent) => {
+    const gn = (parent.name || '').toLowerCase();
+    if (gn !== 'boys' && gn !== 'girls') return;
+    const children = level3.filter((c) => c.parent_id === parent.id);
+    if (gn === 'boys') {
+      boys = children.length;
+      boysNames.push(...children.map((c) => c.name || `Category ${c.id}`));
+    }
+    if (gn === 'girls') {
+      girls = children.length;
+      girlsNames.push(...children.map((c) => c.name || `Category ${c.id}`));
+    }
+  });
+  return { boys, girls, boysNames, girlsNames };
+}
+
+const CATEGORY_CARD_IMAGE_KEY = /^(boys|girls)_category_(\d+)_image$/;
 
 const WebsiteSettings = () => {
   const { updateLogo, fetchWebsiteLogo } = useLogo();
@@ -10,14 +41,34 @@ const WebsiteSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
   const [previewImages, setPreviewImages] = useState({});
+  const [categorySlotCounts, setCategorySlotCounts] = useState({ boys: 0, girls: 0 });
+  const [categorySlotNames, setCategorySlotNames] = useState({ boys: [], girls: [] });
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
+
+      let info = { boys: 0, girls: 0, boysNames: [], girlsNames: [] };
+      try {
+        const raw = await themeApi.getCategories();
+        info = getThemeHomeCategoryInfo(raw);
+      } catch {
+        /* categories public; admin usually has token */
+      }
+      setCategorySlotCounts({ boys: info.boys, girls: info.girls });
+      setCategorySlotNames({ boys: info.boysNames, girls: info.girlsNames });
+
+      try {
+        await websiteSettingsApi.ensureCategoryCardSlots();
+      } catch (err) {
+        if (err.status === 401 || err.status === 403) {
+          toast.error('Admin login required to sync theme home card slots.');
+        } else {
+          console.warn('ensureCategoryCardSlots:', err);
+          toast.error(err.message || 'Could not sync category card slots');
+        }
+      }
+
       const response = await websiteSettingsApi.getWebsiteSettings();
       if (response.success) {
         setSettings(response.data);
@@ -43,7 +94,11 @@ const WebsiteSettings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleImageUpload = (settingId, file) => {
     if (file) {
@@ -191,6 +246,84 @@ const WebsiteSettings = () => {
     );
   };
 
+  const renderCategoryCardSlots = (categorySettings) => {
+    const byKey = Object.fromEntries(categorySettings.map((s) => [s.key, s]));
+    const other = categorySettings.filter((s) => !CATEGORY_CARD_IMAGE_KEY.test(s.key));
+
+    const slotBlock = (genderLabel, prefix, count, names) => (
+      <div className="mb-4" key={prefix}>
+        <h6 className="fw-bold mb-3 border-bottom pb-2">
+          {genderLabel} — {count} theme home card{count !== 1 ? 's' : ''}
+        </h6>
+        <div className="row">
+          {count === 0 ? (
+            <p className="text-muted small">No level-3 categories under {genderLabel}. Add them in Category Management, then Refresh.</p>
+          ) : (
+            Array.from({ length: count }, (_, idx) => {
+              const n = idx + 1;
+              const key = `${prefix}_category_${n}_image`;
+              const setting = byKey[key];
+              const catName = names[idx] || null;
+              if (!setting) {
+                return (
+                  <div key={key} className="col-md-6 mb-3">
+                    <div className="alert alert-warning mb-0 py-2 small">
+                      Missing <code>{key}</code>. Press <strong>Refresh</strong> to sync slots.
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={setting.id} className="col-md-6 mb-3">
+                  <div className="border rounded p-3">
+                    <label className="form-label fw-bold">
+                      {setting.description}
+                      {catName && <span className="text-info ms-2">({catName})</span>}
+                    </label>
+                    <small className="text-muted d-block mb-2">
+                      Key: {setting.key} | Slot {n} of {count}
+                    </small>
+                    {renderSettingInput(setting)}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+
+    return (
+      <>
+        <p className="text-muted small mb-4">
+          Image slots match <strong>Boys</strong> / <strong>Girls</strong> subcategories (same order as Theme Home).
+          Currently <strong>{categorySlotCounts.boys}</strong> boys and <strong>{categorySlotCounts.girls}</strong> girls.
+          After adding a category, click <strong>Refresh</strong> to create the new upload row.
+        </p>
+        {slotBlock('Boys', 'boys', categorySlotCounts.boys, categorySlotNames.boys)}
+        {slotBlock('Girls', 'girls', categorySlotCounts.girls, categorySlotNames.girls)}
+        {other.length > 0 && (
+          <div className="mb-3">
+            <h6 className="fw-bold mb-2">Other (category_cards)</h6>
+            <div className="row">
+              {other.map((setting) => (
+                <div key={setting.id} className="col-md-6 mb-3">
+                  <div className="border rounded p-3">
+                    <label className="form-label fw-bold">{setting.description}</label>
+                    <small className="text-muted d-block mb-2">
+                      Key: {setting.key} | Type: {setting.type}
+                    </small>
+                    {renderSettingInput(setting)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
+
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -210,6 +343,7 @@ const WebsiteSettings = () => {
             <h5 className="mb-0 text-white">Website Settings</h5>
             <div className="d-flex gap-2">
               <button 
+                type="button"
                 className="btn btn-success"
                 onClick={fetchSettings}
                 disabled={loading}
@@ -218,6 +352,7 @@ const WebsiteSettings = () => {
                 Refresh
               </button>
               <button 
+                type="button"
                 className="btn btn-warning"
                 onClick={async () => {
                   try {
@@ -245,21 +380,25 @@ const WebsiteSettings = () => {
                 <h6 className="text-uppercase text-muted mb-3">
                   {category.charAt(0).toUpperCase() + category.slice(1)} Settings
                 </h6>
-                <div className="row">
-                  {categorySettings.map((setting) => (
-                    <div key={setting.id} className="col-md-6 mb-3">
-                      <div className="border rounded p-3">
-                        <label className="form-label fw-bold">
-                          {setting.description}
-                        </label>
-                        <small className="text-muted d-block mb-2">
-                          Key: {setting.key} | Type: {setting.type}
-                        </small>
-                        {renderSettingInput(setting)}
+                {category === 'category_cards' ? (
+                  renderCategoryCardSlots(categorySettings)
+                ) : (
+                  <div className="row">
+                    {categorySettings.map((setting) => (
+                      <div key={setting.id} className="col-md-6 mb-3">
+                        <div className="border rounded p-3">
+                          <label className="form-label fw-bold">
+                            {setting.description}
+                          </label>
+                          <small className="text-muted d-block mb-2">
+                            Key: {setting.key} | Type: {setting.type}
+                          </small>
+                          {renderSettingInput(setting)}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
