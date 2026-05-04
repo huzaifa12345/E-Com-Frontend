@@ -157,7 +157,7 @@ const AllProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('created_at');
+  const [sortBy, setSortBy] = useState('name_asc');
   const [priceRange, setPriceRange] = useState(null);
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -196,7 +196,7 @@ const AllProducts = () => {
       setLoading(true);
       const params = {
         page: currentPage,
-        limit: 12,
+        limit: 30,
         sortBy,
         ...(priceRange && { min_price: priceRange[0], max_price: priceRange[1] }),
         search: searchQuery
