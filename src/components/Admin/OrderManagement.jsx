@@ -114,6 +114,7 @@ const OrderManagement = ({ orders, onOrdersChange }) => {
                         <div><strong>Customer Name:</strong> {selectedOrder.shipping_address.first_name} {selectedOrder.shipping_address.last_name }</div>
                         <div><strong>Email:</strong> {selectedOrder.shipping_address.email || 'N/A'}</div>
                         <div><strong>Phone:</strong> {selectedOrder.shipping_address.phone || 'N/A'}</div>
+                        <div><strong>Address:</strong> {selectedOrder.shipping_address.address || 'N/A'}</div>
                         <div><strong>City:</strong> {selectedOrder.shipping_address.city || 'N/A'}</div>
                         <div><strong>State:</strong> {selectedOrder.shipping_address.state || 'N/A'}</div>
                         <div><strong>Zip Code:</strong> {selectedOrder.shipping_address.zip_code || 'N/A'}</div>
@@ -269,7 +270,7 @@ const OrderManagement = ({ orders, onOrdersChange }) => {
                           <strong>Shipping:</strong> {selectedOrder.shipping_amount || '0.00'}
                         </div>
                         <div className="col-md-6">
-                          <strong>Total:</strong> <span className="text-success fw-bold">{selectedOrder.subtotal || '0.00'}</span>
+                          <strong>Total :</strong> <span className="text-success fw-bold">{selectedOrder.subtotal || '0.00'}</span>
                         </div>
                       </div>
                     </div>
