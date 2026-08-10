@@ -371,6 +371,12 @@
 /* Premium Slider Animation */
 .slider-img {
   animation: premiumSlide 1.5s ease-out;
+  width: 100%;
+  aspect-ratio: 16 / 7; 
+  object-fit: cover;
+  object-position: center; 
+  display: block;
+  transition: opacity 0.5s ease;
 }
 
 /* Mobile Animation */
@@ -753,7 +759,6 @@
 .hero-v4-simple {
   position: relative;
   width: 100%;
-  height: 500px;
   overflow: hidden;
 }
 
